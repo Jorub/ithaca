@@ -1,9 +1,11 @@
 source("source/main.R")
 #source("source/partition_evap.R")
 
-#Input ---- ####
+# parallel
+library(doParallel)
 
-PATH_IPCC_data <- paste0(PATH_DATA,"geodata/ipcc_v4/")
+# Input ---- ####
+PATH_IPCC_data <- paste0(PATH_DATA,"/geodata/ipcc_v4/")
 
 # Output ---- ####
 PATH_SAVE_EVAP_TREND <- paste0(PATH_SAVE, "/evap_trend/")
@@ -11,26 +13,39 @@ load(paste0(PATH_SAVE_EVAP_TREND, "paths.Rdata"))
 
 # Colors---- ####
 ## Color for datasets ####
-cols_data <- c("bess" = "chartreuse2",
-               "camele" = "red",
-               "era5-land" = "gold1",
-               "etmonitor" = "chartreuse4",
-               "synthesizedet" = "hotpink",
-               "fldas" = "darkslategray1",
-               "gldas-clsm" = "deepskyblue1",
-               "gldas-noah" = "deepskyblue3",
-               "gldas-vic" = "deepskyblue4",
-               "gleam" = "darkgreen",
-               "jra55" = "orange1",
-               "merra2" = "orange3",
-               "mod16a" = "green",
-               "terraclimate" = "darkblue"
+
+cols_data <- c("bess" = "#228B22",
+               "camele" = "red2",
+               "era5-land" = "orange1",
+               "etmonitor" = "#708238",
+               "synthesizedet" = "#940308",#"#B81B1A",
+               "fldas" = "darkslategray3",
+               "gldas-clsm" = "#2E64FE",
+               "gldas-noah" = "#2A3F9F",
+               "gldas-vic" = "#4A90E2",
+               "gleam" = "#004F00",
+               "jra55" = "orange3",
+               "merra2" = "#4a3009",
+               "mod16a" = "chartreuse3",
+               "terraclimate" = "#011a59"
 )
 
-cols_data_c <- c("GLDAS-VIC" = "deepskyblue4",    "GLDAS-NOAH" = "deepskyblue3",   "GLDAS-CLSM"  = "deepskyblue1",  
-                 "MOD16A"  = "green",      "CAMELE"   = "red",   "ETMonitor"   = "chartreuse4",   
-               "SynthesizedET" = "hotpink", "GLEAM" = "darkgreen", "MERRA-2"  = "orange3", "JRA-55" = "orange1",   
-               "TerraClimate" = "darkblue", "FLDAS"  = "darkslategray1", "ERA5-land" = "gold1", "BESS"= "chartreuse2")   
+cols_data_c <- c("GLDAS-VIC" = "#4A90E2",    "GLDAS-NOAH" = "#2A3F9F",   "GLDAS-CLSM"  = "#2E64FE",  
+                 "MOD16A"  = "chartreuse3",      "CAMELE"   = "red2",   "ETMonitor"   = "#708238",   
+               "SynthesizedET" = "#940308", "GLEAM" = "#004F00", "MERRA-2"  = "#4a3009", "JRA-55" = "orange3",   
+               "TerraClimate" = "#011a59", "FLDAS"  = "darkslategray3", "ERA5-land" = "orange1", "BESS"= "#228B22")   
+
+# KG classes
+source('source/mask_paths.R')
+
+kg_meta <- data.table(read.table(paste0(PATH_MASKS_BECK_KOEPPEN,"/KG_legend.csv"), sep =';',
+                      col.names = c('KG', 'R', 'G', 'B')))
+
+kg_meta[, hex := rgb(R,G,B, maxColorValue = 255)]
+
+cols_kg <- kg_meta$hex
+names(cols_kg) <- kg_meta$KG
+
 
 # IPCC ####
 IPCC_Africa <- c("CAF", "ESAF", "MDG", "NEAF", "SAH", "SEAF", "WAF", "WSAF")
