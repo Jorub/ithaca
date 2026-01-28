@@ -1,5 +1,7 @@
-# figure 4
+# SI figure 5 ----
 source('source/evap_trend.R')
+
+library(ggpubr)
 
 ## CSI BIAS ----
 CSI_BIAS_data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_CSI_BIAS_dataset_bootstrap_all_p.rds"))
@@ -145,7 +147,7 @@ fig_CSI_0_01 <-ggplot(CSI_BIAS_data[CSI0_01 < 1])+
 
 fig_BIAS_0_2 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
   geom_tile(aes(x = dataset_A , y = dataset_B, fill = BIAS_brks_0_2), color = "white", lwd = 0.8, linetype = 1)+
-  scale_fill_manual(values = c("royalblue3", "lightblue", "gray90","orange","darkorange","darkred"))+
+  scale_fill_manual(values = c("royalblue3", "lightblue", "gray90","gold","darkorange","darkred"))+
   theme_bw()+
     theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1, size = 18),         
           axis.text.y = element_text(size = 18))+
@@ -160,7 +162,7 @@ fig_BIAS_0_2 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
 
 fig_BIAS_0_1 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
   geom_tile(aes(x = dataset_A , y = dataset_B, fill = BIAS_brks_0_1), color = "white", lwd = 0.8, linetype = 1)+
-  scale_fill_manual(values = c("royalblue3", "lightblue", "gray90","orange","darkorange","darkred"))+
+  scale_fill_manual(values = c("royalblue3", "lightblue", "gray90","gold","darkorange","darkred"))+
   theme_bw()+
     theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1, size = 18),         
           axis.text.y = element_text(size = 18))+
@@ -175,7 +177,7 @@ fig_BIAS_0_1 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
 
 fig_BIAS_0_05 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
   geom_tile(aes(x = dataset_A , y = dataset_B, fill = BIAS_brks_0_05), color = "white", lwd = 0.8, linetype = 1)+
-  scale_fill_manual(values = c("darkblue", "royalblue3", "lightblue", "gray90","orange","darkorange","darkred"))+
+  scale_fill_manual(values = c("darkblue", "royalblue3", "lightblue", "gray90","gold","darkorange","darkred"))+
   theme_bw()+
     theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1, size = 18),         
           axis.text.y = element_text(size = 18))+
@@ -190,7 +192,7 @@ fig_BIAS_0_05 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
 
 fig_BIAS_0_01 <- ggplot(CSI_BIAS_data[CSI0_01 < 1])+
   geom_tile(aes(x = dataset_A , y = dataset_B, fill = BIAS_brks_0_01), color = "white", lwd = 0.8, linetype = 1)+
-  scale_fill_manual(values = c("darkblue", "royalblue3", "lightblue", "gray90","orange","darkorange","darkred"))+
+  scale_fill_manual(values = c("darkblue", "royalblue3", "lightblue", "gray90","gold","darkorange","darkred"))+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1, size = 18),
         axis.text.y = element_text(size = 18))+

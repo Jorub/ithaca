@@ -78,8 +78,8 @@ fig_biome_short_class <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill = "Biome") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 2) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 2) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
   theme_bw() +
   theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
         panel.border = element_blank(),
@@ -93,6 +93,46 @@ fig_biome_short_class <- ggplot(to_plot_sf) +
 
 ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES,
               "supplement/fig_SI_evap_biomes.png"), width = 8, height = 5)
+
+## landcover ----
+
+to_plot_sf <- evap_mask[, .(lon, lat, land_cover_short_class)
+][, value := as.numeric(land_cover_short_class)]
+mask_to_val <- unique(to_plot_sf[,(.(land_cover_short_class = land_cover_short_class, value = value))])
+
+to_plot_sf <- to_plot_sf[, .(lon, lat, value)] %>% 
+  rasterFromXYZ(res = c(0.25, 0.25),
+                crs = "+proj=longlat +datum=WGS84 +no_defs") %>%
+  st_as_stars() %>% st_as_sf()
+
+to_plot_sf <- merge(to_plot_sf, mask_to_val, by = "value", all = T)
+
+fig_landcover <- ggplot(to_plot_sf) +
+  geom_sf(data = world_sf, fill = "light gray", color = "light gray") +
+  geom_sf(aes(color = land_cover_short_class, fill = land_cover_short_class)) +
+  geom_sf(data = earth_box, fill = NA, color = "black", lwd = 0.1) +
+  scale_fill_manual(values = colset_land_cover_short) +
+  scale_color_manual(values = colset_land_cover_short,
+                     guide = "none") +
+  labs(x = NULL, y = NULL, fill = "Landcover") +
+  coord_sf(expand = FALSE, crs = "+proj=robin") +
+  scale_y_continuous(breaks = seq(-60, 60, 30)) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 4) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 4) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
+        panel.border = element_blank(),
+        axis.ticks.length = unit(0, "cm"),
+        panel.grid.major = element_line(colour = "gray60"),
+        axis.text = element_blank(), 
+        axis.title = element_text(size = 18), 
+        legend.text = element_text(size = 14), 
+        legend.title = element_text(size = 18),
+        legend.position = "right")+
+  guides(fill = guide_legend(ncol = 1, byrow = TRUE))
+
+ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES,
+              "supplement/fig_SI_landcover.png"), width = 8, height = 5)
 
 ## evap_quantile ----
 levels(evap_mask$evap_quant) <- c("0-0.1", "0.1-0.2", "0.2-0.3", "0.3-0.4", 
@@ -133,8 +173,8 @@ fig_evap_quant_class <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill = "Evaporation\nquantile") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 2) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 2) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
   theme_bw() +
   theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
         panel.border = element_blank(),
@@ -167,8 +207,8 @@ fig_ipcc <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill = "") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 2) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 2) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
   theme_bw() +
   ggtitle("IPCC reference regions v4")+
   theme(panel.background = element_rect(fill = NA), panel.ontop = FALSE,
@@ -183,10 +223,3 @@ fig_ipcc <- ggplot(to_plot_sf) +
 
 ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES,
               "supplement/fig_SI_ipcc.png"), width = 8, height = 5)
-
-## Composite figure ----
-ggarrange(fig_evap_quant_class, fig_biome_short_class, fig_ipcc, 
-          labels = c("a", "b", "c"), nrow = 3, ncol = 1, align = "hv")
-
-ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES,
-              "supplement/fig_SI_environments.png"), width = 8, height = 12)

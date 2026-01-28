@@ -11,7 +11,7 @@ evap_mask <- grid_cell_area[evap_mask, on = .(lon, lat)]
 ## landcover ----
 
 landcover <- evap_mask[, .(area = sum(area)), .(land_cover_short_class)]
-landcover[, area_fraction := round(area/sum(area)*100, 2)]
+landcover[, area_fraction := round(area/sum(area), 3)]
 
 saveRDS(landcover, paste0(PATH_SAVE_PARTITION_EVAP, "land_cover_area_fraction.rds"))
 write.table(landcover, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "land_cover_area_fraction.cvs"), row.names = F, sep = ",")
@@ -22,7 +22,7 @@ write.table(landcover, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "land_cover_area_
 biome <- evap_mask[, .(area = sum(area)), .(biome_short_class)]
 biome <- biome[!is.na(biome_short_class)]
 
-biome[, area_fraction := round(area/sum(area)*100, 2)]
+biome[, area_fraction := round(area/sum(area), 3)]
 
 saveRDS(biome, paste0(PATH_SAVE_PARTITION_EVAP, "biome_area_fraction.rds"))
 write.table(biome, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "biome_area_fraction.cvs"), row.names = F, sep = ",")
@@ -40,7 +40,7 @@ ipcc[IPCC_ref_region %in% IPCC_Europe, region := "Europe"]
 ipcc[IPCC_ref_region %in% IPCC_Namerica, region := "North America"]
 ipcc[IPCC_ref_region %in% IPCC_Samerica, region := "South America"]
 
-ipcc[, area_fraction := round(area/sum(area)*100, 2)]
+ipcc[, area_fraction := round(area/sum(area), 3)]
 saveRDS(ipcc, paste0(PATH_SAVE_PARTITION_EVAP, "ipcc_area_fraction.rds"))
 write.table(ipcc, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "ipcc_area_fraction.cvs"), row.names = F, sep = ",")
 
@@ -48,7 +48,7 @@ write.table(ipcc, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "ipcc_area_fraction.cv
 ## elevation  ----
 
 elevation <- evap_mask[, .(area = sum(area)), .(elev_class)]
-elevation[, area_fraction := round(area/sum(area)*100, 2)]
+elevation[, area_fraction := round(area/sum(area), 3)]
 saveRDS(elevation, paste0(PATH_SAVE_PARTITION_EVAP, "elevation_area_fraction.rds"))
 write.table(elevation, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "elevation_area_fraction.cvs"), row.names = F, sep = ",")
 
@@ -56,7 +56,7 @@ write.table(elevation, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "elevation_area_f
 ## evaporation quantiles  ----
 
 evap <- evap_mask[, .(area = sum(area)), .(evap_quant)]
-evap[, area_fraction := round(area/sum(area)*100, 2)]
+evap[, area_fraction := round(area/sum(area), 3)]
 saveRDS(evap, paste0(PATH_SAVE_PARTITION_EVAP, "evaporation_quantiles_area_fraction.rds"))
 write.table(evap, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "evap_area_fraction.cvs"), row.names = F, sep = ",")
 

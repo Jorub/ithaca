@@ -1,5 +1,5 @@
 # Significant slopes have p-value <= 0.05 derived from bootstrap ----
-# plot global evapo trend uncertinities using IPCC regions as hexagons ####
+# plot global evapo trend uncertainties using IPCC regions as hexagons ####
 
 source('source/evap_trend.R')
 

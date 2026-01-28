@@ -4,9 +4,9 @@ source('source/geo_functions.R')
 
 ## Data ----
 ### Input Data generated in projects/partition_evap/04
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
-### Input Data generated in projects/trend_evap/bootstrap/01_b
+### Input Data generated in projects/trend_evap/bootstrap/01_c
 evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_bootstrap.rds"))  
 
 ## Analysis ----
@@ -69,6 +69,19 @@ KG_class_3_trends <- KG_class_3_trends[complete.cases(KG_class_3_trends)]
 KG_class_3_trends[, KG_class_3_area:= sum(trend_area), .(KG_class_3, dataset)]
 KG_class_3_trends[, KG_class_3_fraction:= trend_area/KG_class_3_area]
 
+### KG beck ----
+KG_beck_trends <- evap_trend_masks[,.(trend_area = sum(area)),.(trend_direction, KG_beck, dataset)]
+KG_beck_trends <- KG_beck_trends[complete.cases(KG_beck_trends)]
+KG_beck_trends[, KG_beck_area:= sum(trend_area), .(KG_beck, dataset)]
+KG_beck_trends[, KG_beck_fraction:= trend_area/KG_beck_area]
+
+
+### evaporation quantiles ----
+evap_quant_trends <- evap_trend_masks[,.(trend_area = sum(area)),.(trend_direction, evap_quant, dataset)]
+evap_quant_trends <- evap_quant_trends[complete.cases(evap_quant_trends)]
+evap_quant_trends[, evap_quant_area:= sum(trend_area), .(evap_quant, dataset)]
+evap_quant_trends[, evap_quant_fraction:= trend_area/evap_quant_area]
+
 
 
 ## Save data ----
@@ -77,4 +90,6 @@ saveRDS(ipcc_trends, paste0(PATH_SAVE_EVAP_TREND, "ipcc_cumulative_trend_directi
 saveRDS(land_trends, paste0(PATH_SAVE_EVAP_TREND, "land_cover_cumulative_trend_direction_per_dataset_bootstrap.rds"))
 saveRDS(elev_trends, paste0(PATH_SAVE_EVAP_TREND, "elevation_cumulative_trend_direction_per_dataset_bootstrap.rds"))
 saveRDS(KG_class_3_trends, paste0(PATH_SAVE_EVAP_TREND, "KG_3_cumulative_trend_direction_per_dataset_bootstrap.rds"))
+saveRDS(KG_beck_trends, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_trend_direction_per_dataset_bootstrap.rds"))
+saveRDS(evap_quant_trends, paste0(PATH_SAVE_EVAP_TREND, "evaporation_quantiles_cumulative_trend_direction_per_dataset_bootstrap.rds"))
 

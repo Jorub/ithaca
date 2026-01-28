@@ -8,6 +8,7 @@ source('source/geo_functions.R')
 evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_bootstrap.rds"))  
 evap_trend <- evap_trend[dataset_count >= 14]
 ### Input Data generated in projects/partition_evap/04
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 ## Analysis ----

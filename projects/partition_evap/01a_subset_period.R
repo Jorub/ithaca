@@ -3,6 +3,10 @@ source('source/main.R')
 source('source/geo_functions.R')
 source('projects/partition_evap/00_initialize.R')
 
+## additional libraries ----
+### parallel ----
+library(doParallel)
+
 load("~/shared/data_projects/ithaca/misc/evap_fnames_2000_2019_full_record.Rdata") # Created by database/07_dataset_fnames_evap.R
 
 registerDoParallel(cores = N_CORES - 1)

@@ -2,6 +2,8 @@
 source('source/partition_evap.R')
 source('source/graphics.R')
 
+library(ggpubr)
+
 ## landcover ----
 landcover <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "area_fraction_matching_products_land_cover.rds"))
 summary(landcover$volume_fraction)

@@ -3,6 +3,8 @@
 source('source/evap_trend.R')
 source('source/geo_functions.R')
 
+library(ggpubr)
+
 ## Data ----
 evap_signal <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_ranked_datasets_signal_booster_p_thresholds_bootstrap.rds"))
 evap_opposers <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_ranked_datasets_opposing_p_thresholds_bootstrap.rds"))
@@ -137,7 +139,7 @@ fig_DCI_opposer <- ggplot(evap_DCI_opposers[opposing_0_01 == 1 & rank_datasets <
         legend.title = element_text(size = 18),
         axis.text = element_text(size = 18))
 
-fig_significance_opposers <- ggplot(evap_significance_opposers[rank_datasets < 6] )+
+fig_significance_opposers <- ggplot(evap_significance_opposers[opposing_0_01 == 1 & rank_datasets < 6] )+
   geom_tile(aes(x = rank_datasets, y = variable, fill = dataset), color = "white", lwd = 0.8, linetype = 1)+
   scale_fill_manual(values = cols_data_c)+
   labs(x = "Top signal opposer", fill = "Dataset ", y = "")+

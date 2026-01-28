@@ -5,22 +5,22 @@ source('source/geo_functions.R')
 
 
 ### Input Data generated in projects/partition_evap/04
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 evap_trend_stats <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_1_b_c_grid_quartile_stats.rds"))
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "different sign", problem := "Direction\nmagnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "different sign", problem := "Direction\nmagnitude"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "different sign", problem := "Direction"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "different sign", problem := "Direction"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "same sign", problem := "None"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "same sign", problem := "None"] 
 
 evap_trend_stats[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 evap_trend_stats[, problem:= as.factor(problem)]
 
@@ -77,13 +77,13 @@ data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
 data_trend_env[Q75/Q25 < 0, sign := "different sign"]
 data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
 
-data_trend_env[fold > 3.2 & sign == "different sign", problem := "Direction\nmagnitude"] 
-data_trend_env[fold <= 3.2 & sign == "different sign", problem := "Direction"] 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
-data_trend_env[fold <= 3.2 & sign == "same sign", problem := "None"] 
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
 data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 data_trend_env[, problem:= as.factor(problem)]
 
@@ -166,13 +166,13 @@ data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
 data_trend_env[Q75/Q25 < 0, sign := "different sign"]
 data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
 
-data_trend_env[fold > 3.2 & sign == "different sign", problem := "Direction\nmagnitude"] 
-data_trend_env[fold <= 3.2 & sign == "different sign", problem := "Direction"] 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
-data_trend_env[fold <= 3.2 & sign == "same sign", problem := "None"] 
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
 data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 data_trend_env[, problem:= as.factor(problem)]
 
@@ -250,13 +250,13 @@ data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
 data_trend_env[Q75/Q25 < 0, sign := "different sign"]
 data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
 
-data_trend_env[fold > 3.2 & sign == "different sign", problem := "Direction\nmagnitude"] 
-data_trend_env[fold <= 3.2 & sign == "different sign", problem := "Direction"] 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
-data_trend_env[fold <= 3.2 & sign == "same sign", problem := "None"] 
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
 data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 data_trend_env[, problem:= as.factor(problem)]
 data_trend_env[IPCC_ref_region %in% IPCC_Africa, region := "Africa"]
@@ -287,6 +287,80 @@ saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_IPCC_re
 saveRDS(ipcc_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_IPCC_ref_regions_problem_area_fraction.rds"))
 saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_IPCC_ref_regions_problem_aggregated.rds"))
 
+
+## Evaporation quantiles ----
+
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "evap_quantiles_trend_bootstrap.rds"))  
+ensemble_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "evap_quantiles_ensemble_trend_bootstrap.rds"))  
+
+ensemble_trend[, dataset := "ensemble"]
+
+data_trend <- merge(data_trend, ensemble_trend, 
+                    by = c("dataset", "evap_quant", "p", "slope", "lower", "upper"),  all = T)
+
+data_trend[, dataset := toupper(dataset)]
+data_trend[dataset == "ETMONITOR", dataset := "ETMonitor"]
+data_trend[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
+data_trend[dataset == "ERA5-LAND", dataset := "ERA5-land"]
+data_trend[dataset == "MERRA2", dataset := "MERRA-2"]
+data_trend[dataset == "JRA55", dataset := "JRA-55"]
+data_trend[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
+data_trend[dataset == "ENSEMBLE", dataset := "Ensemble"]
+
+data_trend[slope >= 0 , trend_direction_detailed :=   "pos. p <= 1   "]
+data_trend[slope > 0 & p <= 0.1 , trend_direction_detailed :=   "pos. p <= 0.1   "]
+data_trend[slope > 0 & p <= 0.05 , trend_direction_detailed :=   "pos. p <= 0.05   "]
+data_trend[slope > 0 & p <= 0.01 , trend_direction_detailed :=   "pos. p <= 0.01   "]
+data_trend[slope < 0  , trend_direction_detailed :=   "neg. p <= 1   "]
+data_trend[slope < 0 & p <= 0.1 , trend_direction_detailed :=   "neg. p <= 0.1   "]
+data_trend[slope < 0 & p <= 0.05 , trend_direction_detailed :=   "neg. p <= 0.05   "]
+data_trend[slope < 0 & p <= 0.01 , trend_direction_detailed :=   "neg. p <= 0.01   "]
+data_trend[, trend_direction_detailed  := factor(trend_direction_detailed, 
+                                                 level = c("pos. p <= 0.01   ",   "pos. p <= 0.05   ",   "pos. p <= 0.1   ",
+                                                           "pos. p <= 1   ",
+                                                           "neg. p <= 1   ",   "neg. p <= 0.1   ",   "neg. p <= 0.05   ",
+                                                           "neg. p <= 0.01   "), ordered = T),]
+
+data_trend_slopes <- data_trend[, .(mean_slope = mean(slope)), dataset]
+data_trend_slopes[, rank := rank(mean_slope)]
+data_trend_slopes[dataset == "Ensemble", rank := 20]
+data_trend_slopes <- data_trend_slopes[order(rank)]
+data_trend[, dataset := factor(dataset, levels = data_trend_slopes$dataset)]
+
+
+### uncertainty for entire region ----
+
+data_trend_env <- data_trend[dataset != "ensemble",.(Q25 = quantile(slope, 0.25),
+                                                     Q75 = quantile(slope, 0.75)), evap_quant]
+data_trend_env[, fold := abs(Q75)/abs(Q25)]
+data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
+data_trend_env[Q75/Q25 < 0, sign := "different sign"]
+data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
+
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
+data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
+
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+
+data_trend_env[, problem:= as.factor(problem)]
+
+
+### problems  ----
+evap_levels <- levels(data_trend$evap_quant)
+evap_trends <- evap_trend_masks[,.(problem_area = sum(area)),.(problem, evap_quant)]
+evap_trends <- evap_trends[complete.cases(evap_quant)]
+evap_trends[, evap_area:= sum(problem_area), .(evap_quant)]
+evap_trends[, evap_fraction:= problem_area/evap_area]
+evap_trends <- evap_trends[!is.na(evap_quant)]
+
+
+### save data ----
+saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_evap_quantiles_trends_by_product.rds"))
+saveRDS(evap_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_evap_quantiles_problem_area_fraction.rds"))
+saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_evap_quantiles_problem_aggregated.rds"))
 
 ## Elevation ----
 
@@ -337,13 +411,13 @@ data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
 data_trend_env[Q75/Q25 < 0, sign := "different sign"]
 data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
 
-data_trend_env[fold > 3.2 & sign == "different sign", problem := "Direction\nmagnitude"] 
-data_trend_env[fold <= 3.2 & sign == "different sign", problem := "Direction"] 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
-data_trend_env[fold <= 3.2 & sign == "same sign", problem := "None"] 
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
 data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 data_trend_env[, problem:= as.factor(problem)]
 
@@ -363,10 +437,11 @@ saveRDS(elev_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_elevat
 saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_elevation_problem_aggregated.rds"))
 
 
+
 ## KG classes ----
 
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_3_trend_bootstrap.rds"))  
-ensemble_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_3_ensemble_trend_bootstrap.rds"))  
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_trend_bootstrap.rds"))  
+ensemble_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_ensemble_trend_bootstrap.rds"))  
 
 ensemble_trend[, dataset := "ensemble"]
 
@@ -419,13 +494,13 @@ data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
 data_trend_env[Q75/Q25 < 0, sign := "different sign"]
 data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
 
-data_trend_env[fold > 3.2 & sign == "different sign", problem := "Direction\nmagnitude"] 
-data_trend_env[fold <= 3.2 & sign == "different sign", problem := "Direction"] 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
-data_trend_env[fold <= 3.2 & sign == "same sign", problem := "None"] 
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
 data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-data_trend_env[fold > 3.2 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 data_trend_env[, problem:= as.factor(problem)]
 
@@ -454,3 +529,96 @@ KG_trends <- KG_trends[!is.na(KG_class_3)]
 saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_Koeppen_Geiger_trends_by_product.rds"))
 saveRDS(KG_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_Koeppen_Geiger_problem_area_fraction.rds"))
 saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_Koeppen_Geiger_problem_aggregated.rds"))
+
+
+## KG beck classes ----
+
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_trend_bootstrap.rds"))  
+ensemble_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_ensemble_trend_bootstrap.rds"))  
+
+ensemble_trend[, dataset := "ensemble"]
+
+data_trend <- merge(data_trend, ensemble_trend, 
+                    by = c("dataset", "KG_beck", "p", "slope", "lower", "upper"),  all = T)
+
+data_trend[, dataset := toupper(dataset)]
+data_trend[dataset == "ETMONITOR", dataset := "ETMonitor"]
+data_trend[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
+data_trend[dataset == "ERA5-LAND", dataset := "ERA5-land"]
+data_trend[dataset == "MERRA2", dataset := "MERRA-2"]
+data_trend[dataset == "JRA55", dataset := "JRA-55"]
+data_trend[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
+data_trend[dataset == "ENSEMBLE", dataset := "Ensemble"]
+
+data_trend[slope >= 0 , trend_direction_detailed :=   "pos. p <= 1   "]
+data_trend[slope > 0 & p <= 0.1 , trend_direction_detailed :=   "pos. p <= 0.1   "]
+data_trend[slope > 0 & p <= 0.05 , trend_direction_detailed :=   "pos. p <= 0.05   "]
+data_trend[slope > 0 & p <= 0.01 , trend_direction_detailed :=   "pos. p <= 0.01   "]
+data_trend[slope < 0  , trend_direction_detailed :=   "neg. p <= 1   "]
+data_trend[slope < 0 & p <= 0.1 , trend_direction_detailed :=   "neg. p <= 0.1   "]
+data_trend[slope < 0 & p <= 0.05 , trend_direction_detailed :=   "neg. p <= 0.05   "]
+data_trend[slope < 0 & p <= 0.01 , trend_direction_detailed :=   "neg. p <= 0.01   "]
+data_trend[, trend_direction_detailed  := factor(trend_direction_detailed, 
+                                                 level = c("pos. p <= 0.01   ",   "pos. p <= 0.05   ",   "pos. p <= 0.1   ",
+                                                           "pos. p <= 1   ",
+                                                           "neg. p <= 1   ",   "neg. p <= 0.1   ",   "neg. p <= 0.05   ",
+                                                           "neg. p <= 0.01   "), ordered = T),]
+
+data_trend_slopes <- data_trend[, .(mean_slope = mean(slope)), dataset]
+data_trend_slopes[, rank := rank(mean_slope)]
+data_trend_slopes[dataset == "Ensemble", rank := 20]
+data_trend_slopes <- data_trend_slopes[order(rank)]
+data_trend[, dataset := factor(dataset, levels = data_trend_slopes$dataset)]
+data_trend <- data_trend[!is.na(KG_beck)]
+
+data_trend[KG_beck %in% c("Af", "Am", "As", "Aw"), climate := "Equatorial"]
+data_trend[KG_beck %in% c("BSh", "BSk", "BWh", "BWk"), climate := "Arid"]
+data_trend[KG_beck %in% c("Cfa", "Cfb", "Cfc", "Csa", "Csb", "Csc", "Cwa", "Cwb", "Cwc"), climate := "Warm temperate"]
+data_trend[KG_beck %in% c("Dfa", "Dfb", "Dfc", "Dfd", "Dsa", "Dsb", "Dsc", "Dsd", "Dwa", "Dwb", "Dwc", "Dwd"), climate := "Boreal"]
+data_trend[KG_beck %in% c("EF",  "ET"), climate := "Polar"]
+
+
+### uncertainty for entire region ----
+
+data_trend_env <- data_trend[dataset != "ensemble",.(Q25 = quantile(slope, 0.25),
+                                                     Q75 = quantile(slope, 0.75)), KG_beck]
+data_trend_env[, fold := abs(Q75)/abs(Q25)]
+data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
+data_trend_env[Q75/Q25 < 0, sign := "different sign"]
+data_trend_env[Q75/Q25 >= 0, sign := "same sign"]
+
+data_trend_env[fold > 3.3 & sign == "different sign", problem := "Direction\nmagnitude"] 
+data_trend_env[fold <= 3.3 & sign == "different sign", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same sign", problem := "None"] 
+data_trend_env[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
+
+data_trend_env[fold > 3.3 & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
+
+data_trend_env[, problem:= as.factor(problem)]
+
+data_trend_env[KG_beck %in% c("Af", "Am", "As", "Aw"), climate := "Equatorial"]
+data_trend_env[KG_beck %in% c("BSh", "BSk", "BWh", "BWk"), climate := "Arid"]
+data_trend_env[KG_beck %in% c("Cfa", "Cfb", "Cfc", "Csa", "Csb", "Csc", "Cwa", "Cwb", "Cwc"), climate := "Warm temperate"]
+data_trend_env[KG_beck %in% c("Dfa", "Dfb", "Dfc", "Dfd", "Dsa", "Dsb", "Dsc", "Dsd", "Dwa", "Dwb", "Dwc", "Dwd"), climate := "Boreal"]
+data_trend_env[KG_beck %in% c("EF",  "ET"), climate := "Polar"]
+
+
+### problems  ----
+KG_trends <- evap_trend_masks[,.(problem_area = sum(area)),.(problem, KG_beck)]
+KG_trends <- KG_trends[complete.cases(KG_trends)]
+KG_trends[, KG_area:= sum(problem_area), .(KG_beck)]
+KG_trends[, KG_fraction:= problem_area/KG_area]
+KG_trends[KG_beck %in% c("Af", "Am", "As", "Aw"), climate := "Equatorial"]
+KG_trends[KG_beck %in% c("BSh", "BSk", "BWh", "BWk"), climate := "Arid"]
+KG_trends[KG_beck %in% c("Cfa", "Cfb", "Cfc", "Csa", "Csb", "Csc", "Cwa", "Cwb", "Cwc"), climate := "Warm temperate"]
+KG_trends[KG_beck %in% c("Dfa", "Dfb", "Dfc", "Dfd", "Dsa", "Dsb", "Dsc", "Dsd", "Dwa", "Dwb", "Dwc", "Dwd"), climate := "Boreal"]
+KG_trends[KG_beck %in% c("EF",  "ET"), climate := "Polar"]
+
+KG_trends <- KG_trends[!is.na(KG_beck)]
+
+
+### save data ----
+saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_Koeppen_Geiger_beck_trends_by_product.rds"))
+saveRDS(KG_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_Koeppen_Geiger_beck_problem_area_fraction.rds"))
+saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_Koeppen_Geiger_beck_problem_aggregated.rds"))

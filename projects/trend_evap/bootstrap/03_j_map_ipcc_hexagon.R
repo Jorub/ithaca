@@ -3,6 +3,8 @@
 
 source('source/evap_trend.R')
 
+library(ggpubr)
+
 # read the input datasets #### -------------------------------------------------
 ipcc_data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "ipcc_uncertainty_bootstrap.rds"))
 ipcc_hexagon <- read.csv(paste0(PATH_IPCC_data,"/gloabl_ipcc_ref_hexagons.csv")) #don't use fread

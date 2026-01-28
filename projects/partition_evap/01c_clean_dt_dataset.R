@@ -4,6 +4,8 @@
 source('source/partition_evap.R')
 source('source/geo_functions.R')
 ## Load data ----
+load("~/shared/data_projects/ithaca/misc/evap_fnames_2000_2019_full_record.Rdata")
+
 evap_datasets <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets.rds"))
 evap_datasets[, year_count := .N, .(dataset, lon, lat)]
 evap_datasets <- evap_datasets[year_count == 20]
@@ -26,7 +28,6 @@ saveRDS(evap_datasets, paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets_clean.rds
 ## Global annual evap mean ----
 
 ### Getting area for weights ----
-
 
 total_area <- sum(grid_cell_area$area)
 total_area/GLOBAL_AREA

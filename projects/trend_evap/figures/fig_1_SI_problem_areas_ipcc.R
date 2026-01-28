@@ -3,20 +3,20 @@ source('source/geo_functions.R')
 
 library(scatterpie)
 ### Input Data generated in projects/partition_evap/04
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 evap_trend_stats <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_1_b_c_grid_quartile_stats.rds"))
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "different sign", problem := "High variety & different sign"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "different sign", problem := "High variety & different sign"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign", problem := "High variety & same sign"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign", problem := "High variety & same sign"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "different sign" & abs(Q25) > 0.5 & abs(Q75) > 0.5, problem := "Low variety & different sign & large trend"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "different sign" & abs(Q25) > 0.5 & abs(Q75) > 0.5, problem := "Low variety & different sign & large trend"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "same sign", problem := "Low variety & same sign"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "same sign", problem := "Low variety & same sign"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "different sign" & (abs(Q25) < 0.5 | abs(Q75) < 0.5), problem := "Low variety & different sign & small trend"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "different sign" & (abs(Q25) < 0.5 | abs(Q75) < 0.5), problem := "Low variety & different sign & small trend"] 
 
 evap_trend_stats[, problem:= as.factor(problem)]
 

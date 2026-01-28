@@ -2,10 +2,11 @@
 source('source/evap_trend.R')
 
 library(rnaturalearth)
+library(ggpubr)
 
 # Map preparation -----
 ## World and Land borders ----
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 load(paste0(PATH_SAVE_PARTITION_EVAP, "paths.Rdata"))
 
 earth_box <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL,

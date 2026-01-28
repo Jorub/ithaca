@@ -1,8 +1,9 @@
-# Figure 3 - SI - results depend product selection ----
+# Figure 4 - SI - results depend product selection ----
 ## Opposers, positive and negative signal boosters, no trenders
 source('source/evap_trend.R')
 
-# Data
+library(ggpubr)
+## Data ----
 evap_signal <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_ranked_datasets_signal_booster_p_thresholds_bootstrap.rds"))
 evap_opposers <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_ranked_datasets_opposing_p_thresholds_bootstrap.rds"))
 evap_DCI_opposers <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "dataset_rank_opposing_DCI.rds"))
@@ -129,7 +130,7 @@ fig_DCI_opposer <- ggplot(evap_DCI_opposers[opposing_0_01 == 1])+
         legend.text = element_text(size = 12), 
         legend.title = element_text(size = 16))
 
-fig_significance_opposers <- ggplot(evap_significance_opposers )+
+fig_significance_opposers <- ggplot(evap_significance_opposers[opposing_0_01 == 1])+
   geom_tile(aes(x = rank_datasets, y = variable, fill = dataset))+
   scale_fill_manual(values = cols_data_c)+
   labs(x = "Ranked by Area Fraction \nof Signal Opposer", fill = "Dataset ", y = "")+

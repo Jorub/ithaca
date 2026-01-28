@@ -96,4 +96,17 @@ data_merged[, evap_mean := environment_volume/area_sum/MM_TO_KM/M2_TO_KM2]
 
 saveRDS(data_merged, paste0(PATH_SAVE_PARTITION_EVAP, "interannual_variance_KG.rds"))
 
+## Ma et al basins ----
+
+data <- merge(evap_mask[, .(lat, lon, ma_basin = as.factor(ma_basin))], 
+              evap[, .(lon, lat, area, evap_volume, dataset, year)], by = c("lon", "lat"), all.y = TRUE)
+data_stats <- data[, .(environment_volume = round(sum(evap_volume, na.rm = T),), area_sum = sum(area)), .(ma_basin, dataset, year)]
+global <- data_stats[, .(environment_volume = sum(environment_volume), area_sum = sum(area_sum)), .(dataset, year)]
+global[, ma_basin := "Global"]
+data_merged <- merge(data_stats, global, by = c("dataset", "year", "ma_basin", "environment_volume", "area_sum"), all = T)
+data_merged[, evap_mean := environment_volume/area_sum/MM_TO_KM/M2_TO_KM2]
+data_merged <- data_merged[complete.cases(data_merged)]
+
+saveRDS(data_merged, paste0(PATH_SAVE_PARTITION_EVAP, "interannual_variance_ma_basin.rds"))
+
 

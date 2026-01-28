@@ -1,6 +1,8 @@
 # figure 5 ----
 source('source/evap_trend.R')
 
+library(ggpubr)
+
 ## CSI BIAS ----
 CSI_BIAS_data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_CSI_BIAS_dataset_bootstrap.rds"))
 
@@ -45,7 +47,7 @@ fig_CSI <-ggplot(CSI_BIAS_data[CSI < 1])+
 
 fig_BIAS <- ggplot(CSI_BIAS_data[CSI < 1])+
   geom_tile(aes(x = dataset_A , y = dataset_B, fill = BIAS_brks), color = "white", lwd = 0.8, linetype = 1)+
-  scale_fill_manual(values = c("darkblue", "royalblue3", "lightblue", "gray90","orange","darkorange","darkred"))+
+  scale_fill_manual(values = c("darkblue", "royalblue3", "lightblue", "gray90","gold","darkorange","darkred"))+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))+
   theme(axis.ticks.length = unit(0, "cm"),

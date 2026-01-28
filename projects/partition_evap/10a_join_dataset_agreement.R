@@ -18,6 +18,9 @@ quant_iqr_0_3 <- quantile(evap_mask$Qdiff, c(0.3))
 quant_iqr_0_7 <- quantile(evap_mask$Qdiff, c(0.7))
 quant_iqr_0_9 <- quantile(evap_mask$Qdiff, c(0.9))
 
+thresholds_IQR <- c(min(evap_mask$Qdiff), quant_iqr_0_1, quant_iqr_0_3, quant_iqr_0_7, quant_iqr_0_9, max(evap_mask$Qdiff))
+saveRDS(thresholds_IQR, paste0(PATH_SAVE_PARTITION_EVAP,'thresholds_IQR.RDS'))
+
 evap_mask[Qdiff > quant_iqr_0_9, Qdiff_brk := ordered(1, labels = "High")]
 evap_mask[Qdiff > quant_iqr_0_7 & Qdiff <= quant_iqr_0_9, Qdiff_brk := ordered(2, labels = "Above average")]
 evap_mask[Qdiff > quant_iqr_0_3 & Qdiff <= quant_iqr_0_7, Qdiff_brk := ordered(3, labels = "Average")]
@@ -32,6 +35,9 @@ quant_thr_0_3 <- quantile(distribution$index, c(0.3))
 quant_thr_0_7 <- quantile(distribution$index, c(0.7))
 quant_thr_0_9 <- quantile(distribution$index, c(0.9))
 
+thresholds_dist <- c(min(distribution$index), quant_thr_0_1, quant_thr_0_3, quant_thr_0_7, quant_thr_0_9, max(distribution$index))
+saveRDS(thresholds_dist, paste0(PATH_SAVE_PARTITION_EVAP,'thresholds_distribution_agreement.RDS'))
+        
 distribution[index > quant_thr_0_9, dist_dataset_agreement := ordered(1, labels = "High")]
 distribution[index > quant_thr_0_7 & index <= quant_thr_0_9, dist_dataset_agreement := ordered(2, labels = "Above average")]
 distribution[index > quant_thr_0_3 & index <= quant_thr_0_7, dist_dataset_agreement := ordered(3, labels = "Average")]
@@ -44,10 +50,12 @@ grid_wise_agreement_environments <- merge(evap_mask[,.(lon, lat, land_cover_shor
                                                        IPCC_ref_region, elev_class, evap_quant, IQR_agreement, rel_dataset_agreement)],
                                           distribution[,.(lon, lat, dist_dataset_agreement)], by = c("lon", "lat"), all = T)
 
-grid_wise_agreement_environments <- merge(evap_grid [,.(lon, lat, area)],grid_wise_agreement_environments,
+grid_wise_agreement_environments <- merge(evap_grid [,.(lon, lat, area)], grid_wise_agreement_environments,
                                           by = c("lon", "lat"), all = T)
 
 ## Save data ----
+
+grid_wise_agreement_environments <- unique(grid_wise_agreement_environments)
 
 saveRDS(grid_wise_agreement_environments, paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
 

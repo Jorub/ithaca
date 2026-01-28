@@ -5,9 +5,7 @@ source('source/geo_functions.R')
 library(openair)
 
 ## Data ----
-### Input Data generated in projects/partition_evap/01_c
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
-evap_datasets <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets_clean.rds"))
+evap_datasets <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "evap_datasets_clean.rds"))
 
 ## Analysis ----
 evap_datasets[, year := as.numeric(as.character(year))]

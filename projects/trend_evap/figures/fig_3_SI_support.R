@@ -1,7 +1,8 @@
-# SI support for figure 3
+# SI support for figure 3 ----
 source('source/evap_trend.R')
 source('source/geo_functions.R')
 
+library(ggpubr)
 
 ## Data ----
 ### Input data generated in trend_evap/bootstrap/01_c 

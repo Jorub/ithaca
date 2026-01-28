@@ -17,17 +17,17 @@ Q75_global/Q25_global
 
 evap_trend_stats <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_1_b_c_grid_quartile_stats.rds"))
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "different sign", problem := "Direction and Magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "different sign", problem := "Direction and Magnitude"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "different sign", problem := "Direction"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "different sign", problem := "Direction"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "same sign", problem := "None"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "same sign", problem := "None"] 
 
 evap_trend_stats[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend - Direction"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend - Magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend - Magnitude"] 
 
 evap_trend_stats[, problem:= as.factor(problem)]
 
@@ -81,6 +81,8 @@ evap_index <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_2_a_c_d_grid
 
 evap_index <- grid_cell_area[evap_index, on = .(lon, lat)]
 
+evap_index <- evap_index[complete.cases(evap_index)]
+
 ## combining DCI and problem regions
 combined <- evap_index[evap_trend_stats[, .(problem, lon, lat)], on = .(lon, lat)]
 combined_frac <- combined[,.(p_area = sum(area)), .(DCI_all_brk, problem)]
@@ -89,6 +91,7 @@ combined_frac[, fraction_problem := p_area/total_area_problem ]
 
 combined_frac[, total_area_DCI := sum(p_area), DCI_all_brk]
 combined_frac[, fraction_DCI := p_area/total_area_DCI]
+combined_frac
 
 p_val_opposing <- evap_index[,.(p_area = sum(area)), (p_val_opposing)]
 p_val_opposing[, total_area := sum(p_area)]
@@ -98,7 +101,7 @@ p_val_opposing
 p_val_opposing[order(p_val_opposing)]
 
 # most trends are significant ----
-sig_trends <- evap_index[,.(p_area = sum(area)), (more_sig_trends)]
+sig_trends <- evap_index[,.(p_area = sum(area, na.rm = T)), (more_sig_trends)]
 sig_trends[, total_area := sum(p_area)]
 sig_trends[, fraction := p_area/total_area]
 

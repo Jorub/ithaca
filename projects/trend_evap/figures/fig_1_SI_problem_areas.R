@@ -6,7 +6,7 @@ library(rnaturalearth)
 
 # Map preparation -----
 ## World and Land borders ----
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 load(paste0(PATH_SAVE_PARTITION_EVAP, "paths.Rdata"))
 
 earth_box <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL,
@@ -28,25 +28,25 @@ labs_x$label <- paste0(abs(labs_x$lon), labs_x$label)
 labs_x <- st_as_sf(labs_x, coords = c("lon", "lat"),
                    crs = "+proj=longlat +datum=WGS84 +no_defs")
 
-cols_problem <- c("Direction and magnitude" = "#330000", "Direction" = "darkred","Magnitude" = "orange2", 
-                  "Small trend: direction" ="royalblue2", 
-                  "Small trend: magnitude" = "lightblue", "None" = "darkblue")
+cols_problem <- c("Direction\nmagnitude" = "#330000", "Direction" = "darkred","Magnitude" = "orange2", 
+                  "Small trend:\ndirection" ="royalblue3", 
+                  "Small trend:\nmagnitude" = "lightblue", "None" = "forestgreen")
 
 ### Input Data generated in projects/partition_evap/04
 
 evap_trend_stats <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_1_b_c_grid_quartile_stats.rds"))
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "different sign", problem := "Direction and magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "different sign", problem := "Direction\nmagnitude"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "different sign", problem := "Direction"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "different sign", problem := "Direction"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign" & (abs(Q25) >= 1 | abs(Q75) >= 1), problem := "Magnitude"] 
 
-evap_trend_stats[fold_brk == "(1,3.2]" & sign == "same sign", problem := "None"] 
+evap_trend_stats[fold_brk == "(1,3.3]" & sign == "same sign", problem := "None"] 
 
-evap_trend_stats[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend: direction"] 
+evap_trend_stats[sign == "different sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\ndirection"] 
 
-evap_trend_stats[fold_brk == "(3.2,Inf]" & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend: magnitude"] 
+evap_trend_stats[fold_brk == "(3.3,Inf]" & sign == "same sign" & (abs(Q25) < 1 & abs(Q75) < 1), problem := "Small trend:\nmagnitude"] 
 
 evap_trend_stats[, problem:= as.factor(problem)]
 

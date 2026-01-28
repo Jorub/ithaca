@@ -112,11 +112,12 @@ data_high <- data_high[order(fraction)]
 
 IPCC_agreement[, IPCC_ref_region := factor(IPCC_ref_region, levels = c("NZ", as.character(data_high$IPCC_ref_region)))]
 ## Save data
-save(land_cover_agreement, biome_agreement, 
+save(global_agreement, land_cover_agreement, biome_agreement, 
      elevation_agreement,evap_quant_agreement, IPCC_agreement,
      file = paste0(PATH_SAVE_PARTITION_EVAP, "distribution_agreement_masks.Rdata"))
 
 ## Save tables for Zenodo
+write.table(global_agreement, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "distribution_agreement_global.csv"), sep = ",", row.names = F)
 write.table(land_cover_agreement, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "distribution_agreement_land_cover.csv"), sep = ",", row.names = F)
 write.table(biome_agreement, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "distribution_agreement_biome.csv"), sep = ",", row.names = F)
 write.table(elevation_agreement, paste0(PATH_SAVE_PARTITION_EVAP_TABLES, "distribution_agreement_elevation.csv"), sep = ",", row.names = F)

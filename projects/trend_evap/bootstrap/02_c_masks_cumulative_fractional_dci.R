@@ -6,7 +6,7 @@ source('source/evap_trend.R')
 ### Input Data generated in projects/trend_evap/bootstrap/01_d
 evap_trend_indices <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_slope_indices_opp_allowed_bootstrap.rds"))
 ### Input Data generated in projects/partition_evap/04
-PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "partition_evap/")
+PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
 evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 ## Analysis ----
@@ -56,6 +56,13 @@ elev_uncertainty <- elev_uncertainty[complete.cases(elev_uncertainty)]
 elev_uncertainty[, elev_area := sum(trend_area), .(elev_class)]
 elev_uncertainty[, elev_fraction:= trend_area/elev_area]
 
+### Evaporation quantile  ----
+
+evap_uncertainty <- evap_trend_masks[,.(trend_area = sum(area)),.(DCI, evap_quant)]
+evap_uncertainty <- evap_uncertainty[complete.cases(evap_uncertainty)]
+evap_uncertainty[, evap_area := sum(trend_area), .(evap_quant)]
+evap_uncertainty[, evap_fraction:= trend_area/evap_area]
+
 ### IPCC reference regions ----
 ipcc_uncertainty <- evap_trend_masks[,.(trend_area = sum(area)),.(DCI, IPCC_ref_region)]
 ipcc_uncertainty <- ipcc_uncertainty[complete.cases(ipcc_uncertainty)]
@@ -72,6 +79,7 @@ KG_3_uncertainty[, KG_3_fraction := trend_area/KG_3_area]
 saveRDS(land_cover_uncertainty, paste0(PATH_SAVE_EVAP_TREND, "land_cover_dci_bootstrap.rds"))
 saveRDS(biome_uncertainty, paste0(PATH_SAVE_EVAP_TREND, "biomes_dci_bootstrap.rds"))
 saveRDS(elev_uncertainty, paste0(PATH_SAVE_EVAP_TREND, "elevation_dci_bootstrap.rds"))
+saveRDS(evap_uncertainty, paste0(PATH_SAVE_EVAP_TREND, "evap_dci_bootstrap.rds"))
 saveRDS(ipcc_uncertainty, paste0(PATH_SAVE_EVAP_TREND, "ipcc_reference_regions_dci_bootstrap.rds"))
 saveRDS(KG_3_uncertainty, paste0(PATH_SAVE_EVAP_TREND, "KG_3_dci_bootstrap.rds"))
 
