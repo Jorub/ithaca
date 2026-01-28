@@ -4,9 +4,30 @@ source('source/geo_functions.R')
 source('source/mask_paths.R')
 
 ## Data 
-prec_era5 <- brick(paste0(PATH_PREC_SIM, "era5_tp_mm_land_195901_202112_025_yearly.nc"))
+prec_era5 <- brick(paste0(PATH_PREC_SIM, "/era5_tp_mm_land_195901_202112_025_yearly.nc"))
 
 ## Masks at 0.25 resolution
+### Koppen-Geiger according to BECK present
+fname <- list.files(path = PATH_MASKS_BECK_KOEPPEN, full.names = TRUE, pattern = "kg_resampled_0.25deg.nc")
+shape_mask <- raster(paste0(fname[1]))
+shape_mask <- ratify(shape_mask)
+
+kg_meta <- as.data.frame(read.table(paste0(PATH_MASKS_BECK_KOEPPEN,"/KG_legend.csv"), sep =';',
+                      col.names = c('KG', 'R', 'G', 'B')))
+
+kg_meta$ID <- 1:30
+kg_meta <- kg_meta[,c(5,1)]
+kg_meta <- rbind(data(ID = 0, KG = "O"), kg_meta)
+
+levels(shape_mask) <- kg_meta
+
+shape_mask_df <- shape_mask %>% as.data.frame(xy = TRUE, long = TRUE, na.rm = TRUE)
+shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'value'))
+colnames(shape_mask_df) <- c('lon', 'lat', 'KG_beck')
+shape_mask_df$KG_beck <- factor(shape_mask_df$KG_beck)
+shape_mask_dt <- as.data.table(shape_mask_df)
+shape_mask_dt <- shape_mask_dt[KG_beck != 'O',]
+
 ### Koppen-Geiger
 fname_shape <- list.files(path = PATH_MASKS_KOPPEN, full.names = TRUE, pattern = "climate_beck_level3.shp")
 shape_mask <- st_read(paste0(fname_shape[1]))
@@ -16,7 +37,7 @@ shape_mask_df <- shape_mask_raster %>% as.data.frame(xy = TRUE, long = TRUE, na.
 shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'value'))
 colnames(shape_mask_df) <- c('lon', 'lat', 'KG_class_1')
 shape_mask_df$KG_class_1 <- factor(shape_mask_df$KG_class_1)
-shape_mask_dt  <- data.table(shape_mask_df)
+shape_mask_dt <- merge(shape_mask_dt, shape_mask_df, by = c('lon', 'lat'), all = TRUE)
 
 fname_shape <- list.files(path = PATH_MASKS_KOPPEN, full.names = TRUE, pattern = "climate_beck_level2.shp")
 shape_mask <- st_read(paste0(fname_shape[1]))
@@ -72,16 +93,13 @@ shape_mask <- ratify(shape_mask)
 
 mask_fname <- list.files(path = PATH_MASKS_ELEVATION, pattern = "*groups_025_classes.txt" , full.names = T)
 mask_raster_classes <- read.table(paste(mask_fname[1]))
-mask_raster_classes <- as.data.frame(sapply(mask_raster_classes,
-                                            mapvalues, from = c("(-Inf,100]", "(800,1.5e+03]", "(1.5e+03,3e+03]", "(3e+03, Inf]"), 
-                                            to = c("(0,100]", "(800,1500]", "(1500,3000]", "(3000,Inf]")))
 levels(shape_mask)[[1]] <- mask_raster_classes
 
 shape_mask_df <- shape_mask %>% as.data.frame(xy = TRUE, long = TRUE, na.rm = TRUE)
 shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'value'))
 colnames(shape_mask_df) <- c('lon', 'lat', 'elev_class')
 shape_mask_df$elev_class <- factor(shape_mask_df$elev_class, 
-                                   levels = c("(0,100]", "(100,400]", "(400,800]", "(800,1500]", "(1500,3000]", "(3000,Inf]"), 
+                                   levels = c("(-Inf,100]", "(100,400]", "(400,800]", "(800,1.5e+03]", "(1.5e+03,3e+03]", "(3e+03, Inf]"), 
                                    labels = c("0-100", "100-400", "400-800", "800-1500", "1500-3000", "3000+"), 
                                    ordered =TRUE)
 shape_mask_dt <- merge(shape_mask_dt, shape_mask_df, by = c('lon', 'lat'), all = TRUE)
@@ -95,7 +113,7 @@ shape_mask_df <- shape_mask_raster %>% as.data.frame(xy = TRUE, long = TRUE, na.
 shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'value'))
 colnames(shape_mask_df) <- c('lon', 'lat', 'IPCC_ref_region')
 shape_mask_df$IPCC_ref_region <- as.factor(shape_mask_df$IPCC_ref_region)
-shape_mask_dt <- merge(shape_mask_dt, spatpol_mask_dt, by = c('lon', 'lat'), all.x = TRUE)
+shape_mask_dt <- merge(shape_mask_dt, shape_mask_df, by = c('lon', 'lat'), all.x = TRUE)
 
 
 ### Extra masks
@@ -135,9 +153,26 @@ shape_mask_dt[grepl("Mediterranean", biome_class) == TRUE, biome_short_class := 
 shape_mask_dt[grepl("N/A", biome_class) == TRUE, biome_short_class := NA]
 shape_mask_dt[, biome_short_class := factor(biome_short_class)]
 
-shape_mask_dt <- shape_mask_dt[, .(lon, lat, elev_class, KG_class_1,  KG_class_2,  KG_class_3, KG_class_1_name, 
+
+### add ma et al data
+
+fname_shape <- list.files(path = PATH_MASKS_MA_BASINS, full.names = TRUE, pattern = "*Boundary_56.shp")
+shape_mask <- st_read(paste0(fname_shape[1]))
+shape_mask <- st_make_valid(shape_mask)
+
+shape_mask_raster <- rasterize(shape_mask, prec_era5[[1]]) 
+shape_mask_df <- shape_mask_raster %>% as.data.frame(xy = TRUE, long = TRUE, na.rm = TRUE)
+shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'layer_BasinID'))
+colnames(shape_mask_df) <- c('lon', 'lat', 'ma_basin')
+shape_mask_df$ma_basin <- factor(shape_mask_df$ma_basin)
+shape_mask_dt <- merge(shape_mask_dt, shape_mask_df, by = c('lon', 'lat'), all = TRUE)
+
+
+## Clean data
+shape_mask_dt <- shape_mask_dt[, .(lon, lat, elev_class, KG_beck, KG_class_1,  KG_class_2,  KG_class_3, KG_class_1_name, 
                                    land_cover_class = land_class, land_cover_short_class = land_use_short_class, biome_class, biome_short_class,
-                                   IPCC_ref_region)]
+                                   IPCC_ref_region, ma_basin)]
+
 
 ## Save data
 saveRDS(shape_mask_dt, paste0(PATH_SAVE, "/misc/masks_global_IPCC.rds"))

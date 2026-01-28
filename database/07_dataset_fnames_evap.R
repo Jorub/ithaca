@@ -14,12 +14,16 @@ EVAP_FNAMES_2000_2019_FULL_RECORD <- unique(grep(paste(EVAP_FNAMES_SHORT_2000_20
 EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("land", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE)
 EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("yearly", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE)
 EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("194801_201412", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE, invert = TRUE)
+EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("e_mm", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE)
 
 # order for alphabetical file name only
 dummy <- strsplit(EVAP_FNAMES_2000_2019_FULL_RECORD, split = '//')
-dummy <- sapply(dummy, "[[", 2)
+dummy <- sapply(dummy, "[[", 1)
 dummy <- strsplit(dummy, split = '_')
 dummy <- sapply(dummy, "[[", 1)
+dummy <- strsplit(dummy, split = '/')
+dummy <- sapply(dummy, "[[", 8)
+
 EVAP_FNAMES_SHORT_2000_2019_FULL_RECORD_ordered_id <- sort(dummy, index.return = T)[[2]]
 
 EVAP_FNAMES_2000_2019_FULL_RECORD <- EVAP_FNAMES_2000_2019_FULL_RECORD[EVAP_FNAMES_SHORT_2000_2019_FULL_RECORD_ordered_id]
