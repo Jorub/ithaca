@@ -163,5 +163,5 @@ fig_all <- ggarrange(fig_top, fig_box_together, nrow = 2, heights = c(2,3),
                      common.legend = T, legend = 'none')
 fig_all
 
-ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "main/fig6_water_balance_comparison.png"), 
+ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "main/fig5_water_balance_comparison.png"), 
        width = 8, height = 10)

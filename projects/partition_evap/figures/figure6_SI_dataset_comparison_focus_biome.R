@@ -31,5 +31,5 @@ performance_global <- ggplot(evap_summary)+
 
 
 
-ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "supplement/fig5_SI_dataset_global_area.png"), 
+ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "supplement/fig6_SI_dataset_global_area.png"), 
        width = 8, height = 4)

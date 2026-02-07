@@ -23,14 +23,11 @@ performance_global <- ggplot(evap_summary)+
   theme(axis.text = element_text(size = 10), 
         axis.title = element_text(size = 10),
         plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.y = element_text(colour = evap_summary_over$colors),
-        legend.spacing.x = unit(1.5, "cm"),
-        legend.spacing.y = unit(1.5, "cm"),
-        legend.title = element_text(hjust = 0.5))+
-  labs(x = "Datasets", y = "Global volume fraction [-]", fill = "Deviation to\nensemble mean")+
+        axis.text.y = element_text(colour = evap_summary_over$colors))+
+  labs(x = "Datasets", y = "Global volume fraction [-]", fill = "Deviation\nto ensemble   \nmean")+
   coord_flip()
 
-data <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "partition_biome_datasets_for_plot.rds"))
+data <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "partition_land_cover_datasets_for_plot.rds"))
 data_count <- data[performance == "Over", .N, .(performance, dataset)]
 data_count <- rbind(data_count, data.table(performance = "Over", dataset = "gldas-vic", N = 0))
 data_count[, rank := rank(N)]
@@ -40,23 +37,23 @@ data_count <- data_count[order(rank)]
 data[, dataset := factor(dataset, levels = data_count$dataset)]
 data[performance == "Over", performance := "Higher"]
 data[performance == "Under", performance := "Lower"]
-
-performance_biome <- ggplot(data,
-                                aes(x = biome_short_class, y = dataset, fill = performance))+
+performance_landcover <- ggplot(data[land_cover_short_class != "Other" & land_cover_short_class != "Global"],
+                                aes(x = land_cover_short_class, y = dataset, fill = performance))+
   geom_tile(color = "white",lwd = 0.8,linetype = 1) +
   theme_bw()+
   scale_fill_manual(values = c("Closest"= "gold","Higher" = colset_RdBu_5[5], "Lower" = colset_RdBu_5[1]))+
   theme(axis.title.y = element_blank(), axis.text = element_text(size = 10), 
         axis.title = element_text(size = 10),
         plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1),
-        axis.text.y = element_text(colour = data_count$colors))+
-  labs(x = "Biomes", y = "Dataset", fill = "Deviation\nto ensemble   \nmean")
+        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1),
+        axis.text.y = element_text(colour = data_count$colors),
+        legend.title = element_text(hjust = 0.5))+
+  labs(x = "Land cover types", y = "Dataset", fill = "Deviation to \nensemble   mean")
 
 
-top_row <- ggarrange(performance_global, performance_biome, 
-                     labels = c("a", "b"), nrow = 1, 
-                     common.legend = T, align = "v")
+top_row <- ggarrange(performance_global, performance_landcover, 
+                     labels = c("a", "b"), nrow = 1, align = "hv", 
+                     common.legend = T)
 
 
 
@@ -82,20 +79,22 @@ dataset_global <- ggplot(global, aes(x = dataset.x, y = dataset.y, fill = fracti
   theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
   ggtitle(label = "Global")
 
-biome <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "area_fraction_matching_products_biome.rds"))
-q10 <- quantile(biome$volume_fraction, c(0.1))
-q30 <- quantile(biome$volume_fraction, c(0.3))
-q70 <- quantile(biome$volume_fraction, c(0.7))
-q90 <- quantile(biome$volume_fraction, c(0.9))
+landcover <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "area_fraction_matching_products_land_cover.rds"))
+q10 <- quantile(landcover$volume_fraction, c(0.1))
+q30 <- quantile(landcover$volume_fraction, c(0.3))
+q70 <- quantile(landcover$volume_fraction, c(0.7))
+q90 <- quantile(landcover$volume_fraction, c(0.9))
 
-biome[, fraction_fac := cut(volume_fraction, breaks = c(-0.01, q10, q30, q70, q90, 1), 
+landcover[, fraction_fac := cut(volume_fraction, breaks = c(-0.01, q10, q30, q70, q90, 1), 
                                 labels = c("Low", "Below average", "Average", "Above average", "High"))]
+
+land_cover_select <- c("Shrublands", "Forests", "Croplands")
 
 dataset_cols <- c("Low" =  colset_RdBu_5[1], "Below average" = colset_RdBu_5[2],
                   "Average" = colset_RdBu_5[3], "Above average" = colset_RdBu_5[4], 
                   "High" = colset_RdBu_5[5])
 
-dataset_tundra <- ggplot(biome[biome_short_class %in% "Tundra"], aes(x = dataset.x, y = dataset.y, fill = fraction_fac))+
+dataset_shrub <- ggplot(landcover[land_cover_short_class %in% "Shrublands"], aes(x = dataset.x, y = dataset.y, fill = fraction_fac))+
   geom_tile(color = "white",lwd = 0.8,linetype = 1) +
   scale_fill_manual(values = dataset_cols)+
   labs(fill = "Distribution\nagreement    ", x = "", y = "")+
@@ -106,9 +105,9 @@ dataset_tundra <- ggplot(biome[biome_short_class %in% "Tundra"], aes(x = dataset
         axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
   theme(strip.background = element_rect(fill = "white"))+
   theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
-  ggtitle(label = "Tundra")
+  ggtitle(label = "Shrublands")
 
-dataset_desert <- ggplot(biome[biome_short_class %in% "Deserts"], 
+dataset_forest <- ggplot(landcover[land_cover_short_class %in% "Forests"], 
                          aes(x = dataset.x, y = dataset.y, fill = fraction_fac))+
   geom_tile(color = "white", lwd = 0.8, linetype = 1) +
   scale_fill_manual(values = dataset_cols)+
@@ -120,9 +119,9 @@ dataset_desert <- ggplot(biome[biome_short_class %in% "Deserts"],
         axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
   theme(strip.background = element_rect(fill = "white"))+
   theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
-  ggtitle(label = "Deserts")
+  ggtitle(label = "Forests")
 
-dataset_trop_forest <- ggplot(biome[biome_short_class %in% "T/S Moist BL Forests"], 
+dataset_croplands <- ggplot(landcover[land_cover_short_class %in% "Croplands"], 
                             aes(x = dataset.x, y = dataset.y, fill = fraction_fac))+
   geom_tile(color = "white", lwd = 0.8, linetype = 1) +
   scale_fill_manual(values = dataset_cols)+
@@ -134,17 +133,17 @@ dataset_trop_forest <- ggplot(biome[biome_short_class %in% "T/S Moist BL Forests
         axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
   theme(strip.background = element_rect(fill = "white"))+
   theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
-  ggtitle(label = "T/S Moist BL Forests")
+  ggtitle(label = "Croplands")
 
 
-dataset_gg <- ggarrange(dataset_global,dataset_desert, dataset_tundra, dataset_trop_forest, 
+dataset_gg <- ggarrange(dataset_global,dataset_shrub, dataset_forest, dataset_croplands, 
                         nrow = 2, ncol = 2,
                         common.legend = T, align = "hv",
                         labels = c("c", "d", "e", "f"))
 
-## composite figure ----
+## composite figure
 
-ggarrange(top_row, dataset_gg, nrow = 2, heights = c(0.55, 1))
+ggarrange(top_row, dataset_gg, nrow = 2, heights = c(0.5, 1))
 
-ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "main/fig5_dataset_comparison_biome.png"), 
+ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "main/fig6_dataset_comparison_land_cover.png"), 
        width = 8, height = 12)
