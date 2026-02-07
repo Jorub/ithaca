@@ -4,6 +4,7 @@
 
 List of the data used for analysis-
 
+## Precipitation
 Seven observational (gauge-based) products:
 
 cpc = CPC-Global (Xie et al., 2010),
@@ -36,3 +37,9 @@ gpm-imerg = GPM IMERGM v06 (Huffman et al., 2019),
 mswep = MSWEP v2.8 (Beck et al., 2019),
 persian = PERSIANN-CDR (Ashouri et al., 2015), and
 trmm-3b43 = TRMM 3B43 v7 (Huffman et al., 2010)
+
+## Terrestrial Evapotranspiration
+
+●	Reanalysis products: ERA5-Land (Muñoz-Sabater et al., 2021), JRA55 (Kobayashi et al., 2015), and MERRA2 (Gelaro et al., 2017).
+●	Remote sensing-based products: BESS v2.0 (B. Li et al., 2023), ETMonitor (Zheng et al., 2022), GLEAM v4.1a (Miralles et al., 2025), and MOD16A2 (Mu et al., 2007, 2011).
+●	Land surface/Hydrological model-based products: FLDAS (McNally et al., 2017) GLDAS-CLSM v2.1 (B. Li et al., 2020; Rodell et al., 2004), GLDAS-NOAH v2.1 (Beaudoing & Rodell, 2020; Rodell et al., 2004), GLDAS-VIC v2.1 (Beaudoing et al., 2020), and TerraClimate (Abatzoglou et al., 2018).
