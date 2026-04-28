@@ -75,7 +75,7 @@ evap_trend_min_max[Q75 >= 0, direction := "positive"]
 evap_trend_min_max[Q75 < 0, direction := "negative"] 
 
 evap_sel <- subset(evap_trend_min_max, select = c("lon", "lat", "min", "max", "Q25", "Q75" ,"fold_brk", "fold_brk_detailed", "sign",
-                                                  "fold_abs_brk", "fold_abs_brk_detailed", "mad_brk", "mad_brk_detailed", "problem"))
+                                                  "problem"))
 
 saveRDS(evap_sel, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_2_grid_quartile_stats.rds"))
 write.csv(evap_sel, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_2_grid_quartile_stats.csv"))
