@@ -42,7 +42,7 @@ basins_quartile <- data_sum_quartile[evap_volume_fraction >=0.5, ma_basin]
 data_merged[dataset %in% EVAP_DATASETS_REANAL, dataset_type := "Reanalysis"]
 data_merged[dataset %in% EVAP_DATASETS_REMOTE, dataset_type := "Remote"]
 data_merged[dataset %in% EVAP_DATASETS_HYDROL, dataset_type := "Hydr./LSM model"]
-data_merged[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Ensemble"]
+data_merged[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Composite"]
 data_merged[dataset %in% 'Ma', dataset_type := "Water balance"]
 
 data_merged[, ma_basin := as.numeric(as.factor(ma_basin))]
