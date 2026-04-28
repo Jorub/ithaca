@@ -1,18 +1,16 @@
-# Figure 3 ----
+# Figure 2 SI ----
 source('source/evap_trend.R')
 
 library(ggpubr)
 
 ## colors ----
-cols_problem <- c("Direction\nmagnitude" = "#330000", "Direction" = "darkred","Magnitude" = "orange2", 
-                  "Small trend:\ndirection" ="royalblue3", 
-                  "Small trend:\nmagnitude" = "lightblue", "None" = "forestgreen")
-
+cols_problem <- c("Both" = "#330000", "Direction" = "darkred","Magnitude" = "orange2",
+                  "None" = "royalblue1")
 
 ## landcover ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_a_land_cover_trends_by_product.rds"))
-land_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_b_land_cover_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_c_land_cover_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_land_cover_trends_by_product.rds"))
+land_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_land_cover_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_land_cover_problem_aggregated.rds"))
 
 
 ### trends ----
@@ -109,9 +107,9 @@ ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_MAIN, "fig3_slope_problem_landcover_v
 
 
 ## Biomes ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_biome_trends_by_product.rds"))
-biome_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_biome_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_biome_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_biome_trends_by_product.rds"))
+biome_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_biome_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_biome_problem_aggregated.rds"))
 
 ### trends ----
 biome_slopes <- ggplot(data_trend[biome_short_class != "N/A"])+
@@ -201,9 +199,9 @@ ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_slope_problem_biome_ve
        width = 11, height = 16)
 
 ## IPCC reference regions ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_IPCC_ref_regions_trends_by_product.rds"))
-ipcc_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_IPCC_ref_regions_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_IPCC_ref_regions_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_IPCC_ref_regions_trends_by_product.rds"))
+ipcc_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_IPCC_ref_regions_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_IPCC_ref_regions_problem_aggregated.rds"))
 
 
 ### trends ----
@@ -302,9 +300,9 @@ ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_slope_problem_ipcc_ver
 
 
 ## Elevation ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_elevation_trends_by_product.rds"))
-elev_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_elevation_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_elevation_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_elevation_trends_by_product.rds"))
+elev_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_elevation_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_elevation_problem_aggregated.rds"))
 
 
 ### trends ----
@@ -395,9 +393,9 @@ ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_slope_problem_elevatio
        width = 10, height = 12)
 
 ## Evaporation quantiles ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_evap_quantiles_trends_by_product.rds"))
-evap_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_evap_quantiles_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_evap_quantiles_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_evap_quantiles_trends_by_product.rds"))
+evap_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_evap_quantiles_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_evap_quantiles_problem_aggregated.rds"))
 
 
 ### trends ----
@@ -489,9 +487,9 @@ ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_slope_problem_evap_qua
 
 
 ## KG classes ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_Koeppen_Geiger_trends_by_product.rds"))
-KG_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_Koeppen_Geiger_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_Koeppen_Geiger_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_trends_by_product.rds"))
+KG_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_problem_aggregated.rds"))
 
 
 KG_slopes <- ggplot(data_trend)+
@@ -587,9 +585,9 @@ ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_slope_problem_KG_class
 
 
 ## KG classes beck ----
-data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_a_Koeppen_Geiger_beck_trends_by_product.rds"))
-KG_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_3_SI_b_Koeppen_Geiger_beck_problem_area_fraction.rds"))
-data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_SI_3_c_Koeppen_Geiger_beck_problem_aggregated.rds"))
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_trends_by_product.rds"))
+KG_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_problem_area_fraction.rds"))
+data_trend_env <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_problem_aggregated.rds"))
 
 
 KG_slopes <- ggplot(data_trend)+

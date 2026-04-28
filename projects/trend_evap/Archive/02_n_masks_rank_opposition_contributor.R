@@ -21,6 +21,85 @@ grid_cell_area <- unique(evap_trend_all[, .(lon, lat)]) %>% grid_area() # m2
 
 evap_trend_all  <- grid_cell_area[evap_trend_all, on = .(lon, lat)]
 
+### latitude ----
+lat_data <- evap_trend_all[, .(lon, lat, trend_0_01, trend_0_05, trend_0_1, trend_0_2, trend_all, area)]
+lat_data[, lat_brk := cut(lat, seq(-60, 90, 15))]
+
+setnames(lat_data, old = c("trend_0_01","trend_0_05", "trend_0_1","trend_0_2","trend_all"), 
+         new = c("p <= 0.01", "p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
+
+lat_melt <- melt(lat_data, measure.vars = c("p <= 0.01", "p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
+
+total_area_land <- lat_melt[, .(total_area = sum(area)), .(lat_brk, variable)]
+total_area_land <- total_area_land[, .(total_area = unique(total_area)), .(lat_brk)]
+
+evap_sum_opposing <- lat_melt[value == "opposing", .(sum_var = sum(area)), .(variable, lat_brk)]
+lat_list <- unique(evap_sum_opposing$lat_brk)
+variable_list <- unique(evap_sum_opposing$variable)
+
+fill_data <- data.table(lat_brk = rep(rep(lat_list,5)),
+                        variable = rep(variable_list, each = length(lat_list)))
+
+fill_data[,sum_var := 0]
+
+evap_sum_fill <- merge(evap_sum_opposing, fill_data, 
+                       all = T,
+                       by = c('lat_brk', 'variable'))
+
+evap_sum_fill[,sum_var := sum_var.x]
+evap_sum_fill[is.na(sum_var.x),sum_var := 0]
+evap_sum_fill[,sum_var.x := NULL]
+evap_sum_fill[,sum_var.y := NULL]
+evap_sum_opposing <- merge(evap_sum_fill, total_area_land, by = "lat_brk")
+evap_sum_opposing[, fraction := sum_var/total_area]
+
+## Estimate opposing fraction dataset leftout
+lat_leftout <- evap_trend_leftout[, .(lon, lat, trend_0_01, trend_0_05, trend_0_1, trend_0_2, trend_all, dataset_leftout)]
+lat_leftout[, lat_brk := cut(lat, seq(-60, 90, 15))]
+
+lat_leftout  <- grid_cell_area[lat_leftout, on = .(lon, lat)]
+setnames(lat_leftout, old = c("trend_0_01","trend_0_05", "trend_0_1","trend_0_2","trend_all"), 
+         new = c("p <= 0.01", "p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
+
+lat_leftout_melt <- melt(lat_leftout, measure.vars = c("p <= 0.01", "p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
+
+lat_leftout_sum_opposing <- lat_leftout_melt[value == "opposing", .(sum_leftout = sum(area)), .(variable, dataset_leftout, lat_brk)]
+
+dataset_list <- unique(lat_leftout_sum_opposing$dataset)
+lat_list <- unique(evap_sum_opposing$lat_brk)
+variable_list <- unique(evap_sum_opposing$variable)
+
+fill_data <- 
+  data.table(dataset_leftout = rep(rep(dataset_list, each = length(lat_list)), 5), 
+             lat_brk = rep(rep(lat_list, length(dataset_list)),5),
+             variable = rep(variable_list, 
+                            each = length(dataset_list)*length(lat_list)))
+
+fill_data[,sum_leftout := 0]
+
+data_check <- merge(fill_data, lat_leftout_sum_opposing,
+                    by = c('variable', 'dataset_leftout', 'lat_brk'),
+                    all = T)
+
+data_check[, sum_leftout := sum_leftout.y]
+data_check[is.na(sum_leftout.y), sum_leftout := 0]
+data_check[, sum_leftout.x := NULL]
+data_check[, sum_leftout.y := NULL]
+
+lat_leftout_sum_opposing <- merge(data_check, total_area_land, by = "lat_brk")
+lat_leftout_sum_opposing[, fraction_leftout := sum_leftout/total_area]
+
+lat_opposing <- merge(lat_leftout_sum_opposing, evap_sum_opposing, 
+                       by = c("variable", "lat_brk", "total_area"),
+                       all = T)
+
+lat_opposing[, fraction_diff := fraction- fraction_leftout]
+
+lat_opposing[, rank_opp := rank(-fraction_diff, ties = "first"), .(variable, lat_brk)]
+
+#### Save data ----
+saveRDS(lat_opposing, paste0(PATH_SAVE_EVAP_TREND, "lat_groups_datasets_opposing_p_thresholds_bootstrap.rds"))
+
 
 ### land use ----
 land_use <- merge(evap_mask[, .(lat, lon, land_cover_short_class)], 

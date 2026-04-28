@@ -9,6 +9,58 @@ evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 data <-  readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_dataset_opposing_DCI.rds"))
 
+## Latitude ----
+data_merge <- data
+data_merge[, lat_brk := cut(lat, seq(-60, 90, 15))]
+
+area_opposing_0_01 <- data_merge[, .(area_opposing_0_01 = sum(area)), 
+                                 .(lat_brk, opposing_0_01, dataset)]
+area_opposing_0_05 <- data_merge[, .(area_opposing_0_05 = sum(area)), 
+                                 .(lat_brk, opposing_0_05, dataset)]
+area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)), 
+                                .(lat_brk, opposing_0_1, dataset)]
+area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
+                                .(lat_brk, opposing_0_2, dataset)]
+area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
+                                .(lat_brk, opposing_all, dataset)]
+
+area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_0_05", "dataset", "lat_brk"), all = TRUE)
+area_opposing <- merge(area_opposing, area_opposing_0_1, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_0_1", "dataset", "lat_brk"), all = TRUE)
+area_opposing <- merge(area_opposing, area_opposing_0_2, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_0_2", "dataset", "lat_brk"), all = TRUE)
+area_opposing <- merge(area_opposing, area_opposing_all, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_all", "dataset", "lat_brk"), all = TRUE)
+
+opposing_melt <- melt(area_opposing,
+                      measure.vars = c("area_opposing_0_01",
+                                       "area_opposing_0_05",
+                                       "area_opposing_0_1",
+                                       "area_opposing_0_2",
+                                       "area_opposing_all"
+                      ))
+
+
+opposing_melt[is.na(value), value := 0]
+
+opposing_melt[, rank_datasets := rank(-value), .(variable, opposing_0_01, lat_brk)]
+
+opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
+opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
+opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
+opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
+opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
+
+opposing_melt <- opposing_melt[opposing_0_01 == 1]
+opposing_melt[, opposing_0_01 := NULL]
+saveRDS(opposing_melt, paste0(PATH_SAVE_EVAP_TREND, "lat_groups_dataset_rank_opposing_DCI.rds")) 
+
+
 ## Land use ----
 data_merge <- merge(evap_mask[, .(lat, lon, land_cover_short_class)], 
                       data, 

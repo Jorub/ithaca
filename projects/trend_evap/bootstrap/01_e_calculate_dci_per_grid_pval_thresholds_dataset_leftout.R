@@ -1,14 +1,14 @@
-# Using p-value thresholds for DCI p-value derived from bootstrap ----
-# Calculate dataset concurrence index for each grid ----
-# Calculate uncertainty for each grid ----
-# Calculate count of grid directions for each grid ----
-
+# Repeat index calculation with dataset leftout ----
+## Only use complete record
+## Using p-value thresholds for DCI p-value derived from bootstrap ----
+## Calculate dataset concurrence index for each grid ----
+## Calculate uncertainty for each grid ----
+## Calculate count of grid directions for each grid ----
 source('source/evap_trend.R')
 
 ## Data ----
 ### Input data generated in trend_evap/bootstrap/01_c 
-evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_bootstrap.rds"))  
-evap_trend <- evap_trend[dataset_count >= 12]
+evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_intersection_lat_lon_bootstrap.rds"))
 
 ## Analysis ----
 
@@ -109,8 +109,8 @@ for(dataset_leftout in datasets[2:length(datasets)]){
   evap_trend_neg <- merge(evap_trend_neg, dummy_neg, by = c("lon", "lat", "dataset_leftout", "N_neg_all"), all = TRUE)
 
 }
-evap_trend_summary <- merge(evap_trend_summary , evap_trend_pos, by = c("lon", "lat", "dataset_leftout"), all = TRUE)
-evap_trend_summary <- merge(evap_trend_summary , evap_trend_neg, by = c("lon", "lat", "dataset_leftout"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_pos, by = c("lon", "lat", "dataset_leftout"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_neg, by = c("lon", "lat", "dataset_leftout"), all = TRUE)
 
 
 ### Fill NA as 0 for count

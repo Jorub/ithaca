@@ -1,17 +1,14 @@
-# Rank datasets according to signal ----
+# Rank datasets according to positive and negative signal and dampening ----
+## Only use grid cells with complete coverage
 source('source/evap_trend.R')
 source('source/geo_functions.R')
 
 ## Data ----
-## Created in trend_evap/01_d
-evap_trend_all <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_DCI_trend_groups_p_thresholds_bootstrap.rds"))
-
-## Created in trend_evap/01_e
-evap_trend_leftout <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_DCI_trend_groups_p_thresholds_bootstrap_dataset_leftout.rds"))
-
 
 ### Input data generated in trend_evap/bootstrap/01_c 
 evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_bootstrap.rds"))  
+evap_trend <- evap_trend[dataset_count == 14]
+
 
 evap_trend_pos <- evap_trend[p <= 0.01 & slope >= 0, .(N_pos_0_01 = .N), .(lat, lon, dataset)]
 evap_trend_neg <- evap_trend[p <= 0.01 & slope < 0, .(N_neg_0_01 = .N), .(lat, lon, dataset)]
@@ -104,40 +101,3 @@ evap_sums_melt[, rank_datasets := rank(-value), .(variable)]
 saveRDS(evap_sums_melt, paste0(PATH_SAVE_EVAP_TREND, "global_ranked_datasets_signal_booster_p_thresholds_bootstrap.rds"))
 
 
-## Estimate opposing fraction of all data ----
-
-evap_sel <- subset(evap_trend_all, select = c("trend_0_01","trend_0_05", "trend_0_1","trend_0_2","trend_all", "lat", "lon"))
-evap_sel  <- grid_cell_area[evap_sel, on = .(lon, lat)]
-setnames(evap_sel, old = c("trend_0_01","trend_0_05", "trend_0_1","trend_0_2","trend_all"), 
-         new = c("p <= 0.01", " p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
-
-evap_sel_melt <- melt(evap_sel, measure.vars = c("p <= 0.01", " p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
-saveRDS(evap_sel_melt, paste0(PATH_SAVE_EVAP_TREND, "global_grid_datasets_opposing_p_thresholds_bootstrap.rds"))
-
-total_area <- evap_sel[, sum(area)]
-evap_sum_opposing <- evap_sel_melt[value == "opposing", .(sum = sum(area)/total_area), .(variable)]
-
-
-## Estimate opposing fraction dataset leftout
-
-evap_leftout_sel <- subset(evap_trend_leftout, select = c("trend_0_01","trend_0_05", "trend_0_1","trend_0_2","trend_all", "lat", "lon", "dataset_leftout"))
-evap_leftout_sel  <- grid_cell_area[evap_leftout_sel, on = .(lon, lat)]
-setnames(evap_leftout_sel, old = c("trend_0_01","trend_0_05", "trend_0_1","trend_0_2","trend_all"), 
-         new = c("p <= 0.01", " p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
-
-evap_leftout_sel_melt <- melt(evap_leftout_sel, measure.vars = c("p <= 0.01", " p <= 0.05", "p <= 0.1", "p <= 0.2", "p <= 1"))
-
-saveRDS(evap_leftout_sel_melt, paste0(PATH_SAVE_EVAP_TREND, "global_grid_datasets_leftout_opposing_p_thresholds_bootstrap.rds"))
-
-evap_leftout_sum_opposing <- evap_leftout_sel_melt[value == "opposing", 
-                                                   .(sum_leftout = sum(area)/total_area), 
-                                                   .(variable, dataset_leftout)]
-
-evap_opposing <- merge(evap_leftout_sum_opposing, evap_sum_opposing, by = "variable")
-
-evap_opposing[, sum_diff := sum - sum_leftout]
-
-evap_opposing[, rank_opp := rank(-sum_diff), .(variable)]
-
-## Save data ----
-saveRDS(evap_opposing, paste0(PATH_SAVE_EVAP_TREND, "global_ranked_datasets_opposing_p_thresholds_bootstrap.rds"))

@@ -10,6 +10,18 @@ evap_datasets <- evap_datasets[dataset_count >= 14]
 
 ### Input Data generated in projects/partition_evap/04
 evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
+evap_mask[, KG_beck_1 := strsplit(as.character(KG_beck), "")[[1]][1], .(lat, lon)]
+### ---- latitudinal profiles
+
+lat_class <- evap_datasets[, .(lon, lat, year, evap_volume, area, dataset)]
+lat_class[, lat_brk := cut(lat, seq(-60, 90, 15))]
+lat_global <- lat_class[, .(evap_volume = sum(evap_volume), area = sum(area)), 
+                        .(dataset, lat_brk, year)]
+
+lat_global[, evap_mean := ((evap_volume / M2_TO_KM2) / area) / MM_TO_KM]
+
+lat_ensemble <- lat_global[, .(evap_mean = mean(evap_mean)), .(lat_brk, year)]
+
 
 ### Land cover class  ----
 land_cover_class <- merge(evap_mask[, .(lat, lon, land_cover_short_class)], 
@@ -105,7 +117,20 @@ KG_beck_class_global[, evap_mean := ((evap_volume / M2_TO_KM2) / area) / MM_TO_K
 
 KG_beck_class_ensemble <- KG_beck_class_global[, .(evap_mean = mean(evap_mean)), .(KG_beck, year)]
 
+### KG beck ----
+KG_beck_class_1 <- merge(evap_mask[, .(lat, lon, KG_beck_1)], 
+                       evap_datasets[, .(lon, lat, year, evap_volume, area, dataset)], 
+                       by = c("lon", "lat"))
+KG_beck_class_1_global <- KG_beck_class_1[, .(evap_volume = sum(evap_volume), area = sum(area)), 
+                                      .(dataset, KG_beck_1, year)]
+KG_beck_class_1_global[, evap_mean := ((evap_volume / M2_TO_KM2) / area) / MM_TO_KM]
+
+KG_beck_class_1_ensemble <- KG_beck_class_1_global[, .(evap_mean = mean(evap_mean)), .(KG_beck_1, year)]
+
+
+
 ## Save data ----
+saveRDS(lat_global, paste0(PATH_SAVE_EVAP_TREND, "lat_groups_mean.rds"))
 saveRDS(land_cover_class_global, paste0(PATH_SAVE_EVAP_TREND, "land_cover_class_mean.rds"))
 saveRDS(biome_class_global, paste0(PATH_SAVE_EVAP_TREND, "biome_class_mean.rds"))
 saveRDS(elev_class_global, paste0(PATH_SAVE_EVAP_TREND, "elev_class_mean.rds"))
@@ -115,7 +140,9 @@ saveRDS(KG_class_3_class_global, paste0(PATH_SAVE_EVAP_TREND, "KG_3_class_mean.r
 saveRDS(KG_class_2_class_global, paste0(PATH_SAVE_EVAP_TREND, "KG_2_class_mean.rds"))
 saveRDS(KG_class_1_class_global, paste0(PATH_SAVE_EVAP_TREND, "KG_1_class_mean.rds"))
 saveRDS(KG_beck_class_global, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_mean.rds"))
+saveRDS(KG_beck_class_1_global, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_mean.rds"))
 
+saveRDS(lat_ensemble, paste0(PATH_SAVE_EVAP_TREND, "lat_groups_ensemble_mean.rds"))
 saveRDS(land_cover_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "land_cover_class_ensemble_mean.rds"))
 saveRDS(biome_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "biome_class_ensemble_mean.rds"))
 saveRDS(elev_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "elev_class_ensemble_mean.rds"))
@@ -125,3 +152,4 @@ saveRDS(KG_class_3_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "KG_3_class_ense
 saveRDS(KG_class_2_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "KG_2_class_ensemble_mean.rds"))
 saveRDS(KG_class_1_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "KG_1_class_ensemble_mean.rds"))
 saveRDS(KG_beck_class_ensemble, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_ensemble_mean.rds"))
+saveRDS(KG_beck_class_1_ensemble, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_ensemble_mean.rds"))

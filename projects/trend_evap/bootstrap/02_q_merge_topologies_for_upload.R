@@ -1,4 +1,4 @@
-# Functions to support main functions
+# Merge topologies ----
 source('source/evap_trend.R')
 
 ## function to merge ----
@@ -70,17 +70,17 @@ merge_data <- function(evap_signal, evap_opposers,
   neg_signal[variable == "sum_N_neg_0_2", variable := "p <= 0.2", ]
   neg_signal[variable == "sum_N_neg_all", variable := "p <= 1", ]
   
-  evap_DCI_opposers[, rank_DCI_opposer := rank_datasets]
-  evap_opposers[, rank_opposer := rank_opp]
+  evap_DCI_opposers[, rank_trend_opposer := rank_datasets]
+  evap_opposers[, rank_opposition_contributor := rank_opp]
   evap_opposers[, dataset := dataset_leftout]
   evap_significance_opposers[, rank_significance_opposer := rank_datasets]
-  no_trenders[, rank_no_trenders := rank_datasets]
+  no_trenders[, rank_dampener := rank_datasets]
   pos_signal[, rank_pos_signal := rank_datasets]
   neg_signal[, rank_neg_signal := rank_datasets]
   
-  data_merge <- subset(evap_DCI_opposers, select = c(mask_name, "dataset", "variable", "rank_DCI_opposer"))
+  data_merge <- subset(evap_DCI_opposers, select = c(mask_name, "dataset", "variable", "rank_trend_opposer"))
   data_merge <- merge(data_merge, 
-                      subset(evap_opposers, select = c(mask_name, "dataset", "variable", "rank_opposer")), 
+                      subset(evap_opposers, select = c(mask_name, "dataset", "variable", "rank_opposition_contributor")), 
                       by = c(mask_name,
                              "dataset", "variable"),
                       all = T
@@ -92,7 +92,7 @@ merge_data <- function(evap_signal, evap_opposers,
                              all = T
   )
   data_merge <- merge(data_merge,
-                      subset(no_trenders, select = c(mask_name, "dataset", "variable", "rank_no_trenders")),                      
+                      subset(no_trenders, select = c(mask_name, "dataset", "variable", "rank_dampener")),                      
                       by = c(mask_name,
                              "dataset", "variable"),
                       all = T
@@ -119,6 +119,25 @@ merge_data <- function(evap_signal, evap_opposers,
   return(data_merge)
   
 }
+## latitudinal groups ----
+evap_signal <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "lat_groups_ranked_datasets_signal_booster_p_thresholds_bootstrap.rds"))
+evap_opposers <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "lat_groups_datasets_opposing_p_thresholds_bootstrap.rds"))
+evap_DCI_opposers <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "lat_groups_dataset_rank_opposing_DCI.rds"))
+evap_significance_opposers <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "lat_groups_dataset_rank_opposing_significance.rds"))
+
+lat_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_opposers,
+                                 evap_significance_opposers, 
+                                 mask_name = 'lat_brk')
+
+### data check ----
+lat_data_topology[,any(is.na(rank_trend_opposer))]
+lat_data_topology[p_value != 'p <= 1',any(is.na(rank_significance_opposer))]
+lat_data_topology[,any(is.na(rank_opposition_contributor))]
+lat_data_topology[,any(is.na(rank_pos_signal))]
+lat_data_topology[,any(is.na(rank_neg_signal))]
+lat_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
+
+saveRDS(lat_data_topology, paste0(PATH_SAVE_EVAP_TREND, "lat_groups_dataset_trend_topology.rds"))
 
 ## land use ----
 evap_signal <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "land_use_ranked_datasets_signal_booster_p_thresholds_bootstrap.rds"))
@@ -131,12 +150,12 @@ land_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_opposers,
                                  mask_name = 'land_cover_short_class')
 
 ### data check ----
-land_data_topology[,any(is.na(rank_DCI_opposer))]
-land_data_topology[,any(is.na(rank_significance_opposer))]
-land_data_topology[,any(is.na(rank_opposer))]
+land_data_topology[,any(is.na(rank_trend_opposer))]
+land_data_topology[p_value != 'p <= 1', any(is.na(rank_significance_opposer))]
+land_data_topology[,any(is.na(rank_opposition_contributor))]
 land_data_topology[,any(is.na(rank_pos_signal))]
 land_data_topology[,any(is.na(rank_neg_signal))]
-land_data_topology[p_value != 'p <= 1', any(is.na(rank_no_trenders))]
+land_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
 
 saveRDS(land_data_topology, paste0(PATH_SAVE_EVAP_TREND, "land_use_dataset_trend_topology.rds"))
 
@@ -152,12 +171,12 @@ biome_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_opposers,
                                  mask_name = 'biome_short_class')
 
 ### data check ----
-biome_data_topology[,any(is.na(rank_DCI_opposer))]
-biome_data_topology[,any(is.na(rank_significance_opposer))]
-biome_data_topology[,any(is.na(rank_opposer))]
+biome_data_topology[,any(is.na(rank_trend_opposer))]
+biome_data_topology[p_value != 'p <= 1', any(is.na(rank_significance_opposer))]
+biome_data_topology[,any(is.na(rank_opposition_contributor))]
 biome_data_topology[,any(is.na(rank_pos_signal))]
 biome_data_topology[,any(is.na(rank_neg_signal))]
-biome_data_topology[p_value != 'p <= 1', any(is.na(rank_no_trenders))]
+biome_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
 
 saveRDS(biome_data_topology, paste0(PATH_SAVE_EVAP_TREND, "biome_dataset_trend_topology.rds"))
 
@@ -174,15 +193,16 @@ ipcc_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_opposers,
 ### data check ----
 ipcc_data_topology <- ipcc_data_topology[!is.na(IPCC_ref_region)]
 
-ipcc_data_topology[,any(is.na(rank_DCI_opposer))]
-ipcc_data_topology[,any(is.na(rank_significance_opposer))]
-ipcc_data_topology[,any(is.na(rank_opposer))]
+ipcc_data_topology[,any(is.na(rank_trend_opposer))]
+ipcc_data_topology[p_value != 'p <= 1', any(is.na(rank_significance_opposer))]
+ipcc_data_topology[,any(is.na(rank_opposition_contributor))]
 ipcc_data_topology[,any(is.na(rank_pos_signal))]
 ipcc_data_topology[,any(is.na(rank_neg_signal))]
-ipcc_data_topology[p_value != 'p <= 1', any(is.na(rank_no_trenders))]
+ipcc_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
 
 
 saveRDS(ipcc_data_topology, paste0(PATH_SAVE_EVAP_TREND, "ipcc_ref_regions_dataset_trend_topology.rds"))
+write.csv(ipcc_data_topology, paste0(PATH_SAVE_EVAP_TREND_TABLES, "ipcc_ref_regions_dataset_trend_topology.csv"))
 
 ## evaporation quantiles ----
 
@@ -196,12 +216,12 @@ evap_quant_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_oppo
                                  mask_name = 'evap_quant')
 
 ### data check ----
-evap_quant_data_topology[,any(is.na(rank_DCI_opposer))]
-evap_quant_data_topology[,any(is.na(rank_significance_opposer))]
-evap_quant_data_topology[,any(is.na(rank_opposer))]
+evap_quant_data_topology[,any(is.na(rank_trend_opposer))]
+evap_quant_data_topology[p_value != 'p <= 1', any(is.na(rank_significance_opposer))]
+evap_quant_data_topology[,any(is.na(rank_opposition_contributor))]
 evap_quant_data_topology[,any(is.na(rank_pos_signal))]
 evap_quant_data_topology[,any(is.na(rank_neg_signal))]
-evap_quant_data_topology[p_value != 'p <= 1', any(is.na(rank_no_trenders))]
+evap_quant_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
 
 saveRDS(evap_quant_data_topology, paste0(PATH_SAVE_EVAP_TREND, "evap_quantiles_dataset_trend_topology.rds"))
 
@@ -218,12 +238,12 @@ elev_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_opposers,
                                        mask_name = 'elev_class')
 
 ### data check ----
-elev_data_topology[,any(is.na(rank_DCI_opposer))]
-elev_data_topology[,any(is.na(rank_significance_opposer))]
-elev_data_topology[,any(is.na(rank_opposer))]
+elev_data_topology[,any(is.na(rank_trend_opposer))]
+elev_data_topology[p_value != 'p <= 1',any(is.na(rank_significance_opposer))]
+elev_data_topology[,any(is.na(rank_opposition_contributor))]
 elev_data_topology[,any(is.na(rank_pos_signal))]
 elev_data_topology[,any(is.na(rank_neg_signal))]
-elev_data_topology[p_value != 'p <= 1', any(is.na(rank_no_trenders))]
+elev_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
 
 saveRDS(elev_data_topology, paste0(PATH_SAVE_EVAP_TREND, "elevation_classes_dataset_trend_topology.rds"))
 
@@ -241,12 +261,12 @@ KG_beck_data_topology <- merge_data(evap_signal, evap_opposers, evap_DCI_opposer
 KG_beck_data_topology <- KG_beck_data_topology[!is.na(KG_beck)]
 
 ### data check ----
-KG_beck_data_topology[,any(is.na(rank_DCI_opposer))]
-KG_beck_data_topology[,any(is.na(rank_significance_opposer))]
-KG_beck_data_topology[,any(is.na(rank_opposer))]
+KG_beck_data_topology[,any(is.na(rank_trend_opposer))]
+KG_beck_data_topology[p_value != 'p <= 1', any(is.na(rank_significance_opposer))]
+KG_beck_data_topology[,any(is.na(rank_opposition_contributor))]
 KG_beck_data_topology[,any(is.na(rank_pos_signal))]
 KG_beck_data_topology[,any(is.na(rank_neg_signal))]
-KG_beck_data_topology[p_value != 'p <= 1', any(is.na(rank_no_trenders))]
+KG_beck_data_topology[p_value != 'p <= 1', any(is.na(rank_dampener))]
 
 
 saveRDS(KG_beck_data_topology, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_dataset_trend_topology.rds"))

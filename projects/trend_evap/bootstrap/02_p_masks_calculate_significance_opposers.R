@@ -9,6 +9,51 @@ evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 data <-  readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_dataset_opposing_significance.rds"))
 
+## Latitude groups ----
+data_merge <- data
+data_merge[, lat_brk := cut(lat, seq(-60, 90, 15))]
+
+area_opposing_0_01 <- data_merge[, .(area_opposing_0_01 = sum(area)), 
+                                 .(lat_brk, opposing_0_01, dataset)]
+area_opposing_0_05 <- data_merge[, .(area_opposing_0_05 = sum(area)), 
+                                 .(lat_brk, opposing_0_05, dataset)]
+area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)), 
+                                .(lat_brk, opposing_0_1, dataset)]
+area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
+                                .(lat_brk, opposing_0_2, dataset)]
+
+area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_0_05", "dataset", "lat_brk"), all = TRUE)
+area_opposing <- merge(area_opposing, area_opposing_0_1, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_0_1", "dataset", "lat_brk"), all = TRUE)
+area_opposing <- merge(area_opposing, area_opposing_0_2, 
+                       by.x = c("opposing_0_01", "dataset", "lat_brk"), 
+                       by.y = c("opposing_0_2", "dataset", "lat_brk"), all = TRUE)
+
+opposing_melt <- melt(area_opposing,
+                      measure.vars = c("area_opposing_0_01",
+                                       "area_opposing_0_05",
+                                       "area_opposing_0_1",
+                                       "area_opposing_0_2"
+                      ))
+
+
+opposing_melt[is.na(value), value := 0]
+
+opposing_melt[, rank_datasets := rank(-value), .(variable, opposing_0_01, lat_brk)]
+
+opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
+opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
+opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
+opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
+
+opposing_melt <- opposing_melt[opposing_0_01 == 1]
+opposing_melt[, opposing_0_01 := NULL]
+saveRDS(opposing_melt, paste0(PATH_SAVE_EVAP_TREND, "lat_groups_dataset_rank_opposing_significance.rds")) 
+
+
 ## Land use ----
 data_merge <- merge(evap_mask[, .(lat, lon, land_cover_short_class)], 
                     data, 
@@ -22,8 +67,6 @@ area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)),
                                 .(land_cover_short_class, opposing_0_1, dataset)]
 area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
                                 .(land_cover_short_class, opposing_0_2, dataset)]
-area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
-                                .(land_cover_short_class, opposing_all, dataset)]
 
 area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
                        by.x = c("opposing_0_01", "dataset", "land_cover_short_class"), 
@@ -34,16 +77,12 @@ area_opposing <- merge(area_opposing, area_opposing_0_1,
 area_opposing <- merge(area_opposing, area_opposing_0_2, 
                        by.x = c("opposing_0_01", "dataset", "land_cover_short_class"), 
                        by.y = c("opposing_0_2", "dataset", "land_cover_short_class"), all = TRUE)
-area_opposing <- merge(area_opposing, area_opposing_all, 
-                       by.x = c("opposing_0_01", "dataset", "land_cover_short_class"), 
-                       by.y = c("opposing_all", "dataset", "land_cover_short_class"), all = TRUE)
 
 opposing_melt <- melt(area_opposing,
                       measure.vars = c("area_opposing_0_01",
                                        "area_opposing_0_05",
                                        "area_opposing_0_1",
-                                       "area_opposing_0_2",
-                                       "area_opposing_all"
+                                       "area_opposing_0_2"
                       ))
 
 
@@ -55,7 +94,6 @@ opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
 opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
 opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
-opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
 opposing_melt <- opposing_melt[opposing_0_01 == 1]
 opposing_melt[, opposing_0_01 := NULL]
@@ -75,8 +113,7 @@ area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)),
                                 .(biome_short_class, opposing_0_1, dataset)]
 area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
                                 .(biome_short_class, opposing_0_2, dataset)]
-area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
-                                .(biome_short_class, opposing_all, dataset)]
+
 
 area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
                        by.x = c("opposing_0_01", "dataset", "biome_short_class"), 
@@ -87,16 +124,13 @@ area_opposing <- merge(area_opposing, area_opposing_0_1,
 area_opposing <- merge(area_opposing, area_opposing_0_2, 
                        by.x = c("opposing_0_01", "dataset", "biome_short_class"), 
                        by.y = c("opposing_0_2", "dataset", "biome_short_class"), all = TRUE)
-area_opposing <- merge(area_opposing, area_opposing_all, 
-                       by.x = c("opposing_0_01", "dataset", "biome_short_class"), 
-                       by.y = c("opposing_all", "dataset", "biome_short_class"), all = TRUE)
+
 
 opposing_melt <- melt(area_opposing,
                       measure.vars = c("area_opposing_0_01",
                                        "area_opposing_0_05",
                                        "area_opposing_0_1",
-                                       "area_opposing_0_2",
-                                       "area_opposing_all"
+                                       "area_opposing_0_2"
                       ))
 
 
@@ -108,7 +142,6 @@ opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
 opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
 opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
-opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
 opposing_melt <- opposing_melt[opposing_0_01 == 1]
 opposing_melt[, opposing_0_01 := NULL]
@@ -128,8 +161,7 @@ area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)),
                                 .(IPCC_ref_region, opposing_0_1, dataset)]
 area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
                                 .(IPCC_ref_region, opposing_0_2, dataset)]
-area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
-                                .(IPCC_ref_region, opposing_all, dataset)]
+
 
 area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
                        by.x = c("opposing_0_01", "dataset", "IPCC_ref_region"), 
@@ -140,16 +172,13 @@ area_opposing <- merge(area_opposing, area_opposing_0_1,
 area_opposing <- merge(area_opposing, area_opposing_0_2, 
                        by.x = c("opposing_0_01", "dataset", "IPCC_ref_region"), 
                        by.y = c("opposing_0_2", "dataset", "IPCC_ref_region"), all = TRUE)
-area_opposing <- merge(area_opposing, area_opposing_all, 
-                       by.x = c("opposing_0_01", "dataset", "IPCC_ref_region"), 
-                       by.y = c("opposing_all", "dataset", "IPCC_ref_region"), all = TRUE)
+
 
 opposing_melt <- melt(area_opposing,
                       measure.vars = c("area_opposing_0_01",
                                        "area_opposing_0_05",
                                        "area_opposing_0_1",
-                                       "area_opposing_0_2",
-                                       "area_opposing_all"
+                                       "area_opposing_0_2"
                       ))
 
 
@@ -161,7 +190,6 @@ opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
 opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
 opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
-opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
 opposing_melt <- opposing_melt[opposing_0_01 == 1]
 opposing_melt[, opposing_0_01 := NULL]
@@ -181,8 +209,6 @@ area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)),
                                 .(evap_quant, opposing_0_1, dataset)]
 area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
                                 .(evap_quant, opposing_0_2, dataset)]
-area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
-                                .(evap_quant, opposing_all, dataset)]
 
 area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
                        by.x = c("opposing_0_01", "dataset", "evap_quant"), 
@@ -193,16 +219,13 @@ area_opposing <- merge(area_opposing, area_opposing_0_1,
 area_opposing <- merge(area_opposing, area_opposing_0_2, 
                        by.x = c("opposing_0_01", "dataset", "evap_quant"), 
                        by.y = c("opposing_0_2", "dataset", "evap_quant"), all = TRUE)
-area_opposing <- merge(area_opposing, area_opposing_all, 
-                       by.x = c("opposing_0_01", "dataset", "evap_quant"), 
-                       by.y = c("opposing_all", "dataset", "evap_quant"), all = TRUE)
+
 
 opposing_melt <- melt(area_opposing,
                       measure.vars = c("area_opposing_0_01",
                                        "area_opposing_0_05",
                                        "area_opposing_0_1",
-                                       "area_opposing_0_2",
-                                       "area_opposing_all"
+                                       "area_opposing_0_2"
                       ))
 
 
@@ -214,7 +237,6 @@ opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
 opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
 opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
-opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
 opposing_melt <- opposing_melt[opposing_0_01 == 1]
 opposing_melt[, opposing_0_01 := NULL]
@@ -234,8 +256,7 @@ area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)),
                                 .(elev_class, opposing_0_1, dataset)]
 area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
                                 .(elev_class, opposing_0_2, dataset)]
-area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
-                                .(elev_class, opposing_all, dataset)]
+
 
 area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
                        by.x = c("opposing_0_01", "dataset", "elev_class"), 
@@ -246,16 +267,13 @@ area_opposing <- merge(area_opposing, area_opposing_0_1,
 area_opposing <- merge(area_opposing, area_opposing_0_2, 
                        by.x = c("opposing_0_01", "dataset", "elev_class"), 
                        by.y = c("opposing_0_2", "dataset", "elev_class"), all = TRUE)
-area_opposing <- merge(area_opposing, area_opposing_all, 
-                       by.x = c("opposing_0_01", "dataset", "elev_class"), 
-                       by.y = c("opposing_all", "dataset", "elev_class"), all = TRUE)
+
 
 opposing_melt <- melt(area_opposing,
                       measure.vars = c("area_opposing_0_01",
                                        "area_opposing_0_05",
                                        "area_opposing_0_1",
-                                       "area_opposing_0_2",
-                                       "area_opposing_all"
+                                       "area_opposing_0_2"
                       ))
 
 
@@ -267,7 +285,6 @@ opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
 opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
 opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
-opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
 opposing_melt <- opposing_melt[opposing_0_01 == 1]
 opposing_melt[, opposing_0_01 := NULL]
@@ -287,8 +304,7 @@ area_opposing_0_1 <- data_merge[, .(area_opposing_0_1 = sum(area)),
                                 .(KG_beck, opposing_0_1, dataset)]
 area_opposing_0_2 <- data_merge[, .(area_opposing_0_2 = sum(area)), 
                                 .(KG_beck, opposing_0_2, dataset)]
-area_opposing_all <- data_merge[, .(area_opposing_all = sum(area)), 
-                                .(KG_beck, opposing_all, dataset)]
+
 
 area_opposing <- merge(area_opposing_0_01, area_opposing_0_05, 
                        by.x = c("opposing_0_01", "dataset", "KG_beck"), 
@@ -299,16 +315,12 @@ area_opposing <- merge(area_opposing, area_opposing_0_1,
 area_opposing <- merge(area_opposing, area_opposing_0_2, 
                        by.x = c("opposing_0_01", "dataset", "KG_beck"), 
                        by.y = c("opposing_0_2", "dataset", "KG_beck"), all = TRUE)
-area_opposing <- merge(area_opposing, area_opposing_all, 
-                       by.x = c("opposing_0_01", "dataset", "KG_beck"), 
-                       by.y = c("opposing_all", "dataset", "KG_beck"), all = TRUE)
 
 opposing_melt <- melt(area_opposing,
                       measure.vars = c("area_opposing_0_01",
                                        "area_opposing_0_05",
                                        "area_opposing_0_1",
-                                       "area_opposing_0_2",
-                                       "area_opposing_all"
+                                       "area_opposing_0_2"
                       ))
 
 
@@ -318,7 +330,6 @@ opposing_melt[variable == "area_opposing_0_01", variable := "p <= 0.01", ]
 opposing_melt[variable == "area_opposing_0_05", variable := "p <= 0.05", ]
 opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
-opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
 dataset_list <- unique(opposing_melt$dataset)
 KG_list <- unique(opposing_melt$KG_beck)

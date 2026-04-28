@@ -69,5 +69,7 @@ opposing_melt[variable == "area_opposing_0_1", variable := "p <= 0.1", ]
 opposing_melt[variable == "area_opposing_0_2", variable := "p <= 0.2", ]
 opposing_melt[variable == "area_opposing_all", variable := "p <= 1", ]
 
+opposing_melt <- opposing_melt[opposing_0_01 == 1]
+opposing_melt[, opposing_0_01 := NULL]
 saveRDS(opposing_melt, paste0(PATH_SAVE_EVAP_TREND, "dataset_rank_opposing_DCI.rds")) 
 

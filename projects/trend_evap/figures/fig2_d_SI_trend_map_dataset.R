@@ -1,8 +1,10 @@
-# Figure to support figure 4 - trend by dataset ----
+# Figure to support - trend by dataset ----
 source('source/evap_trend.R')
+source('source/geo_functions.R')
 
 library(rnaturalearth)
 library(ggpubr)
+
 
 # Map preparation -----
 ## World and Land borders ----
@@ -86,14 +88,6 @@ fig_slope <- ggplot(to_plot_sf) +
   guides(fill = guide_legend(ncol = 1, byrow = TRUE))
 
 
-to_plot_sf <- evap_trend[dataset == dataset_sel, .(lon, lat, lower)]
-to_plot_sf <- to_plot_sf[, .(lon, lat, lower)] %>% 
-  rasterFromXYZ(res = c(0.25, 0.25),
-                crs = "+proj=longlat +datum=WGS84 +no_defs") %>%
-  st_as_stars() %>% st_as_sf()
-
-to_plot_sf$lower_brk <-  cut(to_plot_sf$lower, breaks = c(-117,-5,-3,-1, 0, 1, 3, 5, 142))
-
 to_plot_sf <- evap_trend[dataset == dataset_sel, .(lon, lat, pval_brk)
 ][, value := as.numeric(pval_brk)]
 to_plot_sf <- to_plot_sf[, .(lon, lat, value)] %>% 
@@ -136,7 +130,7 @@ fig_col <- ggarrange(fig_slope, fig_pval,  labels = c("a", "b"), ncol = 1, nrow 
 annotate_figure(fig_col, top = text_grob(dataset_sel, 
                                       color = "black", size = 28))
 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_maps_trends_",dataset_sel,".png"), 
+ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig_SI_maps_trends_",dataset_sel,".png"), 
        width = 8, height = 8)
 
 }
