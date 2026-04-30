@@ -124,5 +124,5 @@ fig <- ggarrange(fig_evap, fig_elev, fig_lat, fig_climate, nrow = 4,
           labels = c("a", "b", "c", "d"))
 annotate_figure(fig, top = text_grob("Quartile uncertainty across environmental gradients", face = "bold", size = 14))
 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_SI_quartile_uncertainty_area_fraction.png"), 
+ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig3_quartile_uncertainty_area_fraction.png"), 
        width = 10, height = 10)

@@ -2,6 +2,7 @@
 source('source/evap_trend.R')
 source('source/geo_functions.R')
 
+library(ggpubr)
 
 ## Data ----
 ### Input data generated in trend_evap/bootstrap/01_c 
@@ -96,5 +97,5 @@ fig_random <- ggplot(evap_trend_area[dataset == "Random"])+
 
 ggarrange(fig_datasets, fig_random, common.legend = T, labels = c("a",   "b"), widths = c(0.9, 0.125), align =   "h", font.label = list(size = 20))
 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP,   "SI_fig_support_evap_trend_direction_detailed_per_dataset_bootstrap.png"), 
+ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_support_evap_trend_direction_detailed_per_dataset_bootstrap.png"), 
        width = 12, height = 8)
