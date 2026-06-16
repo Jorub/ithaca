@@ -128,7 +128,7 @@ theme_map_fig2 <- theme_bw() +
     axis.title = element_text(size = 14),
     legend.text = element_text(size = 10),
     legend.title = element_text(size = 12),
-    plot.title = element_text(size = 12, face = "plain"),
+    plot.title = element_text(size = 12, face = "bold", hjust = 0),
     plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm")
   )
 

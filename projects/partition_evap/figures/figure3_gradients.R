@@ -4,6 +4,7 @@ source('source/graphics.R')
 library(ggpubr)
 library(ggnewscale)
 library(cowplot)
+library(grid)
 
 # Data ----
 dataset_agreement_grid_wise <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
@@ -27,7 +28,7 @@ evap_quant_labels_v2 <- levels(dataset_agreement_grid_wise$evap_quant_v2)
 ## theme ----
 theme_fig3 <- theme_bw(base_size = 11) +
   theme(
-    axis.text = element_text(size = 9),
+    axis.text = element_text(size = 10),
     axis.title = element_text(size = 10),
     plot.title = element_text(size = 10, face = "bold", hjust = 0),
     panel.grid.major.x = element_blank(),
@@ -109,8 +110,9 @@ a_top <- ggplot()+
     expand = c(0, 0)
   ) +
   labs(
-    x = NULL,
+    x = "Evapotranspiration quantiles",
     y = "Area fraction [%]",
+    title = "ET quantiles"
   ) +
   theme_fig3
 
@@ -195,8 +197,9 @@ b_top <- ggplot()+
     expand = c(0, 0)
   ) +
   labs(
-    x = NULL,
+    x = "Elevation classes [m]",
     y = "Area fraction [%]",
+    title = "Elevation"
   ) +
   theme_fig3 +
   theme(axis.text.x = element_text(angle = 25, vjust = 1, hjust = 1))
@@ -218,7 +221,7 @@ b_bottom <- ggplot(joint_agreement)+
     expand = c(0, 0)
   ) +
   labs(
-    x = "Elevation [m]",
+    x = "Elevation classes [m]",
     y = "Area fraction [%]",
   ) +
   theme_fig3 +
@@ -286,8 +289,9 @@ c_top <- ggplot()+
     expand = c(0, 0)
   ) +
   labs(
-    x = NULL,
+    x = "Latitude classes [°]",
     y = "Area fraction [%]",
+    title = "Latitude"
   ) +
   theme_fig3
 
@@ -308,7 +312,7 @@ c_bottom <- ggplot(joint_agreement)+
     expand = c(0, 0)
   ) +
   labs(
-    x = "Latitude [°]",
+    x = "Latitude classes [°]",
     y = "Area fraction [%]",
   ) +
   theme_fig3
@@ -366,8 +370,8 @@ legend_theme <- theme_void() +
     legend.position = "bottom",
     legend.direction = "vertical",
     legend.box = "vertical",
-    legend.title = element_text(face = "bold", size = 8),
-    legend.text = element_text(size = 7),
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 10),
     legend.key.size = unit(0.35, "cm"),
     legend.spacing.x = unit(0.10, "cm"),
     legend.margin = margin(t = 0, r = 2, b = 0, l = 2),
@@ -467,26 +471,23 @@ common_legend_v3 <- cowplot::plot_grid(
 
 # plot all ----
 
-fig3_grid <- cowplot::plot_grid(
-  a_top, b_top,  c_top,
-  a_bottom, b_bottom, c_bottom,
-  ncol = 3,
-  align = "hv",
-  labels = c("a", "b", "c", "d", "e", "f"),
-  label_fontface = "bold",
-  label_size = 11
-)
+panel_title_top <- ggdraw() +
+  draw_label(
+    "Quartile and distribution agreement across gradients",
+    x = 0,
+    hjust = 0,
+    fontface = "bold",
+    size = 11
+  )
 
-fig3_final <- cowplot::plot_grid(
-  fig3_grid,
-  common_legend_v2,
-  ncol = 2,
-  rel_widths = c(1, 0.15)
-)
-
-fig3_final
-
-# differrent version
+panel_title_bottom <- ggdraw() +
+  draw_label(
+    "Joint agreement across gradients",
+    x = 0,
+    hjust = 0,
+    fontface = "bold",
+    size = 11
+  )
 
 fig3_grid_top <- cowplot::plot_grid(
   a_top, b_top,  c_top, 
@@ -521,10 +522,12 @@ fig3_grid_bottom_legend <- cowplot::plot_grid(
 )
 
 fig3 <- cowplot::plot_grid(
+  panel_title_top,
   fig3_grid_top_legend,
+  panel_title_bottom,
   fig3_grid_bottom_legend,
-  nrow = 2,
-  rel_heights = c(1, 0.5)
+  nrow = 4,
+  rel_heights = c(0.1, 1, 0.1, 0.6)
 )
 
 fig3
@@ -536,9 +539,9 @@ ggsave(
     "main/fig3_agreement_gradients.png"
   ),
   plot = fig3,
-  width = 13,
-  height = 8.5,
-  units = "in",
+  width = 1.5*20,
+  height = 20,
+  units = "cm",
   dpi = 300
 )
 
@@ -548,9 +551,9 @@ ggsave(
     "main/fig3_agreement_gradients.pdf"
   ),
   plot = fig3,
-  width = 13,
-  height = 8.5,
-  units = "in",
+  width = 1.5*20,
+  height = 20,
+  units = "cm",
   dpi = 300
 )
 
