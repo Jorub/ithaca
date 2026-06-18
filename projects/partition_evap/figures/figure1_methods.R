@@ -84,7 +84,7 @@ evap_mask_merge[rel_dataset_agreement == "Low", location_label := "Q2"]
 
 ## color ----
 
-color_agreement <- c("Low" = "#CE5A57",
+color_agreement <- c("Low" = "#A63A3A",
                      "Below average" = "#E38B75", 
                       "Average" = "#F4CC70",
                       "Above average"= "#97B8C2",

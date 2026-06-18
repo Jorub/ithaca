@@ -31,13 +31,10 @@ saveRDS(data_merged, paste0(PATH_SAVE_PARTITION_EVAP, "interannual_variance_ma_b
 
 data_ma_quartile <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "quartile_agreement_ma_basins.rds"))
 data_ma_distribution <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "distribution_agreement_ma_basins.rds"))
+agreement_summary <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "high_agreement_ma_basins_area.rds"))
 
-# Basins with agreement above average and high in over 50 % volume fraction ----
-data_sum_distribution <- data_ma_distribution[agreement_fac %in% c('High', 'Above average'), .(evap_volume_fraction = sum(evap_volume_fraction)), .(ma_basin)]
-data_sum_quartile <- data_ma_quartile[rel_dataset_agreement %in% c('High', 'Above average'), .(evap_volume_fraction = sum(evap_volume_fraction)), .(ma_basin)]
-
-basins_distribution <- data_sum_distribution[evap_volume_fraction >= 0.5, ma_basin]
-basins_quartile <- data_sum_quartile[evap_volume_fraction >= 0.5, ma_basin]
+# Basins with joint agreement above average and high in over 40 % area fraction ----
+basins_higher_area <- agreement_summary[joint_da_higher > 0.4]
 
 data_merged[dataset %in% EVAP_DATASETS_REANAL, dataset_type := "Reanalysis"]
 data_merged[dataset %in% EVAP_DATASETS_REMOTE, dataset_type := "Remote sensing"]
@@ -54,7 +51,7 @@ data_merged[ma_basin > 33 & ma_basin < 47, continent := 'Asia']
 data_merged[ma_basin > 46 & ma_basin < 52, continent := 'Africa']
 data_merged[ma_basin > 51, continent := 'Oceania']
 
-common_basins <- basins_distribution[basins_distribution %in% basins_quartile]
+common_basins <- basins_higher_area$ma_basin 
 
 ## basins ----
 # World and Land borders -----
@@ -127,10 +124,10 @@ theme_map_fig5 <- theme_bw() +
   )
 
 ## gg----
-fig_basins <- ggplot() +
+fig_map_5a <- ggplot() +
   geom_sf(data = world_no_antarctica, fill = "light gray", color = "light gray") +
   geom_sf(data = ma_sf, fill = "white", color = "gray35", alpha = 1) +
-  geom_sf(data = ma_sf_terr, fill = "royalblue4", color = "black", alpha = 0.7) +
+  geom_sf(data = ma_sf_terr, fill = "grey15", color = "black", alpha = 0.7) +
   geom_label_repel(
     data = ma_sf_terr,
     aes(label = BasinID, geometry = geometry),
@@ -140,8 +137,8 @@ fig_basins <- ggplot() +
     point.padding = 0.1,
     size = 4,
     segment.color = "black",
-    nudge_x = 0.15,          # adjust nudging as needed
-    nudge_y = 0.15
+    nudge_x = 0.25,          # adjust nudging as needed
+    nudge_y = 0.25
   ) +
   labs(x = NULL, y = NULL, fill = "") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
@@ -286,56 +283,93 @@ fig5b_data <- data_merged_mean %>%
     by = "dataset"
   )
 
-## Figure 5b heatmap ----
+# Figure 5 shared visual style ------------------------------------------------
+## theme and color ----
+fig5_col_low  <- "#D55E00"   # product ET below WB
+fig5_col_mid  <- "#F7F7F7"   # close to WB
+fig5_col_high <- "#0072B2"   # product ET above WB
+fig5_col_neut <- "grey65"
+fig5_col_dark <- "grey25"
+          
+color_ref <- c(
+  "Central product range below WB"   = fig5_col_low,
+  "Central product range crosses WB" = fig5_col_neut,
+  "Central product range above WB"   = fig5_col_high
+)
+        
+        theme_fig5 <- theme_bw(base_size = 11) +
+          theme(
+            panel.grid = element_blank(),
+            panel.background = element_rect(fill = "white", colour = NA),
+            plot.background = element_rect(fill = "white", colour = NA),
+            axis.title = element_text(size = 11),
+            axis.text = element_text(size = 9, colour = fig5_col_dark),
+            axis.ticks = element_line(colour = "grey45", linewidth = 0.25),
+            legend.title = element_text(size = 10),
+            legend.text = element_text(size = 9),
+            strip.background = element_rect(fill = "grey92", colour = NA),
+            strip.text = element_text(size = 9, face = "bold", colour = fig5_col_dark),
+            plot.margin = margin(5, 5, 5, 5)
+          )
 
+# Figure 5b heatmap ----
 fig5b <- ggplot(
   fig5b_data,
   aes(x = x_plot, y = y_id, fill = ratio_ET)
 ) +
   geom_tile(
     color = "white",
-    linewidth = 0.25
+    linewidth = 0.35
   ) +
   geom_text(
-    aes(label = number(ratio_ET, accuracy = 0.01)),
-    size = 3
+    aes(
+      label = number(ratio_ET, accuracy = 0.01),
+      colour = abs(ratio_ET - 1) > 0.25
+    ),
+    size = 2.8
+  ) +
+  scale_colour_manual(
+    values = c(`FALSE` = "grey20", `TRUE` = "white"),
+    guide = "none"
   ) +
   geom_vline(
     data = continent_separators,
     aes(xintercept = x_sep),
     inherit.aes = FALSE,
-    linewidth = 0.6,
-    colour = "black"
+    linewidth = 0.45,
+    colour = "grey20"
   ) +
   geom_hline(
     data = dataset_type_separators,
     aes(yintercept = y_sep),
     inherit.aes = FALSE,
-    linewidth = 0.6,
-    colour = "black"
+    linewidth = 0.45,
+    colour = "grey20"
   ) +
   geom_text(
     data = continent_blocks,
     aes(
       x = x_mid,
-      y = n_datasets + 0.85,
+      y = n_datasets + 0.82,
       label = continent
     ),
     inherit.aes = FALSE,
     fontface = "bold",
-    size = 3.5
+    size = 3.2,
+    colour = fig5_col_dark
   ) +
   geom_text(
     data = dataset_type_labels,
     aes(
-      x = 2.0 ,
+      x = 2.0,
       y = y_mid,
       label = dataset_type
     ),
     inherit.aes = FALSE,
     fontface = "bold",
-    size = 3.5,
-    hjust = 1
+    size = 3.2,
+    hjust = 1,
+    colour = fig5_col_dark
   ) +
   geom_text(
     data = dataset_name_labels,
@@ -345,17 +379,18 @@ fig5b <- ggplot(
       label = dataset
     ),
     inherit.aes = FALSE,
-    size = 3.2,
-    hjust = 1
+    size = 3.0,
+    hjust = 1,
+    colour = fig5_col_dark
   ) +
   scale_fill_gradient2(
-    low = "#A63A3A",
-    mid = "white",
-    high = "#4D648D",
+    low = fig5_col_low,
+    mid = fig5_col_mid,
+    high = fig5_col_high,
     midpoint = 1,
     limits = c(0.5, 1.5),
     oob = squish,
-    name = expression(frac(Mean~ET[WB], Mean~ET[Product]))
+    name = "Product ET / WB ET"
   ) +
   scale_x_continuous(
     breaks = basin_order$x_plot,
@@ -374,19 +409,178 @@ fig5b <- ggplot(
     y = NULL
   ) +
   coord_cartesian(clip = "off") +
-  theme_bw() +
+  theme_fig5 +
   theme(
     panel.border = element_blank(),
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
     axis.ticks = element_blank(),
     axis.text.y = element_blank(),
-    legend.position = "right",
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10),
-    plot.margin = margin(25, 10, 10, 15)
+    plot.margin = margin(16, 8, 8, 18)
   )
 
 fig5b
 
+# Figure 5c error vs joint agreement ----
+data_merged[, ma_basin := factor(ma_basin)]
+
+## Product mean ET per basin ----
+data_mean <- data_merged[, .(
+  product_et   = mean(evap_mean, na.rm = TRUE),
+  dataset_type = first(dataset_type),
+  continent    = first(continent)
+), by = .(dataset, ma_basin)]
+
+## Separate Ma as independent water-balance reference ----
+wb <- data_mean[dataset == "Ma", .(
+  wb_et = product_et
+), by = ma_basin]
+
+data_prod <- merge(
+  data_mean[dataset != "Ma"],
+  wb,
+  by = "ma_basin",
+  all.x = TRUE
+)
+
+data_prod[, ratio_ET := product_et / wb_et]
+
+## Add agreement information ----
+plot_dt <- merge(
+  data_prod,
+  agreement_summary,
+  by = "ma_basin",
+  all.x = TRUE
+)
+
+plot_dt <- plot_dt[!is.na(ratio_ET) & !is.na(joint_da_higher)]
+
+# If joint_da_higher is stored as 0-1, convert to percent.
+x_scale <- if (max(plot_dt$joint_da_higher, na.rm = TRUE) <= 1) 100 else 1
+plot_dt[, joint_high_pct := joint_da_higher * x_scale]
+
+## Basin-level summaries ----
+basin_sum <- plot_dt[, .(
+  ratio_min = min(ratio_ET, na.rm = TRUE),
+  ratio_q25 = quantile(ratio_ET, 0.25, na.rm = TRUE),
+  ratio_med = median(ratio_ET, na.rm = TRUE),
+  ratio_q75 = quantile(ratio_ET, 0.75, na.rm = TRUE),
+  ratio_max = max(ratio_ET, na.rm = TRUE),
+  n_products = .N
+), by = .(ma_basin, joint_high_pct)]
+
+basin_sum[, wb_relation := fifelse(
+  ratio_q75 < 1, "Central product range below WB",
+  fifelse(ratio_q25 > 1, "Central product range above WB",
+          "Central product range crosses WB")
+)]
+
+## colors ----
+
+label_dt <- basin_sum[
+  joint_high_pct >= quantile(joint_high_pct, 0.75, na.rm = TRUE) &
+    (ratio_q75 < 1 | ratio_q25 > 1)
+]
+
+## ggplot ----
+fig_5c <- ggplot() +
+  geom_point(
+    data = plot_dt,
+    aes(x = joint_high_pct, y = ratio_ET),
+    color = "grey70",
+    alpha = 0.35,
+    size = 1.0
+  ) +
+  geom_linerange(
+    data = basin_sum,
+    aes(x = joint_high_pct, ymin = ratio_min, ymax = ratio_max),
+    color = "grey70",
+    linewidth = 0.25,
+    alpha = 0.65
+  ) +
+  geom_linerange(
+    data = basin_sum,
+    aes(
+      x = joint_high_pct,
+      ymin = ratio_q25,
+      ymax = ratio_q75,
+      color = wb_relation
+    ),
+    linewidth = 1.15
+  ) +
+  geom_point(
+    data = basin_sum,
+    aes(x = joint_high_pct, y = ratio_med, fill = wb_relation),
+    shape = 21,
+    color = "grey15",
+    size = 2.3,
+    stroke = 0.25
+  ) +
+  geom_hline(
+    yintercept = 1,
+    linetype = "dashed",
+    color = "grey15",
+    linewidth = 0.4
+  ) +
+  geom_vline(
+    xintercept = 40,
+    linetype = "dotted",
+    color = "grey45",
+    linewidth = 0.4
+  ) +
+  geom_text(
+    data = label_dt,
+    aes(x = joint_high_pct, y = ratio_med, label = ma_basin),
+    nudge_y = -0.045,
+    size = 3.2,
+    colour = fig5_col_dark,
+    check_overlap = TRUE
+  ) +
+  scale_color_manual(values = color_ref, name = NULL) +
+  scale_fill_manual(values = color_ref, name = NULL) +
+  labs(
+    x = "Basin fraction with joint high or above-average agreement (%)",
+    y = "Product ET / WB ET"
+  ) +
+  coord_cartesian(ylim = c(0.5, 1.5)) +
+  theme_fig5 +
+  theme(
+    legend.position = "right",
+    plot.margin = margin(8, 8, 10, 18)
+  )
+
+# Figure 5 join plot ----
+fig5 <- ggarrange(
+  fig_map_5a,
+  fig5b,
+  fig_5c,
+  nrow = 3,
+  labels = c("a", "b", "c"),
+  font.label = list(size = 12, face = "bold"),
+  heights = c(0.85, 1.35, 1.0)
+)
+
+fig5
+# Save figure ----
+ggsave(
+  filename = paste0(
+    PATH_SAVE_PARTITION_EVAP_FIGURES,
+    "main/fig5_basin_comparison.png"
+  ),
+  plot = fig5,
+  width = 20,
+  height = 1.5*20,
+  units = "cm",
+  dpi = 300
+)
+
+ggsave(
+  filename = paste0(
+    PATH_SAVE_PARTITION_EVAP_FIGURES,
+    "main/fig5_basin_comparison.pdf"
+  ),
+  plot = fig5,
+  width = 20,
+  height = 1.5*20,
+  units = "cm",
+  dpi = 300
+)
 
