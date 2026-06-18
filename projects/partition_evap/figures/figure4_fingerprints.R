@@ -5,6 +5,7 @@ library(ggpubr)
 library(ggnewscale)
 library(cowplot)
 library(scales)
+library(tibble)
 
 # Data ----
 dataset_agreement_grid_wise <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
@@ -90,10 +91,10 @@ contrast_evap_agreement_q_higher_summary <-
 
 
 environments <- c(
-  "BWh", "ARP", "Barren",
-  "Cfc", "TIB", "Snow/Ice",
-  "BSh", "EAU", "Mediterranean",
-  "Af",  "NWS", "T/S Forests"
+  "BWh", "ARP", "Barren", "Deserts",
+  "Cfc", "TIB", "Snow/Ice", "Tundra",
+  "Af",  "NWS", "T/S Forests", "Forests",
+  "BSh", "EAU", "Savannas", "Mediterranean"
 )
 
 environments_select <- joint_evap_agreement[environment %in% environments]
