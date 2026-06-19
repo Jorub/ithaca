@@ -100,9 +100,9 @@ basin_sum <- plot_dt[, .(
 ), by = .(ma_basin)]
 
 basin_sum[, ratio_et := fifelse(
-  ratio_q75 < 1, "Central product range below WB",
-  fifelse(ratio_q25 > 1, "Central product range above WB",
-          "Central product range crosses WB")
+  ratio_q75 < 1, "Below WB",
+  fifelse(ratio_q25 > 1, "Above WB",
+          "Crosses WB")
 )]
 
 # Panel b and c ----
@@ -114,9 +114,9 @@ fig5_col_neut <- "grey65"
 fig5_col_dark <- "grey25"
           
 color_ref <- c(
-          "Central product range below WB"   = fig5_col_low,
-          "Central product range crosses WB" = fig5_col_neut,
-          "Central product range above WB"   = fig5_col_high
+          "Below WB"   = fig5_col_low,
+          "Crosses WB" = fig5_col_neut,
+          "Above WB"   = fig5_col_high
 )
 ## theme ----
 theme_fig5 <- theme_bw(base_size = 11) +
@@ -173,16 +173,17 @@ fig_5b <- ggplot(
   ) +
   labs(
     x = NULL,
-    y = NULL
+    y = "Dataset",
+    title = "High agreement basins"
   ) +
   theme_fig5 +
   theme(
-    axis.text.x = element_blank(),
+    axis.text.x = element_text(size = 9),
     axis.ticks.x = element_blank(),
-    axis.text.y = element_text(size = 8.8),
+    axis.text.y = element_text(size = 9),
     strip.placement = "outside",
     strip.text.x = element_text(
-      size = 8.8,
+      size = 9,
       face = "bold",
       colour = fig5_col_dark
     ),
@@ -261,13 +262,15 @@ fig_5c <- ggplot() +
     colour = fig5_col_dark,
     check_overlap = TRUE
   ) +
-  scale_color_manual(values = color_ref, name = NULL) +
-  scale_fill_manual(values = color_ref, name = NULL) +
+  scale_color_manual(values = color_ref) +
+  scale_fill_manual(values = color_ref) +
   labs(
-    x = "Basin fraction with joint high or above-average agreement (%)",
-    y = "Product ET / WB ET"
+    x = "Basin area fraction of spatial overlap of high or above-average agreement (%)",
+    y = "Product ET / WB ET",
+    color = "Central product range",
+    fill = "Central product range"
   ) +
-  coord_cartesian(ylim = c(0.5, 1.5)) +
+  coord_cartesian(ylim = c(0.3, 2)) +
   theme_fig5 +
   theme(
     plot.margin = margin(8, 8, 10, 18)
@@ -316,15 +319,16 @@ labs_x <- st_as_sf(labs_x, coords = c("lon", "lat"),
 
 fname_shape <- list.files(path = PATH_MASKS_MA_BASINS, full.names = TRUE, pattern = "*Boundary_56.shp")
 ma_sf <- read_sf(fname_shape[1])
-ma_sf_terr <- ma_sf[ma_sf$BasinID %in% common_basins,]
-
-
-fname_shape <- list.files(path = PATH_MASKS_MA_BASINS, full.names = TRUE, pattern = "*Boundary_56.shp")
-ma_sf <- read_sf(fname_shape[1])
+ma_sf_terr <- ma_sf %>%
+  filter(BasinID %in% as.character(common_basins))
 
 ma_sf <- ma_sf %>%
+  mutate(BasinID = as.character(BasinID)) %>%
+  left_join(
+    basin_sum,
+    by = c("BasinID" = "ma_basin")
+  ) %>%
   mutate(
-    BasinID = as.character(BasinID),
     basin_group = if_else(
       BasinID %in% as.character(common_basins),
       "High agreement basins",
@@ -333,10 +337,14 @@ ma_sf <- ma_sf %>%
     basin_group = factor(
       basin_group,
       levels = c("Other basins", "High agreement basins")
+    ),
+    ratio_et = factor(
+      ratio_et,
+      levels = names(color_ref)
     )
   )
 
-ma_sf_terr <- ma_sf[ma_sf$BasinID %in% common_basins,]
+
 
 # figure 5 a plot basin ----
 ## themes ----
@@ -355,10 +363,11 @@ theme_map_fig5 <- theme_bw() +
   )
 
 ## gg----
-fig_map_5a <- ggplot() +
+fig_map_5a <- 
+  ggplot() +
   geom_sf(data = world_no_antarctica, fill = "light gray", color = "light gray") +
-  geom_sf(data = ma_sf, fill = "white", color = "gray35", alpha = 1) +
-  geom_sf(data = ma_sf_terr, fill = "grey15", color = "black", alpha = 0.7) +
+  geom_sf(data = ma_sf, aes(fill = ratio_et) ,color = "gray35", alpha = 1) +
+  geom_sf(data = ma_sf_terr, fill = "transparent", color = "black", lwd = 0.3) +
   geom_label_repel(
     data = ma_sf_terr,
     aes(label = BasinID, geometry = geometry),
@@ -366,18 +375,19 @@ fig_map_5a <- ggplot() +
     min.segment.length = 0,  # always draw the line
     box.padding = 0.5,
     point.padding = 0.1,
-    size = 4,
+    size = 2,
     segment.color = "black",
-    nudge_x = 0.25,          # adjust nudging as needed
-    nudge_y = 0.25
+    nudge_x = 0.2,          # adjust nudging as needed
+    nudge_y = 0.2,
+    max.overlaps = Inf
   ) +
-  labs(x = NULL, y = NULL, fill = "") +
+  scale_fill_manual(values = color_ref) +
+  labs(x = NULL, y = NULL, fill = "Central product range") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
   geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
   geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
-  theme_bw() +
   coord_sf(ylim = c(-70, 90), expand = F)+
-  theme_map_fig5
+  theme_map_fig5+theme(legend.position = "bottom")
 
 # join all ----
 
@@ -387,8 +397,6 @@ fig_5 <- ggarrange(fig_map_5a,
                    heights = c(0.7, 1.3),
                    labels = c('a', ''))
 
-
-fig_5 
 
 # Save figure ----
 ggsave(

@@ -5,6 +5,8 @@ library(ggpubr)
 library(ggnewscale)
 library(cowplot)
 library(grid)
+library(scales)
+
 
 # Data ----
 dataset_agreement_grid_wise <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
@@ -48,11 +50,11 @@ color_quartile_agreement <- c(
 )
 
 color_distribution_agreement <- c(
-  "Low" = "#B35806",
-  "Below average" = "#F1A340",
+  "Low" = "#A6611A",
+  "Below average" = "#DFC27D",
   "Average" = "#F7F7F7",
-  "Above average" = "#F6E8C3",
-  "High" = "#8C510A"
+  "Above average" = "#80CDC1",
+  "High" = "#018571"
 )
 
 color_joint <- c("Both higher" = "#4D648D", "Both lower" = "#A63A3A")
@@ -482,7 +484,7 @@ panel_title_top <- ggdraw() +
 
 panel_title_bottom <- ggdraw() +
   draw_label(
-    "Joint agreement across gradients",
+    "Spatial overlap of agreement metrics across gradients",
     x = 0,
     hjust = 0,
     fontface = "bold",
