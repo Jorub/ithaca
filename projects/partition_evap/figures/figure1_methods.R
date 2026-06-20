@@ -77,10 +77,10 @@ evap_data_a[rel_dataset_agreement == "Low", location := 1.2]
 evap_mask_merge[rel_dataset_agreement == "High", location := 1]
 evap_mask_merge[rel_dataset_agreement == "Low", location := 1.2]
 
-evap_data_a[rel_dataset_agreement == "High", location_label := "Q1"]
-evap_data_a[rel_dataset_agreement == "Low", location_label := "Q2"]
-evap_mask_merge[rel_dataset_agreement == "High", location_label := "Q1"]
-evap_mask_merge[rel_dataset_agreement == "Low", location_label := "Q2"]
+evap_data_a[rel_dataset_agreement == "High", location_label := "M1"]
+evap_data_a[rel_dataset_agreement == "Low", location_label := "M2"]
+evap_mask_merge[rel_dataset_agreement == "High", location_label := "M1"]
+evap_mask_merge[rel_dataset_agreement == "Low", location_label := "M2"]
 
 ## color ----
 
@@ -147,7 +147,7 @@ panel_b <- ggplot(evap_mask_sample)+
                  color = rel_dataset_agreement), 
              size = 4.5, shape = 10)+
   geom_text(data = evap_mask_merge, 
-             aes(label = c("Q1", "Q2"), y = IQR, x = ens_mean_mean,
+             aes(label = c("M1", "M2"), y = IQR, x = ens_mean_mean,
                  color = rel_dataset_agreement), 
              size = 3, nudge_x = -120)+
   scale_color_manual(values = color_agreement)+
@@ -168,7 +168,7 @@ panel_c <- ggplot(evap_mask_sample)+
                  color = rel_dataset_agreement), 
              size = 4.5, shape = 10)+
   geom_text(data = evap_mask_merge, 
-            aes(label = c("Q1", "Q2"), y = std_quant_range, x = ens_mean_mean,
+            aes(label = c("M1", "M2"), y = std_quant_range, x = ens_mean_mean,
                 color = rel_dataset_agreement), 
             size = 3, nudge_x = -120)+
   geom_text(data = evap_mask_merge[rel_dataset_agreement == "Low"],
@@ -185,7 +185,7 @@ panel_c <- ggplot(evap_mask_sample)+
     "text",
     x = 1100,
     y = 0.78,
-    label = "sIQR == frac(IQR, bar(ET))",
+    label = "sIQR == frac(IQR, bar(ET[plain(ensemble)]))",
     parse = TRUE,
     size = 3.5
   )+
@@ -264,7 +264,7 @@ panel_d <- ggplot(evap_mask)+
             aes(x = std_quant_range, y = c(0.09, 0.96)), 
             size = 3, shape = 10)+
   geom_text(data = evap_mask_merge, 
-            aes(label = c("Q1", "Q2"), x = std_quant_range, 
+            aes(label = c("M1", "M2"), x = std_quant_range, 
                 y = c(0.05, 0.93)), 
             size = 3, nudge_x = c(0.1))+
   geom_hline(yintercept = c(0.1, 0.3, 0.7, 0.9), linewidth = 0.25,
@@ -661,10 +661,10 @@ example_locations_data[dataset %in% EVAP_DATASETS_HYDROL, dataset_type := "Hydr.
 example_locations_data[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Composite"]
 
 example_locations_data[rel_dataset_agreement == "High", 
-                       rel_dataset_agreement := "High quartile\nagreement"]
+                       rel_dataset_agreement := "High magnitude\nagreement"]
 
 example_locations_data[rel_dataset_agreement == "Low", 
-                       rel_dataset_agreement := "Low quartile\nagreement"]
+                       rel_dataset_agreement := "Low magnitude\nagreement"]
 
 example_locations_data[dist_dataset_agreement == "High", 
                        dist_dataset_agreement := "High distribution\nagreement"]
@@ -678,10 +678,10 @@ example_locations_data[, ens_mean_mean := mean(evap_mean), .(lat, lon)]
 # Annotation labels for the 2 x 2 joint agreement examples
 facet_labels <- data.table::data.table(
   rel_dataset_agreement = c(
-    "High quartile\nagreement",
-    "High quartile\nagreement",
-    "Low quartile\nagreement",
-    "Low quartile\nagreement"
+    "High magnitude\nagreement",
+    "High magnitude\nagreement",
+    "Low magnitude\nagreement",
+    "Low magnitude\nagreement"
   ),
   dist_dataset_agreement = c(
     "High distribution\nagreement",
@@ -689,12 +689,12 @@ facet_labels <- data.table::data.table(
     "High distribution\nagreement",
     "Low distribution\nagreement"
   ),
-  example_label = c("D1", "Q1", "Q2", "D2"),
+  example_label = c("D1", "M1", "M2", "D2"),
   example_desc = c(
-    "High quartile + high distribution",
-    "High quartile + low distribution",
-    "Low quartile + high distribution",
-    "Low quartile + low distribution"
+    "High magnitude + high distribution",
+    "High magnitude + low distribution",
+    "Low magnitude + high distribution",
+    "Low magnitude + low distribution"
   )
 )
 
@@ -736,7 +736,7 @@ fig_types <- ggplot(example_locations_data)+
     fill = "white"
   ) +
   facet_grid(rel_dataset_agreement~dist_dataset_agreement, scales = 'free')+
-  labs(y = expression(paste('Product annual ET (mm year'^-1,')')), x = 'Year')+
+  labs(y = expression(paste('Product annual ET (mm yr'^-1,')')), x = 'Year')+
   theme_fig1_row1+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 10, face = "plain"),
@@ -746,7 +746,7 @@ fig_types <- ggplot(example_locations_data)+
 
 # ggarrange ----
 row1 <- annotate_figure(
-  fig1_row1, top = text_grob("Quartile agreement", face = "bold",
+  fig1_row1, top = text_grob("Magnitude agreement", face = "bold",
                              size = 13)
 )
 
@@ -766,7 +766,7 @@ figure_1 <- ggarrange(row1, row2, agreement_pattern,
 ggsave(
   filename = paste0(
     PATH_SAVE_PARTITION_EVAP_FIGURES,
-    "main/figure_1_agreement_metrics.pdf"
+    "main/fig1_agreement_metrics.pdf"
   ),
   plot = figure_1,
   width = 1.5*25,

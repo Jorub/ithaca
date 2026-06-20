@@ -42,10 +42,10 @@ dataset_agreement_grid_wise[rel_dataset_agreement %in% c("Low", "Below average")
                             joint_agreement:= "Both lower"]
 dataset_agreement_grid_wise[rel_dataset_agreement %in% c("High", "Above average") & 
                               dist_dataset_agreement %in% c("Low", "Below average"), 
-                            joint_agreement:= "Quartile higher \nDistribution lower"]
+                            joint_agreement:= "Magnitude higher \nDistribution lower"]
 dataset_agreement_grid_wise[rel_dataset_agreement %in% c("Low", "Below average") & 
                               dist_dataset_agreement %in% c("High", "Above average"), 
-                            joint_agreement:= "Quartile lower \nDistribution higher"]
+                            joint_agreement:= "Magnitude lower \nDistribution higher"]
 
 dataset_agreement_grid_wise[is.na(joint_agreement), joint_agreement := "Average"]
 
@@ -113,8 +113,8 @@ color_agreement <- c("Low" = "#A63A3A",
 
 color_joint_agreement <- c("Both lower" = "#A63A3A",
                            "Both higher" = "#4D648D",
-                           "Quartile lower \nDistribution higher" = "#E2A374", 
-                           "Quartile higher \nDistribution lower"= "#6E5773",
+                           "Magnitude lower \nDistribution higher" = "#E2A374", 
+                           "Magnitude higher \nDistribution lower"= "#6E5773",
                            "Average" = "gray90")
 
 ### theme ----
@@ -132,7 +132,7 @@ theme_map_fig2 <- theme_bw() +
     plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm")
   )
 
-# Panel a: quartile agreement ----
+# Panel a: Magnitude agreement ----
 
 ## prep ----
 to_plot_dt <- dataset_agreement_grid_wise[, .(lon, lat,rel_dataset_agreement,
@@ -190,7 +190,7 @@ fig_a <- ggplot() +
   scale_color_manual(values = color_agreement,
                      guide = "none") +
   labs(x = NULL, y = NULL, fill = "",
-       title = "Quartile agreement") +
+       title = "Magnitude agreement") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
   geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
   geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
@@ -355,7 +355,7 @@ bar_joint <- ggplot(
   labs(
     x = NULL,
     y = NULL,
-    title = "Area fraction [%]"
+    title = "Agreement overlap [%]"
   ) +
   coord_flip() +
   theme_bw() +

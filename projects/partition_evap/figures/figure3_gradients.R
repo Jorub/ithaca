@@ -93,7 +93,7 @@ a_top <- ggplot()+
                                    fill = rel_dataset_agreement),
            width = 0.3) +
   scale_fill_manual(values = color_quartile_agreement,
-                    name = "Quartile agreement")+
+                    name = "Magnitude agreement")+
   ggnewscale::new_scale_fill() +
   geom_col(data = d_agreement, aes(x = as.numeric(evap_quant_v2)+0.18, y = area_fraction, 
                                    fill = dist_dataset_agreement),
@@ -180,7 +180,7 @@ b_top <- ggplot()+
                                    fill = rel_dataset_agreement),
            width = 0.3) +
   scale_fill_manual(values = color_quartile_agreement,
-                    name = "Quartile agreement")+
+                    name = "Magnitude agreement")+
   ggnewscale::new_scale_fill() +
   geom_col(data = d_agreement, aes(x = as.numeric(elev_class)+0.18, y = area_fraction, 
                                    fill = dist_dataset_agreement),
@@ -272,7 +272,7 @@ c_top <- ggplot()+
                                    fill = rel_dataset_agreement),
            width = 0.3) +
   scale_fill_manual(values = color_quartile_agreement,
-                    name = "Quartile agreement")+
+                    name = "Magnitude agreement")+
   ggnewscale::new_scale_fill() +
   geom_col(data = d_agreement, aes(x = as.numeric(lat_classes)+0.18, y = area_fraction, 
                                    fill = dist_dataset_agreement),
@@ -340,7 +340,7 @@ joint_levels <- c(
   "Both lower"
 )
 
-dummy_quartile <- data.table(
+dummy_magnitude <- data.table(
   x = agreement_levels,
   y = 1,
   rel_dataset_agreement = factor(
@@ -367,22 +367,23 @@ dummy_joint <- data.table(
   )
 )
 
-legend_theme <- theme_void() +
+legend_theme_top <- theme_void() +
   theme(
     legend.position = "bottom",
-    legend.direction = "vertical",
-    legend.box = "vertical",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 10),
+    legend.direction = "horizontal",
+    legend.box = "horizontal",
+    legend.title = element_text(face = "bold", size = 10, hjust = 0.5),
+    legend.text = element_text(size = 9),
     legend.key.size = unit(0.35, "cm"),
+    legend.key.width = unit(0.45, "cm"),
     legend.spacing.x = unit(0.10, "cm"),
-    legend.margin = margin(t = 0, r = 2, b = 0, l = 2),
-    legend.box.margin = margin(t = 0, r = 2, b = 0, l = 2)
+    legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+    legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0),
+    plot.margin = margin(t = 0, r = 0, b = 0, l = 0)
   )
 
-
-p_legend_quartile <- ggplot(
-  dummy_quartile,
+p_legend_magnitude <- ggplot(
+  dummy_magnitude,
   aes(x = x, y = y, fill = rel_dataset_agreement)
 ) +
   geom_col() +
@@ -391,10 +392,14 @@ p_legend_quartile <- ggplot(
     limits = agreement_levels,
     breaks = agreement_levels,
     drop = FALSE,
-    name = "Quartile agreement",
-    guide = guide_legend(ncol = 1, byrow = TRUE)
+    name = "Magnitude agreement",
+    guide = guide_legend(
+      nrow = 1,
+      byrow = TRUE,
+      title.position = "top"
+    )
   ) +
-  legend_theme
+  legend_theme_top
 
 p_legend_distribution <- ggplot(
   dummy_distribution,
@@ -406,10 +411,14 @@ p_legend_distribution <- ggplot(
     limits = agreement_levels,
     breaks = agreement_levels,
     drop = FALSE,
-    name = "Distribution agreement",
-    guide = guide_legend(ncol = 1, byrow = TRUE)
+    name = "Distributional agreement",
+    guide = guide_legend(
+      nrow = 1,
+      byrow = TRUE,
+      title.position = "top"
+    )
   ) +
-  legend_theme
+  legend_theme_top
 
 p_legend_joint <- ggplot(
   dummy_joint,
@@ -422,9 +431,13 @@ p_legend_joint <- ggplot(
     breaks = joint_levels,
     drop = FALSE,
     name = "Joint agreement",
-    guide = guide_legend(ncol = 1, byrow = TRUE)
+    guide = guide_legend(
+      nrow = 1,
+      byrow = TRUE,
+      title.position = "top"
+    )
   ) +
-  legend_theme
+  legend_theme_top
 
 get_bottom_legend <- function(p) {
   g <- ggplotGrob(p)
@@ -432,50 +445,41 @@ get_bottom_legend <- function(p) {
   guide_id <- which(g$layout$name == "guide-box-bottom")
   
   if (length(guide_id) == 0) {
-    stop("No bottom legend found. Check that legend.position = 'bottom'.")
+    guide_id <- which(g$layout$name == "guide-box")
   }
   
-  legend <- g$grobs[[guide_id]]
+  if (length(guide_id) == 0) {
+    stop("No legend found. Check legend.position and guide settings.")
+  }
   
-  return(legend)
+  g$grobs[[guide_id[1]]]
 }
 
-legend_quartile <- get_bottom_legend(p_legend_quartile)
+legend_magnitude <- get_bottom_legend(p_legend_magnitude)
 legend_distribution <- get_bottom_legend(p_legend_distribution)
 legend_joint <- get_bottom_legend(p_legend_joint)
 
-
-common_legend <- cowplot::plot_grid(
-  cowplot::ggdraw(legend_quartile),
+common_legend_top <- cowplot::plot_grid(
+  cowplot::ggdraw(legend_magnitude),
   cowplot::ggdraw(legend_distribution),
-  cowplot::ggdraw(legend_joint),
   nrow = 1,
-  rel_widths = c(1.35, 1.55, 0.75),
+  rel_widths = c(1, 1.08),
   align = "h"
 )
 
-
-common_legend_v2 <- cowplot::plot_grid(
-  cowplot::ggdraw(legend_quartile),
-  cowplot::ggdraw(legend_distribution),
+common_legend_joint <- cowplot::plot_grid(
+  NULL,
   cowplot::ggdraw(legend_joint),
-  nrow = 3,
-  rel_widths = c(1.35, 1.55, 0.75),
-  align = "hv"
-)
-
-common_legend_v3 <- cowplot::plot_grid(
-  cowplot::ggdraw(legend_quartile),
-  cowplot::ggdraw(legend_distribution),
-  nrow = 2,
-  align = "hv"
+  NULL,
+  nrow = 1,
+  rel_widths = c(0.35, 0.30, 0.35)
 )
 
 # plot all ----
 
 panel_title_top <- ggdraw() +
   draw_label(
-    "Quartile and distribution agreement across gradients",
+    "Magnitude and distributional agreement across gradients",
     x = 0,
     hjust = 0,
     fontface = "bold",
@@ -484,7 +488,7 @@ panel_title_top <- ggdraw() +
 
 panel_title_bottom <- ggdraw() +
   draw_label(
-    "Spatial overlap of agreement metrics across gradients",
+    "Joint high and low agreement across gradients",
     x = 0,
     hjust = 0,
     fontface = "bold",
@@ -492,7 +496,7 @@ panel_title_bottom <- ggdraw() +
   )
 
 fig3_grid_top <- cowplot::plot_grid(
-  a_top, b_top,  c_top, 
+  a_top, b_top, c_top,
   ncol = 3,
   align = "hv",
   labels = c("a", "b", "c"),
@@ -500,15 +504,8 @@ fig3_grid_top <- cowplot::plot_grid(
   label_size = 11
 )
 
-fig3_grid_top_legend <- cowplot::plot_grid(
-  fig3_grid_top,
-  common_legend_v3,
-  ncol = 2,
-  rel_widths = c(1, 0.15)
-)
-
 fig3_grid_bottom <- cowplot::plot_grid(
-  a_bottom, b_bottom,  c_bottom, 
+  a_bottom, b_bottom, c_bottom,
   ncol = 3,
   align = "hv",
   labels = c("d", "e", "f"),
@@ -516,20 +513,16 @@ fig3_grid_bottom <- cowplot::plot_grid(
   label_size = 11
 )
 
-fig3_grid_bottom_legend <- cowplot::plot_grid(
-  fig3_grid_bottom,
-  cowplot::ggdraw(legend_joint),
-  ncol = 2,
-  rel_widths = c(1, 0.15)
-)
-
 fig3 <- cowplot::plot_grid(
   panel_title_top,
-  fig3_grid_top_legend,
+  common_legend_top,
+  fig3_grid_top,
   panel_title_bottom,
-  fig3_grid_bottom_legend,
-  nrow = 4,
-  rel_heights = c(0.1, 1, 0.1, 0.6)
+  common_legend_joint,
+  fig3_grid_bottom,
+  nrow = 6,
+  rel_heights = c(0.08, 0.2, 1.00, 0.08, 0.2, 0.62),
+  align = "v"
 )
 
 fig3

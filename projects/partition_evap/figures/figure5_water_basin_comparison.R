@@ -105,6 +105,54 @@ basin_sum[, ratio_et := fifelse(
           "Crosses WB")
 )]
 
+## heatplot data ----
+plot_dt_heat <- merge(
+  data_mean,
+  agreement_summary,
+  by = "ma_basin",
+  all.x = TRUE
+)
+
+x_scale <- if (max(plot_dt_heat$joint_da_higher, na.rm = TRUE) <= 1) 100 else 1
+plot_dt_heat[, joint_high_pct := joint_da_higher * x_scale]
+
+basin_order <- plot_dt_heat[, .(
+  joint_high_pct = first(joint_high_pct)
+), by = ma_basin][order(joint_high_pct, ma_basin)]
+
+plot_dt_heat[, ma_basin_ord := factor(
+  ma_basin,
+  levels = basin_order$ma_basin
+)]
+
+mean_dataset_ratio <- 
+  plot_dt_heat[,.(mean_ratio = mean(ratio_ET)),
+               .(dataset)]
+
+dataset_ratio_summary <- 
+  plot_dt_heat[,.(ratio_ET = exp(mean(log(ratio_ET)))),
+               .(dataset)]
+
+dataset_ratio_summary[, group := "Mean"]
+dataset_ratio_summary[, ma_basin := "Mean"]
+dataset_ratio_summary[, ma_basin_ord := "Mean"]
+dataset_ratio_summary[dataset %in% EVAP_DATASETS_REMOTE, dataset_type := "Remote sensing"]
+dataset_ratio_summary[dataset %in% EVAP_DATASETS_REANAL, dataset_type := "Reanalysis"]
+dataset_ratio_summary[dataset %in% EVAP_DATASETS_HYDROL, dataset_type := "Hydr./LSM model"]
+dataset_ratio_summary[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Composite"]
+
+dataset_order <- mean_dataset_ratio[,order(mean_ratio)]
+dataset_level <- mean_dataset_ratio$dataset[dataset_order]
+
+plot_dt_heat[, dataset := factor(dataset,
+  levels = dataset_level
+)]
+
+plot_dt_heat[, group:= "Basin"]
+
+plot_dt_heat_merge <- merge(plot_dt_heat, dataset_ratio_summary, by = c("dataset", "ratio_ET", "group", "dataset_type", "ma_basin", "ma_basin_ord"),
+                      all = T)
+
 # Panel b and c ----
 ## color ----
 fig5_col_low  <- "#D55E00"   # product ET below WB
@@ -135,71 +183,6 @@ theme_fig5 <- theme_bw(base_size = 11) +
     legend.position = "bottom"
   )
 
-## figure 5 b ----
-fig_5b <- ggplot(
-  data_merged_mean,
-  aes(x = ma_basin, y = dataset, fill = ratio_ET)
-) +
-  geom_tile(
-    color = "white",
-    linewidth = 0.35
-  ) +
-  geom_text(
-    aes(
-      label = number(ratio_ET, accuracy = 0.01),
-      colour = abs(ratio_ET - 1) > 0.28
-    ),
-    size = 2.55
-  ) +
-  scale_colour_manual(
-    values = c(`FALSE` = "grey20", `TRUE` = "white"),
-    guide = "none"
-  ) +
-  facet_grid(
-    rows = vars(dataset_type),
-    cols = vars(continent),
-    scales = "free",
-    space = "free",
-    switch = "y"
-  ) +
-  scale_fill_gradient2(
-    low = fig5_col_low,
-    mid = fig5_col_mid,
-    high = fig5_col_high,
-    midpoint = 1,
-    limits = c(0.5, 1.5),
-    oob = squish,
-    name = "Product ET / WB ET"
-  ) +
-  labs(
-    x = NULL,
-    y = "Dataset",
-    title = "High agreement basins"
-  ) +
-  theme_fig5 +
-  theme(
-    axis.text.x = element_text(size = 9),
-    axis.ticks.x = element_blank(),
-    axis.text.y = element_text(size = 9),
-    strip.placement = "outside",
-    strip.text.x = element_text(
-      size = 9,
-      face = "bold",
-      colour = fig5_col_dark
-    ),
-    strip.text.y.left = element_text(
-      angle = 0,
-      hjust = 1,
-      size = 9,
-      face = "bold",
-      colour = fig5_col_dark
-    ),
-    panel.spacing.x = unit(0.08, "lines"),
-    panel.spacing.y = unit(0.08, "lines"),
-    plot.margin = margin(6, 6, 2, 16)
-  )
-
-fig_5b
 ## figure 5 c ----
 
 ### label ----
@@ -207,6 +190,10 @@ label_dt <- basin_sum[
   joint_high_pct >= 40 &
     (ratio_q75 < 1 | ratio_q25 > 1)
 ]
+
+##
+plot_dt[, joint_high_pct_fac := cut(joint_high_pct, 
+                                    breaks = c(20, 40, 60, 100))]
 
 ### ggplot ----
 fig_5c <- ggplot() +
@@ -249,7 +236,7 @@ fig_5c <- ggplot() +
     linewidth = 0.4
   ) +
   geom_vline(
-    xintercept = 40,
+    xintercept = c(2, 10, 40),
     linetype = "dotted",
     color = "grey45",
     linewidth = 0.4
@@ -270,20 +257,80 @@ fig_5c <- ggplot() +
     color = "Central product range",
     fill = "Central product range"
   ) +
-  coord_cartesian(ylim = c(0.3, 2)) +
+  coord_cartesian(ylim = c(0.4, 2.5)) +
+  scale_y_log10(
+    breaks = c(0.5, 0.67, 1, 1.5, 2),
+    labels = c("0.5", "0.67", "1", "1.5", "2")
+  )+
   theme_fig5 +
   theme(
-    plot.margin = margin(8, 8, 10, 18)
+    plot.margin = margin(8, 8, 10, 18),
+    legend.position = "none"
   )
 
 fig_5c
 
+## Figure 5 c alternate ----
+
+fig_5c_alt <- ggplot(
+  plot_dt_heat_merge,
+  aes(x = ma_basin_ord, y = dataset, fill = ratio_ET)
+) +
+  geom_tile(
+    color = "white",
+    linewidth = 0.25
+  ) +
+  facet_grid(
+    rows = vars(dataset_type), 
+    cols = vars(group),
+    scales = "free",
+    space = "free",
+    switch = "y"
+  ) +
+  scale_fill_gradient2(
+    low = fig5_col_low,
+    mid = fig5_col_mid,
+    high = fig5_col_high,
+    midpoint = 1,
+    limits = c(0.5, 1.5),
+    oob = squish,
+    name = "Product ET / WB ET"
+  ) +
+  geom_vline(xintercept = c(15.5, 28.5, 40.5),
+             linetype = "dotted")+
+  labs(
+    x = "Basin",
+    y = NULL
+  ) +
+  theme_fig5 +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5,
+      hjust = 1,
+      size = 7
+    ),
+    axis.text.y = element_text(size = 8.2),
+    strip.placement = "outside",
+    strip.text.x = element_blank(),
+    strip.text.y.left = element_text(
+      angle = 0,
+      hjust = 1,
+      size = 9,
+      face = "bold",
+      colour = fig5_col_dark
+    ),
+    panel.spacing.y = unit(0.08, "lines"),
+    plot.margin = margin(6, 6, 2, 16)
+  )
+
+fig_5c_alt
 ## ggarrange ----
 
 fig_5bc <-
-  ggarrange(fig_5b, fig_5c, nrow = 2, align = "v",
+  ggarrange( fig_5c, fig_5c_alt, nrow = 2, align = "v",
             labels = c('b', 'c'),
-            heights = c(1, 0.7))
+            heights = c(0.6, 1))
 
 fig_5bc
 
@@ -343,7 +390,6 @@ ma_sf <- ma_sf %>%
       levels = names(color_ref)
     )
   )
-
 
 
 # figure 5 a plot basin ----
