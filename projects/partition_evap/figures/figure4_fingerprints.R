@@ -1,10 +1,8 @@
 source('source/partition_evap.R')
 source('source/graphics.R')
+source('source/partition_evap_graphics.R')
+source('projects/partition_evap/figures/figure4_SI_fingerprints_function.R')
 
-library(ggpubr)
-library(ggnewscale)
-library(cowplot)
-library(scales)
 library(tibble)
 
 # Data ----
@@ -97,6 +95,17 @@ environments <- c(
   "BSh", "EAU", "Savannas", "Mediterranean"
 )
 
+group_names <- unique(joint_evap_agreement$group)
+
+all_order <- make_environment_order(
+  joint_evap_agreement,
+  group_name = group_names
+)
+
+environments_order <- as.character(all_order[all_order %in% environments])
+
+environments <- rev(environments_order)
+
 environments_select <- joint_evap_agreement[environment %in% environments]
 
 environments_select[, environment := factor(environment, levels = environments, 
@@ -104,22 +113,22 @@ environments_select[, environment := factor(environment, levels = environments,
 environments_select[,unique(environment)]
 
 environments_select_q_high <- environments_select[rel_dataset_agreement == "High", 
-                                                  .(x = "Quartile high", area_fraction = sum(area_fraction)), .(environment)]
+                                                  .(x = "Magnitude high", area_fraction = sum(area_fraction)), .(environment)]
 environments_select_q_high <- merge(environments_select_q_high, 
                                     environments_select[,.(environment = unique(environment))], 
                                     all = T, by = "environment") 
 environments_select_q_high[is.na(area_fraction), area_fraction := 0]
-environments_select_q_high[is.na(x), x := "Quartile high"]
+environments_select_q_high[is.na(x), x := "Magnitude high"]
 environments_select_q_high[, x_pos := 1]
 
 
 environments_select_q_low <- environments_select[rel_dataset_agreement == "Low", 
-                                                 .(x = "Quartile low",  area_fraction = sum(area_fraction)), .(environment)]
+                                                 .(x = "Magnitude low",  area_fraction = sum(area_fraction)), .(environment)]
 environments_select_q_low <- merge(environments_select_q_low, 
                                     environments_select[,.(environment = unique(environment))], 
                                     all = T, by = "environment") 
 environments_select_q_low [is.na(area_fraction), area_fraction := 0]
-environments_select_q_low [is.na(x), x := "Quartile low"]
+environments_select_q_low [is.na(x), x := "Magnitude low"]
 environments_select_q_low [, x_pos := 2]
 
 environments_select_d_high <- environments_select[dist_dataset_agreement == "High", 
@@ -162,12 +171,12 @@ environments_select_lower[, x_pos := 6]
 
 environments_select_q_higher <- environments_select[rel_dataset_agreement %in% higher &
                                                       dist_dataset_agreement %in% lower, 
-                                                    .(x = "Contrasting\nQuartile higher", area_fraction = sum(area_fraction)), .(environment)]
+                                                    .(x = "Contrasting\nMagnitude higher", area_fraction = sum(area_fraction)), .(environment)]
 environments_select_q_higher <- merge(environments_select_q_higher, 
                                     environments_select[,.(environment = unique(environment))], 
                                     all = T, by = "environment") 
 environments_select_q_higher[is.na(area_fraction), area_fraction := 0]
-environments_select_q_higher[is.na(x), x := "Contrasting\nQuartile higher"]
+environments_select_q_higher[is.na(x), x := "Contrasting\nMagnitude higher"]
 environments_select_q_higher[, x_pos := 7]
 
 environments_select_d_higher <- environments_select[rel_dataset_agreement %in% lower &
@@ -216,20 +225,11 @@ block_labels <- tibble(
   x_pos = c(1.5, 3.5, 6.5),
   environment = top_row,
   label = c(
-    "Quartile agreement",
+    "Magnitude agreement",
     "Distribution agreement",
     "Spatial overlap between metrics"
   )
 )
-## theme ----
-theme_fig3 <- theme_minimal(base_size = 11) +
-  theme(
-    axis.text = element_text(size = 10),
-    axis.title = element_text(size = 10),
-    plot.title = element_text(size = 10, face = "bold", hjust = 0),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-  )
 
 ## gg ----
 
@@ -328,7 +328,7 @@ fig4 <- ggplot()+
            fill = NA, colour = "black", linewidth = 0.8) +
   annotate("rect", xmin = 4.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
            fill = NA, colour = "black", linewidth = 0.8) +
-  theme_fig3+
+  theme_fig4+
   theme(legend.position = "bottom")+
   labs(y = "Environment", x = NULL,
        title = "Environmental fingerprints of product agreement")
@@ -340,7 +340,7 @@ ggsave(
     "main/fig4_fingerprint.png"
   ),
   plot = fig4,
-  width = 2*15,
+  width = figure_widths,
   height = 15,
   units = "cm",
   dpi = 300
@@ -352,10 +352,11 @@ ggsave(
     "main/fig4_fingerprint.pdf"
   ),
   plot = fig4,
-  width = 2*15,
+  width = figure_widths,
   height = 15,
   units = "cm",
-  dpi = 300
+  dpi = 300,
+  device = cairo_pdf,
 )
 
 

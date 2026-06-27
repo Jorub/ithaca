@@ -1,13 +1,11 @@
 # Overview figure agreement across ma basins ----
 source('source/partition_evap.R')
+source('source/partition_evap_graphics.R')
 source('source/graphics.R')
 source('source/mask_paths.R')
 
-library(ggpubr)
 library(rnaturalearth)
 library(dplyr)
-library(ggrepel)
-library(scales)
 
 ## data ----
 data_ma_time <- read.table(paste0(PATH_MASK, "ma_et_al_water_balance/ETwb_56_ma_et_al.csv"), dec =',', sep =';', header = T)
@@ -33,7 +31,17 @@ agreement_summary <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "high_agreement_ma
 
 # Analysis ----
 ## Basins with joint agreement above average and high in over 40 % area fraction ----
-basins_higher_area <- agreement_summary[joint_da_higher > 0.4]
+
+qs <- quantile(
+  agreement_summary[ma_basin != "Mean", joint_da_higher],
+  probs = c(0, 0.25, 0.5, 0.75, 1),
+  na.rm = TRUE
+)
+
+qs_percent <- ceiling(qs*100)
+qs_percent[4] <- qs_percent[4]-1
+
+basins_higher_area <- agreement_summary[joint_da_higher > qs[4]]
 common_basins <- basins_higher_area$ma_basin 
 
 ### assign data type
@@ -93,6 +101,7 @@ basin_sum <- plot_dt[, .(
   ratio_min = min(ratio_ET, na.rm = TRUE),
   ratio_q25 = quantile(ratio_ET, 0.25, na.rm = TRUE),
   ratio_med = median(ratio_ET, na.rm = TRUE),
+  ratio_mean = mean(ratio_ET, na.rm = TRUE),
   ratio_q75 = quantile(ratio_ET, 0.75, na.rm = TRUE),
   ratio_max = max(ratio_ET, na.rm = TRUE),
   n_products = .N,
@@ -150,44 +159,162 @@ plot_dt_heat[, dataset := factor(dataset,
 
 plot_dt_heat[, group:= "Basin"]
 
-plot_dt_heat_merge <- merge(plot_dt_heat, dataset_ratio_summary, by = c("dataset", "ratio_ET", "group", "dataset_type", "ma_basin", "ma_basin_ord"),
+### Ensemble-mean row for each basin ----
+ensemble_basin_ratio <- plot_dt_heat[
+  ,
+  .(
+    ratio_ET = mean(ratio_ET, na.rm = TRUE),
+    joint_high_pct = first(joint_high_pct)
+  ),
+  by = .(ma_basin, ma_basin_ord)
+]
+
+ensemble_basin_ratio[
+  ,
+  `:=`(
+    dataset = "ensemble mean",
+    dataset_type = "Ensemble",
+    group = "Basin"
+  )
+]
+
+# Ensemble-mean value for the right-side "Mean" column
+ensemble_mean_ratio <- ensemble_basin_ratio[
+  ,
+  .(
+    ratio_ET = exp(mean(log(ratio_ET), na.rm = TRUE))
+  )
+]
+
+ensemble_mean_ratio[
+  ,
+  `:=`(
+    dataset = "ensemble mean",
+    dataset_type = "Ensemble",
+    group = "Mean",
+    ma_basin = "Mean",
+    ma_basin_ord = "Mean"
+  )
+]
+
+plot_dt_heat_merge <- merge(plot_dt_heat, dataset_ratio_summary, 
+                            by = c("dataset", "ratio_ET", "group", "dataset_type", "ma_basin", "ma_basin_ord"),
                       all = T)
 
-# Panel b and c ----
-## color ----
-fig5_col_low  <- "#D55E00"   # product ET below WB
-fig5_col_mid  <- "#F7F7F7"   # close to WB
-fig5_col_high <- "#0072B2"   # product ET above WB
-fig5_col_neut <- "grey65"
-fig5_col_dark <- "grey25"
-          
-color_ref <- c(
-          "Below WB"   = fig5_col_low,
-          "Crosses WB" = fig5_col_neut,
-          "Above WB"   = fig5_col_high
+plot_dt_heat_merge_summary <- rbindlist(
+  list(
+    plot_dt_heat,
+    dataset_ratio_summary,
+    ensemble_basin_ratio,
+    ensemble_mean_ratio
+  ),
+  fill = TRUE
 )
-## theme ----
-theme_fig5 <- theme_bw(base_size = 11) +
-  theme(
-    panel.grid = element_blank(),
-    panel.background = element_rect(fill = "white", colour = NA),
-    plot.background = element_rect(fill = "white", colour = NA),
-    axis.title = element_text(size = 11),
-    axis.text = element_text(size = 9, colour = fig5_col_dark),
-    axis.ticks = element_line(colour = "grey45", linewidth = 0.25),
-    legend.title = element_text(size = 10),
-    legend.text = element_text(size = 9),
-    strip.background = element_rect(fill = "grey92", colour = NA),
-    strip.text = element_text(size = 9, face = "bold", colour = fig5_col_dark),
-    plot.margin = margin(5, 5, 5, 5),
-    legend.position = "bottom"
+
+### Order product rows and put ensemble mean at top ----
+
+dataset_level_summary <- c(dataset_level, "ensemble mean")
+
+plot_dt_heat_merge_summary[
+  ,
+  dataset := factor(
+    dataset,
+    levels = dataset_level_summary
   )
+]
 
-## figure 5 c ----
+plot_dt_heat_merge_summary[
+  ,
+  dataset_type := factor(
+    dataset_type,
+    levels = c(
+      "Ensemble",
+      "Composite",
+      "Hydr./LSM model",
+      "Reanalysis",
+      "Remote sensing"
+    )
+  )
+]
 
+plot_dt_heat_merge_summary[
+  ,
+  group := factor(
+    group,
+    levels = c("Basin", "Mean")
+  )
+]
+
+
+### agreement strip -----
+agreement_strip <- plot_dt_heat[
+  ,
+  .(
+    joint_high_pct = first(joint_high_pct)
+  ),
+  by = .(ma_basin, ma_basin_ord)
+]
+
+agreement_strip_mean <- agreement_strip[
+  ,
+  .(
+    joint_high_pct = mean(joint_high_pct, na.rm = TRUE)
+  )
+]
+
+agreement_strip_mean[
+  ,
+  `:=`(
+    ma_basin = "Mean",
+    ma_basin_ord = "Mean"
+  )
+]
+
+agreement_strip <- rbindlist(
+  list(agreement_strip, agreement_strip_mean),
+  fill = TRUE
+)
+
+agreement_strip[,metric := "agreement overlap"]
+
+agreement_strip[,dataset_type := "Ensemble"]
+
+
+agreement_strip[
+  ,
+  dataset_type := factor(
+    dataset_type,
+    levels = c(
+      "Ensemble",
+      "Composite",
+      "Hydr./LSM model",
+      "Reanalysis",
+      "Remote sensing"
+    )
+  )
+]
+agreement_strip[,dataset := "ensemble mean"]
+
+agreement_strip[, group := "Basin"]
+
+agreement_strip[ma_basin == "Mean", group := "Mean"]
+
+
+
+
+agreement_strip[
+  ,
+  joint_high_q := cut(
+    joint_high_pct,
+    breaks = qs_percent,
+    include.lowest = TRUE
+  )
+]
+
+# figure 5 b ----
 ### label ----
 label_dt <- basin_sum[
-  joint_high_pct >= 40 &
+  joint_high_pct >= qs_percent[4] &
     (ratio_q75 < 1 | ratio_q25 > 1)
 ]
 
@@ -196,7 +323,7 @@ plot_dt[, joint_high_pct_fac := cut(joint_high_pct,
                                     breaks = c(20, 40, 60, 100))]
 
 ### ggplot ----
-fig_5c <- ggplot() +
+fig_5b <- ggplot() +
   geom_point(
     data = plot_dt,
     aes(x = joint_high_pct, y = ratio_ET),
@@ -236,7 +363,7 @@ fig_5c <- ggplot() +
     linewidth = 0.4
   ) +
   geom_vline(
-    xintercept = c(2, 10, 40),
+    xintercept = qs_percent[2:4],
     linetype = "dotted",
     color = "grey45",
     linewidth = 0.4
@@ -252,8 +379,8 @@ fig_5c <- ggplot() +
   scale_color_manual(values = color_ref) +
   scale_fill_manual(values = color_ref) +
   labs(
-    x = "Basin area fraction of spatial overlap of high or above-average agreement (%)",
-    y = "Product ET / WB ET",
+    x = "Basin area fraction of high or above-average agreement overlap (%)",
+    y = expression(ET[Product] / ET[WB]),
     color = "Central product range",
     fill = "Central product range"
   ) +
@@ -268,15 +395,13 @@ fig_5c <- ggplot() +
     legend.position = "none"
   )
 
-fig_5c
+fig_5b
 
-## Figure 5 c alternate ----
+# Figure 5 c alternate ----
 
-fig_5c_alt <- ggplot(
-  plot_dt_heat_merge,
-  aes(x = ma_basin_ord, y = dataset, fill = ratio_ET)
-) +
-  geom_tile(
+fig_5c <- ggplot() +
+  geom_tile(data = plot_dt_heat_merge_summary,
+            aes(x = ma_basin_ord, y = dataset, fill = ratio_ET),
     color = "white",
     linewidth = 0.25
   ) +
@@ -294,13 +419,22 @@ fig_5c_alt <- ggplot(
     midpoint = 1,
     limits = c(0.5, 1.5),
     oob = squish,
-    name = "Product ET / WB ET"
+    name = expression(ET[Product] / ET[WB])
   ) +
-  geom_vline(xintercept = c(15.5, 28.5, 40.5),
+  geom_vline(xintercept = c(15.5, 28.5, 42.5),
              linetype = "dotted")+
   labs(
     x = "Basin",
     y = NULL
+  ) +
+  ggnewscale::new_scale_fill() +
+  geom_tile(
+    data = agreement_strip,
+    aes(x = ma_basin_ord, y = metric, fill = joint_high_q)
+  ) +
+  scale_fill_manual(
+    values = colors_agreement_strip,
+    name = "Agreement overlap [%]"
   ) +
   theme_fig5 +
   theme(
@@ -310,7 +444,6 @@ fig_5c_alt <- ggplot(
       hjust = 1,
       size = 7
     ),
-    axis.text.y = element_text(size = 8.2),
     strip.placement = "outside",
     strip.text.x = element_blank(),
     strip.text.y.left = element_text(
@@ -324,44 +457,18 @@ fig_5c_alt <- ggplot(
     plot.margin = margin(6, 6, 2, 16)
   )
 
-fig_5c_alt
+fig_5c
+
 ## ggarrange ----
 
 fig_5bc <-
-  ggarrange( fig_5c, fig_5c_alt, nrow = 2, align = "v",
+  ggarrange( fig_5b, fig_5c, nrow = 2,
             labels = c('b', 'c'),
             heights = c(0.6, 1))
 
 fig_5bc
 
 # map data ----
-## World and Land borders -----
-earth_box <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL,
-                            "earth_box.rds")) %>%
-  st_as_sf(crs = "+proj=longlat +datum=WGS84 +no_defs")
-
-world_sf <- ne_countries(returnclass = "sf")
-world_no_antarctica <- world_sf[world_sf$continent != "Antarctica", ]
-
-
-### Labels ----
-labs_y <- data.frame(
-  lon = -160,
-  lat = c( 30, 0, -30, -60)
-)
-
-labs_y_labels <- seq(30, -60, -30)
-labs_y$label <- ifelse(labs_y_labels == 0, "°", ifelse(labs_y_labels > 0, "°N", "°S"))
-labs_y$label <- paste0(abs(labs_y_labels), labs_y$label)
-labs_y <- st_as_sf(labs_y, coords = c("lon", "lat"),
-                   crs = "+proj=longlat +datum=WGS84 +no_defs")
-
-labs_x <- data.frame(lon = seq(120, -120, -60), lat = -62)
-labs_x$label <- ifelse(labs_x$lon == 0, "°", ifelse(labs_x$lon > 0, "°E", "°W"))
-labs_x$label <- paste0(abs(labs_x$lon), labs_x$label)
-labs_x <- st_as_sf(labs_x, coords = c("lon", "lat"),
-                   crs = "+proj=longlat +datum=WGS84 +no_defs")
-
 ### basin ----
 
 fname_shape <- list.files(path = PATH_MASKS_MA_BASINS, full.names = TRUE, pattern = "*Boundary_56.shp")
@@ -393,19 +500,57 @@ ma_sf <- ma_sf %>%
 
 
 # figure 5 a plot basin ----
-## themes ----
-theme_map_fig5 <- theme_bw() +
+
+## Panel a count bar plot ----
+
+basin_count <- ma_sf %>%
+  st_drop_geometry() %>%
+  filter(!is.na(ratio_et)) %>%
+  count(ratio_et, name = "n") %>%
+  mutate(
+    ratio_et = factor(ratio_et, levels = names(color_ref)),
+    ratio_et_label = factor(
+      as.character(ratio_et),
+      levels = c("Below WB", "Crosses WB", "Above WB"),
+      labels = c(
+        "Below~ET[WB]",
+        "Crosses~ET[WB]",
+        "Above~ET[WB]"
+      )
+    )
+  )
+
+fig_map_5a_counts <- ggplot(
+  basin_count,
+  aes(x = n, y = ratio_et_label, fill = ratio_et)
+) +
+  geom_col(width = 0.65) +
+  geom_text(
+    aes(label = n),
+    hjust = -0.15,
+    size = 3
+  ) +
+  scale_fill_manual(
+    values = color_ref,
+    name = "Central product range",
+    drop = F
+  )+
+  scale_y_discrete(labels = function(x) parse(text = x)) +
+  scale_x_continuous(
+    expand = expansion(mult = c(0, 0.18)),
+    breaks = pretty_breaks(n = 3)
+  ) +
+  labs(
+    x = "Basins [n]",
+    y = NULL,
+    title = "Central\nproduct range"
+  ) +
+  theme_fig5 +
   theme(
-    panel.background = element_rect(fill = NA),
-    panel.ontop = TRUE,
-    axis.ticks.length = unit(0, "cm"),
-    panel.grid.major = element_line(colour = "gray70", linewidth = 0.2),
-    axis.text = element_blank(),
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 10),
-    legend.title = element_text(size = 12),
-    plot.title = element_text(size = 12, face = "bold", hjust = 0),
-    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm")
+    legend.position = "none",
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(4, 2, 4, 2)
   )
 
 ## gg----
@@ -427,22 +572,53 @@ fig_map_5a <-
     nudge_y = 0.2,
     max.overlaps = Inf
   ) +
-  scale_fill_manual(values = color_ref) +
+  scale_fill_manual(
+    values = color_ref,
+    breaks = c("Below WB", "Crosses WB", "Above WB"),
+    labels = c(
+      expression(paste("Below ", ET[WB])),
+      expression(paste("Crosses ", ET[WB])),
+      expression(paste("Above ", ET[WB]))
+    ),
+    name = "Central product range"
+  )+
   labs(x = NULL, y = NULL, fill = "Central product range") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
   geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
   geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
   coord_sf(ylim = c(-70, 90), expand = F)+
-  theme_map_fig5+theme(legend.position = "bottom")
+  theme_map_fig5
+
+
+# Panel c: merge map and inset ----
+bar_joint_grob <- ggplotGrob(fig_map_5a_counts)
+
+build <- ggplot_build(fig_map_5a)
+
+x_range <- build$layout$panel_params[[1]]$x_range
+y_range <- build$layout$panel_params[[1]]$y_range
+
+x_width <- diff(x_range)
+y_height <- diff(y_range)
+
+fig_5a <- fig_map_5a +
+  annotation_custom(
+    grob = bar_joint_grob,
+    xmin = x_range[2] + 0.02 * x_width,
+    xmax = x_range[2] + 0.49 * x_width,
+    ymin = y_range[1] + 0.0 * y_height,
+    ymax = y_range[1] + 0.6 * y_height
+  )
+
+
 
 # join all ----
 
-fig_5 <- ggarrange(fig_map_5a,
+fig_5 <- ggarrange(fig_5a,
                    fig_5bc,
                    nrow = 2,
-                   heights = c(0.7, 1.3),
+                   heights = c(0.925, 1.3),
                    labels = c('a', ''))
-
 
 # Save figure ----
 ggsave(
@@ -451,10 +627,11 @@ ggsave(
     "main/fig5_basin_comparison.png"
   ),
   plot = fig_5,
-  width = 20,
+  width = figure_widths,
   height = 1.4*20,
   units = "cm",
-  dpi = 300
+  dpi = 300,
+  device = cairo_pdf,
 )
 
 ggsave(
@@ -463,9 +640,10 @@ ggsave(
     "main/fig5_basin_comparison.pdf"
   ),
   plot = fig_5,
-  width = 20,
+  width = figure_widths,
   height = 1.3*20,
   units = "cm",
-  dpi = 300
+  dpi = 300,
+  device = cairo_pdf
 )
 

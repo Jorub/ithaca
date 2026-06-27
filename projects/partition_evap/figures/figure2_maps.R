@@ -1,5 +1,6 @@
 # Figure 2: agreement maps ----
 source("source/partition_evap.R")
+source("source/partition_evap_graphics.R")
 source("source/geo_functions.R")
 source("source/graphics.R")
 
@@ -7,9 +8,7 @@ library(data.table)
 library(sf)
 library(stars)
 library(raster)
-library(rnaturalearth)
-library(ggplot2)
-library(ggpubr)
+
 
 # Data ----
 dataset_agreement_grid_wise <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
@@ -53,89 +52,13 @@ dataset_agreement_grid_wise[, joint_agreement:= as.factor(joint_agreement)]
 
 joint_levels <- levels(dataset_agreement_grid_wise$joint_agreement)
 
-# Map preparation ----
-earth_box <- readRDS(
-  paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL, "earth_box.rds")
-) %>%
-  st_as_sf(crs = "+proj=longlat +datum=WGS84 +no_defs")
-
-world_sf <- ne_countries(returnclass = "sf")
-world_no_antarctica <- world_sf[world_sf$continent != "Antarctica", ]
-
-labs_y <- data.frame(
-  lon = -160,
-  lat = c( 30, 0, -30, -60)
-)
-
-labs_y_labels <- seq(30, -60, -30)
-
-labs_y$label <- ifelse(
-  labs_y_labels == 0,
-  "°",
-  ifelse(labs_y_labels > 0, "°N", "°S")
-)
-
-labs_y$label <- paste0(abs(labs_y_labels), labs_y$label)
-
-labs_y <- st_as_sf(
-  labs_y,
-  coords = c("lon", "lat"),
-  crs = "+proj=longlat +datum=WGS84 +no_defs"
-)
-
-labs_x <- data.frame(
-  lon = seq(120, -120, -60),
-  lat = -64
-)
-
-labs_x$label <- ifelse(
-  labs_x$lon == 0,
-  "°",
-  ifelse(labs_x$lon > 0, "°E", "°W")
-)
-
-labs_x$label <- paste0(abs(labs_x$lon), labs_x$label)
-
-labs_x <- st_as_sf(
-  labs_x,
-  coords = c("lon", "lat"),
-  crs = "+proj=longlat +datum=WGS84 +no_defs"
-)
-
-## Colours ----
-
-color_agreement <- c("Low" = "#A63A3A",
-                     "Below average" = "#E38B75", 
-                     "Average" = "#F4CC70",
-                     "Above average"= "#97B8C2",
-                     "High" = "#4D648D")
 
 
-color_joint_agreement <- c("Both lower" = "#A63A3A",
-                           "Both higher" = "#4D648D",
-                           "Magnitude lower \nDistribution higher" = "#E2A374", 
-                           "Magnitude higher \nDistribution lower"= "#6E5773",
-                           "Average" = "gray90")
-
-### theme ----
-theme_map_fig2 <- theme_bw() +
-  theme(
-    panel.background = element_rect(fill = NA),
-    panel.ontop = TRUE,
-    axis.ticks.length = unit(0, "cm"),
-    panel.grid.major = element_line(colour = "gray70", linewidth = 0.2),
-    axis.text = element_blank(),
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 10),
-    legend.title = element_text(size = 12),
-    plot.title = element_text(size = 12, face = "bold", hjust = 0),
-    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm")
-  )
 
 # Panel a: Magnitude agreement ----
 
 ## prep ----
-to_plot_dt <- dataset_agreement_grid_wise[, .(lon, lat,rel_dataset_agreement,
+to_plot_dt <- dataset_agreement_grid_wise[, .(lon, lat, rel_dataset_agreement,
     value = as.numeric(rel_dataset_agreement))
 ]
 
@@ -195,7 +118,7 @@ fig_a <- ggplot() +
   geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
   geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   coord_sf(ylim = c(-70, 90), expand = F)+
-  theme_map_fig2
+  theme_map
 
 
 # Panel b: distribution agreement ----
@@ -258,7 +181,7 @@ fig_b <- ggplot() +
   geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
   geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   coord_sf(ylim = c(-70, 90), expand = F)+
-  theme_map_fig2
+  theme_map
 
 
 # Panel c: joint agreement map ----
@@ -314,12 +237,12 @@ fig_c <-  ggplot() +
                     na.value = "transparent",
                     na.translate = FALSE) +
   labs(x = NULL, y = NULL, fill = "",
-       title = "Joint agreement") +
+       title = "Spatial overlap of higher (high and above average) and lower (low and below average) agreement") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
   geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
   geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   coord_sf(ylim = c(-70, 90), expand = F)+
-  theme_map_fig2
+  theme_map
 
 
 fig_c <- fig_c + theme(plot.margin = unit(c(1.1, 7, 0.1, 0.1), "cm"),
@@ -336,7 +259,8 @@ joint_area_stats <- dataset_agreement_grid_wise[,.(
 
 ### bar plot ----
 bar_joint <- ggplot(
-  joint_area_stats[!is.na(joint_agreement) & joint_agreement != "Average"], aes(x = joint_agreement, y = area_fraction * 100)
+  joint_area_stats[!is.na(joint_agreement) & joint_agreement != "Average"], 
+  aes(x = joint_agreement, y = area_fraction * 100)
   ) +
   geom_bar(
     aes(fill = joint_agreement),
@@ -344,9 +268,14 @@ bar_joint <- ggplot(
     width = 0.7
   ) +
   geom_hline(
-    yintercept = seq(0, 10, 5),
+    yintercept = seq(0, 15, 5),
     color = "white",
     linewidth = 0.25
+  ) +
+  geom_text(
+    aes(label = round(area_fraction * 100, digits = 1)),
+    hjust = -0.15,
+    size = 3
   ) +
   scale_fill_manual(
     values = color_joint_agreement,
@@ -355,18 +284,11 @@ bar_joint <- ggplot(
   labs(
     x = NULL,
     y = NULL,
-    title = "Agreement overlap [%]"
+    title = "Area fraction [%]"
   ) +
   coord_flip() +
-  theme_bw() +
+  theme_fig1+
   theme(
-    plot.title = element_text(size = 10, face = "bold", hjust = 0),
-    axis.text.y = element_text(size = 10),
-    axis.text.x = element_text(size = 10),
-    axis.line = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid = element_blank(),
-    panel.border = element_blank(),
     legend.position = "none",
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
@@ -423,7 +345,7 @@ fig2 <- ggarrange(
   font.label = list(size = 14, face = "bold"),
   nrow = 2,
   ncol = 1,
-  heights = c(1, 1.35)
+  heights = c(1, 1.4)
 )
 
 fig2
@@ -435,9 +357,9 @@ ggsave(
     "main/fig2_agreement_maps.png"
   ),
   plot = fig2,
-  width = 13,
-  height = 8.5,
-  units = "in",
+  width = figure_widths,
+  height = 30,
+  units = "cm",
   dpi = 300
 )
 
@@ -447,9 +369,10 @@ ggsave(
     "main/fig2_agreement_maps.pdf"
   ),
   plot = fig2,
-  width = 13,
-  height = 8.5,
-  units = "in",
-  dpi = 300
+  width = figure_widths,
+  height = 23,
+  units = "cm",
+  dpi = 300,
+  device = cairo_pdf
 )
 

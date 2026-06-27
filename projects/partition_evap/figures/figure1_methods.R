@@ -1,125 +1,94 @@
 # Figure showing agreement methodology ----
-
 source("source/partition_evap.R")
-library(ggpubr)
+source("source/partition_evap_graphics.R")
 
 ## data ----
 agreement <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
 evap_datasets <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets_clean.rds"))
-evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 
 evap_datasets[, year := as.numeric(as.character(year))]
 
 # Magnitude agreement -----
-evap_mask[rel_dataset_agreement == "high", rel_dataset_agreement := "High"]
-evap_mask[rel_dataset_agreement == "above average", rel_dataset_agreement := "Above average"]
-evap_mask[rel_dataset_agreement == "average", rel_dataset_agreement := "Average"]
-evap_mask[rel_dataset_agreement == "below average", rel_dataset_agreement := "Below average"]
-evap_mask[rel_dataset_agreement == "low", rel_dataset_agreement := "Low"]
-
-evap_mask[, IQR := ens_mean_q75-ens_mean_q25] 
-
-evap_mask_sel_high <- evap_mask[IQR > 190  & IQR < 210 &
+agreement_high <- agreement[quant_range > 190  & quant_range < 210 &
                                   rel_dataset_agreement == "High", ][599,] 
 
-all_low <- evap_mask[IQR > 160  & IQR < 210 & rel_dataset_agreement == "Low", ]
+all_low <- agreement[quant_range > 160  & quant_range < 210 & rel_dataset_agreement == "Low", ]
 
-check_low <- merge(all_low, agreement, by = c("lon", "lat", "rel_dataset_agreement"))
+agreement_low <- all_low[dist_dataset_agreement == "High" & std_quant_range < 1]
 
-evap_mask_sel_low <- check_low[dist_dataset_agreement == "High" & std_quant_range < 1]
-
-evap_mask_merge <- merge(evap_mask_sel_high, evap_mask_sel_low, all = T,
+agreement_merge <- merge(agreement_high, agreement_low, all = T,
                          by = c("lon", "lat",
                          "rel_dataset_agreement",
                          "std_quant_range", "ens_mean_q25",
                          "ens_mean_mean", "ens_mean_q75",
-                         "IQR"))
+                         "quant_range"))
 
-evap_mask_merge <- subset(evap_mask_merge, select = c("lon", "lat",
+agreement_merge <- subset(agreement_merge, select = c("lon", "lat",
                                                       "rel_dataset_agreement",
                                                       "std_quant_range", "ens_mean_q25",
                                                       "ens_mean_mean", "ens_mean_q75",
-                                                      "IQR"))
+                                                      "quant_range"))
 
-evap_mask_merge[, annotation := sprintf(
+agreement_merge[, annotation := sprintf(
   "IQR = %.0f mm yr\u207B\u00B9\nmean ET = %.0f mm yr\u207B\u00B9\nsIQR = %.2f",
-  IQR,
+  quant_range,
   ens_mean_mean,
   std_quant_range
 )]                          
 
-evap_time_high <- merge(evap_datasets, evap_mask_sel_high, by = c("lon", "lat"))
+evap_time_high <- merge(evap_datasets, agreement_high, by = c("lon", "lat"))
 evap_time_high[, mean_evap_dataset := mean(evap), .(dataset)]
 evap_time_high_sub <- subset(evap_time_high, select = c("lon", "lat", "mean_evap_dataset",
                                                       "rel_dataset_agreement",
                                                       "std_quant_range", "ens_mean_q25",
                                                       "ens_mean_mean", "ens_mean_q75",
-                                                      "IQR"))
+                                                      "quant_range"))
 
-evap_time_low <- merge(evap_datasets, evap_mask_sel_low, by = c("lon", "lat"))
+evap_time_low <- merge(evap_datasets, agreement_low, by = c("lon", "lat"))
 evap_time_low[, mean_evap_dataset := mean(evap), .(dataset)]
 evap_time_low_sub <- subset(evap_time_low, select = c("lon", "lat", "mean_evap_dataset",
                                                         "rel_dataset_agreement",
                                                         "std_quant_range", "ens_mean_q25",
                                                         "ens_mean_mean", "ens_mean_q75",
-                                                        "IQR"))
+                                                        "quant_range"))
 
 evap_data_a <- merge(evap_time_high_sub, evap_time_low_sub, all = T,
                      by = c("lon", "lat", "mean_evap_dataset",
                             "rel_dataset_agreement",
                             "std_quant_range", "ens_mean_q25",
                             "ens_mean_mean", "ens_mean_q75",
-                            "IQR"))
+                            "quant_range"))
 evap_data_a <- unique(evap_data_a)
 
 evap_data_a[rel_dataset_agreement == "High", location := 1]
 evap_data_a[rel_dataset_agreement == "Low", location := 1.2]
-evap_mask_merge[rel_dataset_agreement == "High", location := 1]
-evap_mask_merge[rel_dataset_agreement == "Low", location := 1.2]
+agreement_merge[rel_dataset_agreement == "High", location := 1]
+agreement_merge[rel_dataset_agreement == "Low", location := 1.2]
 
 evap_data_a[rel_dataset_agreement == "High", location_label := "M1"]
 evap_data_a[rel_dataset_agreement == "Low", location_label := "M2"]
-evap_mask_merge[rel_dataset_agreement == "High", location_label := "M1"]
-evap_mask_merge[rel_dataset_agreement == "Low", location_label := "M2"]
+agreement_merge[rel_dataset_agreement == "High", location_label := "M1"]
+agreement_merge[rel_dataset_agreement == "Low", location_label := "M2"]
 
-## color ----
-
-color_agreement <- c("Low" = "#A63A3A",
-                     "Below average" = "#E38B75", 
-                      "Average" = "#F4CC70",
-                      "Above average"= "#97B8C2",
-                     "High" = "#4D648D")
-
-## theme ----
-theme_fig1_row1 <- theme_bw(base_size = 11) +
-  theme(
-    legend.position = "none",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.text = element_text(size = 9),
-    axis.title = element_text(size = 10),
-    plot.title = element_text(size = 10, face = "bold", hjust = 0),
-    plot.margin = margin(5.5, 8, 5.5, 5.5)
-  )
 
 ## panel a ----
 panel_a <- ggplot(evap_data_a)+
   geom_point(aes(y = mean_evap_dataset, x = location_label,
                  col = rel_dataset_agreement), 
              position = position_jitter(width = 0.02), alpha = 0.5)+
-  geom_errorbar(data = evap_mask_merge, 
+  geom_errorbar(data = agreement_merge, 
                 aes(ymin = ens_mean_q25, ymax = ens_mean_q75, 
                     x = location_label),
                 width = 0.1)+
   annotate(
     "text",
-    x = "Q2",
+    x = "M2",
     y = 1450,
     label = "IQR == Q[75] - Q[25]",
     parse = TRUE,
     size = 3.5
   )+
-  geom_text(data = evap_mask_merge,
+  geom_text(data = agreement_merge,
             aes(label = "IQR", color = rel_dataset_agreement,
                 x = location_label,
                 y = ens_mean_mean
@@ -131,23 +100,23 @@ panel_a <- ggplot(evap_data_a)+
     colour = NULL,
     title = "Same IQR, different agreement"
   ) +
-  theme_fig1_row1
+  theme_fig1
 
 ## panel b ----
 
 set.seed(42)
-evap_mask_sample <- evap_mask[sample(.N, 50)]
+evap_mask_sample <- agreement[sample(.N, 50)]
 
 
 panel_b <- ggplot(evap_mask_sample)+
-  geom_point(aes(y = IQR, x = ens_mean_mean),
+  geom_point(aes(y = quant_range, x = ens_mean_mean),
              alpha = 0.2)+
-  geom_point(data = evap_mask_merge, 
-             aes(y = IQR, x = ens_mean_mean,
+  geom_point(data = agreement_merge, 
+             aes(y = quant_range, x = ens_mean_mean,
                  color = rel_dataset_agreement), 
              size = 4.5, shape = 10)+
-  geom_text(data = evap_mask_merge, 
-             aes(label = c("M1", "M2"), y = IQR, x = ens_mean_mean,
+  geom_text(data = agreement_merge, 
+             aes(label = c("M1", "M2"), y = quant_range, x = ens_mean_mean,
                  color = rel_dataset_agreement), 
              size = 3, nudge_x = -120)+
   scale_color_manual(values = color_agreement)+
@@ -157,26 +126,26 @@ panel_b <- ggplot(evap_mask_sample)+
     colour = NULL,
     title = "IQR depends on mean ET"
   ) +
-  theme_fig1_row1
+  theme_fig1
 
 ## panel c ----
 panel_c <- ggplot(evap_mask_sample)+
   geom_point(aes(y = std_quant_range, x = ens_mean_mean),
              alpha = 0.2)+
-  geom_point(data = evap_mask_merge, 
+  geom_point(data = agreement_merge, 
              aes(y = std_quant_range, x = ens_mean_mean,
                  color = rel_dataset_agreement), 
              size = 4.5, shape = 10)+
-  geom_text(data = evap_mask_merge, 
+  geom_text(data = agreement_merge, 
             aes(label = c("M1", "M2"), y = std_quant_range, x = ens_mean_mean,
                 color = rel_dataset_agreement), 
             size = 3, nudge_x = -120)+
-  geom_text(data = evap_mask_merge[rel_dataset_agreement == "Low"],
+  geom_text(data = agreement_merge[rel_dataset_agreement == "Low"],
             aes(label = "high sIQR\nlow agreement", color = rel_dataset_agreement,
                 x = ens_mean_mean+250,
                 y = std_quant_range-0.05
             ))+
-  geom_text(data = evap_mask_merge[rel_dataset_agreement == "High"],
+  geom_text(data = agreement_merge[rel_dataset_agreement == "High"],
             aes(label = "low sIQR\nhigh agreement", color = rel_dataset_agreement,
                 x = ens_mean_mean-150,
                 y = std_quant_range+0.14
@@ -196,7 +165,7 @@ panel_c <- ggplot(evap_mask_sample)+
     colour = NULL,
     title = "Standardized IQR"
   ) +
-  theme_fig1_row1
+  theme_fig1
 
 
 ## panel d ----
@@ -208,7 +177,7 @@ evap_mask_sample[, rel_dataset_agreement := factor(rel_dataset_agreement,
                                                      "Below average",
                                                      "Low")),]
 
-evap_mask_merge[, rel_dataset_agreement := factor(rel_dataset_agreement, 
+agreement_merge[, rel_dataset_agreement := factor(rel_dataset_agreement, 
                                                    levels = c("High","Above average",
                                                               "Average",
                                                               "Below average",
@@ -232,7 +201,7 @@ agreement_band_labels <- transform(
   x = 1.05
 )
 
-panel_d <- ggplot(evap_mask)+
+panel_d <- ggplot(agreement)+
   geom_rect(
     data = agreement_bands_siqr,
     aes(
@@ -260,17 +229,17 @@ panel_d <- ggplot(evap_mask)+
     colour = NULL,
     title = "Agreement classes from sIQR"
   ) +
-  geom_point(data = evap_mask_merge, 
+  geom_point(data = agreement_merge, 
             aes(x = std_quant_range, y = c(0.09, 0.96)), 
             size = 3, shape = 10)+
-  geom_text(data = evap_mask_merge, 
+  geom_text(data = agreement_merge, 
             aes(label = c("M1", "M2"), x = std_quant_range, 
                 y = c(0.05, 0.93)), 
             size = 3, nudge_x = c(0.1))+
   geom_hline(yintercept = c(0.1, 0.3, 0.7, 0.9), linewidth = 0.25,
              color = "gray35")+
   coord_cartesian(xlim = c(0, 1.55), expand = F)+
-  theme_fig1_row1 
+  theme_fig1 
 
 
 ## ggarrange row 1 ----
@@ -335,14 +304,11 @@ panel_e <- ggplot()+
     colour = NULL,
     title = "Contrasting annual ET"
   ) +
-  theme_fig1_row1
+  theme_fig1
 
 ## panel f ----
 
-match_cols <- c(
-  "match" = "grey20",
-  "no match" = "grey82"
-)
+
 
 x1 <- time_series_low[dataset %in% c("bess"), evap]
 x2 <- time_series_low[dataset %in% c("gldas-vic"), evap]
@@ -473,7 +439,7 @@ panel_f <- ggplot()+
     colour = NULL,
     title = "Pairwise ECDF comparison"
   ) +
-  theme_fig1_row1
+  theme_fig1
 
 
 ## panel g ----
@@ -527,7 +493,7 @@ panel_g <- ggplot(ks_panel, aes(x = dataset.x, y = dataset.y, fill = match))+
     fill = "white"
   ) +
   facet_wrap(~location, nrow = 2)+
-  theme_fig1_row1+
+  theme_fig1+
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
@@ -626,7 +592,7 @@ panel_h <- ggplot(distribution) +
     fill = NULL,
     title = "Agreement classes from match ratio"
   ) +
-  theme_fig1_row1 +
+  theme_fig1 +
   theme(
     axis.text.x = element_text(
       angle = 25,
@@ -648,7 +614,7 @@ fig1_row2 <- ggarrange(
 
 
 # Patterns ----
-example_locations <- rbind(evap_mask_merge[,.(lon,lat)],
+example_locations <- rbind(agreement_merge[,.(lon,lat)],
                            time_series_high[,.(lon,lat)],
                            time_series_low[,.(lon,lat)])
 
@@ -737,7 +703,7 @@ fig_types <- ggplot(example_locations_data)+
   ) +
   facet_grid(rel_dataset_agreement~dist_dataset_agreement, scales = 'free')+
   labs(y = expression(paste('Product annual ET (mm yr'^-1,')')), x = 'Year')+
-  theme_fig1_row1+
+  theme_fig1+
   theme(strip.background = element_blank(),
         strip.text = element_text(size = 10, face = "plain"),
         panel.spacing = unit(0.6, "lines"),
@@ -769,7 +735,7 @@ ggsave(
     "main/fig1_agreement_metrics.pdf"
   ),
   plot = figure_1,
-  width = 1.5*25,
+  width = figure_widths,
   height = 25,
   units = "cm",
   device = cairo_pdf

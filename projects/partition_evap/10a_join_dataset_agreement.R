@@ -48,7 +48,7 @@ distribution[index <= quant_thr_0_1, dist_dataset_agreement := ordered(5, labels
 
 grid_wise_agreement_environments <- merge(evap_mask[,.(lon, lat, land_cover_short_class, biome_short_class,
                                                        IPCC_ref_region, elev_class, evap_quant, ma_basin, KG_beck, IQR_agreement,
-                                                       rel_dataset_agreement, std_quant_range, quant_range = ens_mean_q75-ens_mean_q25, ens_mean_mean)],
+                                                       rel_dataset_agreement, std_quant_range, quant_range = ens_mean_q75-ens_mean_q25, ens_mean_q75, ens_mean_q25,ens_mean_mean)],
                                           distribution[,.(lon, lat, dist_dataset_agreement, match_ratio = index)], by = c("lon", "lat"), all = T)
 
 grid_wise_agreement_environments <- merge(evap_grid [,.(lon, lat, area)], grid_wise_agreement_environments,

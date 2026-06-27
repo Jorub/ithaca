@@ -1,12 +1,6 @@
 source('source/partition_evap.R')
 source('source/graphics.R')
-
-library(ggpubr)
-library(ggnewscale)
-library(cowplot)
-library(grid)
-library(scales)
-
+source('source/partition_evap_graphics.R')
 
 # Data ----
 dataset_agreement_grid_wise <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
@@ -27,37 +21,7 @@ dataset_agreement_grid_wise[, evap_quant_v2 := as.factor(evap_quant_v2)]
 evap_quant_labels_v2 <- levels(dataset_agreement_grid_wise$evap_quant_v2)
 
 # plot ----
-## theme ----
-theme_fig3 <- theme_bw(base_size = 11) +
-  theme(
-    axis.text = element_text(size = 10),
-    axis.title = element_text(size = 10),
-    plot.title = element_text(size = 10, face = "bold", hjust = 0),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    legend.position = "none"
-  )
 
-
-## colors ----
-
-color_quartile_agreement <- c(
-  "Low" = "#6A51A3",
-  "Below average" = "#B2ABD2",
-  "Average" = "#F7F7F7",
-  "Above average" = "#92C5DE",
-  "High" = "#0571B0"
-)
-
-color_distribution_agreement <- c(
-  "Low" = "#A6611A",
-  "Below average" = "#DFC27D",
-  "Average" = "#F7F7F7",
-  "Above average" = "#80CDC1",
-  "High" = "#018571"
-)
-
-color_joint <- c("Both higher" = "#4D648D", "Both lower" = "#A63A3A")
 
 # panel a ----
 ## Calculate area fractions ----
@@ -488,7 +452,7 @@ panel_title_top <- ggdraw() +
 
 panel_title_bottom <- ggdraw() +
   draw_label(
-    "Joint high and low agreement across gradients",
+    "Spatial overlap of higher (high and above average) and lower (low and below average) agreement",
     x = 0,
     hjust = 0,
     fontface = "bold",
@@ -534,7 +498,7 @@ ggsave(
     "main/fig3_agreement_gradients.png"
   ),
   plot = fig3,
-  width = 1.5*20,
+  width = figure_widths,
   height = 20,
   units = "cm",
   dpi = 300
@@ -546,9 +510,10 @@ ggsave(
     "main/fig3_agreement_gradients.pdf"
   ),
   plot = fig3,
-  width = 1.5*20,
+  width = figure_widths,
   height = 20,
   units = "cm",
-  dpi = 300
+  dpi = 300,
+  device = cairo_pdf
 )
 

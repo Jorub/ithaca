@@ -1,9 +1,8 @@
 # tile plots for over and underestimator and best
 # heatplots
 source('source/partition_evap.R')
+source('source/partition_evap_graphics.R')
 source('source/graphics.R')
-
-library(ggpubr)
 
 evap_summary <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "grid_performance_datasets.rds"))
 cols_data_dt <- data.table(dataset = names(cols_data), colors = cols_data) 
@@ -19,17 +18,13 @@ evap_summary[performance == "Under", performance := "Lower"]
 ## global ----
 performance_global <- ggplot(evap_summary)+
   geom_bar(aes(x = dataset, y = area_fraction, fill = performance), stat = "identity")+
-  theme_bw()+
-  scale_fill_manual(values = c("Closest"= "gray75","Higher" = "#0072B2", "Lower" = "#D55E00"))+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
+  scale_fill_manual(values = color_global_positioning)+
+  theme_fig6 + theme(
         legend.spacing.x = unit(1.5, "cm"),
         legend.spacing.y = unit(1.5, "cm"),
-        legend.title = element_text(hjust = 0.5),
         legend.position = "right")+
   labs(x = "Datasets", y = "Global area fraction [-]", 
-       fill = "Deviation to\nensemble mean")+
+       fill = "Relative position to\nensemble mean")+
   coord_flip()
 
 data <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "partition_biome_datasets_for_plot.rds"))
@@ -99,21 +94,14 @@ dataset_global <-  ggplot(global_sym) +
     drop = FALSE
   )+
   labs(fill = "Pairwise matching\narea fraction", x = "", y = "") +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 10), 
-    axis.title = element_text(size = 10),
-    plot.title = element_text(size = 11, hjust = 0.5),
-    axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1),
-    strip.background = element_rect(fill = "white"),
-    strip.text = element_text(colour = "black"),
-    legend.position = "none"
-  ) +
+  theme_fig6 +
   ggtitle(label = "Global")
 
-top_row <- ggarrange(performance_global, dataset_global, 
-                     labels = c("a", "b"), nrow = 1, 
-                     align = "hv")
+top_row <- ggarrange(dataset_global, performance_global, 
+                     labels = c("a", "b"), 
+                     nrow = 1, 
+                     align = "hv", 
+                     widths = c(1, 1.3))
 
 ## biomes ----
 biome <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "area_fraction_matching_products_biome.rds"))
@@ -190,13 +178,8 @@ dataset_tundra <-
     drop = FALSE
   )+
   labs(fill = "Pairwise matching\narea fraction", x = "", y = "")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
-  theme(strip.background = element_rect(fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
+  theme_fig6 + 
+  theme(legend.position = "right")+
   ggtitle(label = "Tundra")
 
 dataset_desert <- ggplot(biome_sym[biome_short_class %in% "Deserts"])+
@@ -218,13 +201,7 @@ dataset_desert <- ggplot(biome_sym[biome_short_class %in% "Deserts"])+
     drop = FALSE
   )+
   labs(fill = "Pairwise matching\narea fraction", x = "", y = "")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
-  theme(strip.background = element_rect(fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
+  theme_fig6 + 
   ggtitle(label = "Deserts")
 
 dataset_trop_forest <- ggplot(biome_sym[biome_short_class %in% "T/S Moist BL Forests"], 
@@ -246,14 +223,8 @@ dataset_trop_forest <- ggplot(biome_sym[biome_short_class %in% "T/S Moist BL For
     labels = agreement_labels,
     drop = FALSE
   )+
-  labs(fill = "Pairwise matching\narea fraction", x = "", y = "")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
-  theme(strip.background = element_rect(fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
+  labs(fill = "Pairwise matching\narea fraction", x = "", y = "") +
+  theme_fig6 + theme(legend.position = "right") +
   ggtitle(label = "T/S Moist BL Forests")
 
 
@@ -264,36 +235,22 @@ dataset_gg <- ggarrange(dataset_desert, dataset_tundra, dataset_trop_forest,
 
 ## plot difference to global ----
 ## colors diff ----
-dataset_diff_cols <- c("Lower in biome" =  "#D55E00", 
-                  "Similar" = "gray85",
-                  "Higher in biome" = "#0072B2")
+
 
 dataset_tundra_diff <- ggplot(biome_global_sym[biome_short_class %in% "Tundra"], 
                          aes(x = dataset.x, y = dataset.y, fill = agreement))+
   geom_tile(color = "white",lwd = 0.8,linetype = 1) +
   scale_fill_manual(values = dataset_diff_cols)+
   labs(fill = "Change in matching area fraction vs. global", x = "", y = "")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
-  theme(strip.background = element_rect(fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
+  theme_fig6 +  
   ggtitle(label = "Tundra")
 
 dataset_desert_diff <- ggplot(biome_global_sym[biome_short_class %in% "Deserts"], 
                          aes(x = dataset.x, y = dataset.y, fill = agreement))+
   geom_tile(color = "white", lwd = 0.8, linetype = 1) +
-  scale_fill_manual(values = dataset_diff_cols)+
-  labs(fill = "Change in matching area fraction vs. global", x = "", y = "")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
-  theme(strip.background = element_rect(fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
+  scale_fill_manual(values = dataset_diff_cols) +
+  labs(fill = "Change in matching area fraction vs. global", x = "", y = "") +
+  theme_fig6 +    
   ggtitle(label = "Deserts")
 
 dataset_trop_forest_diff <- ggplot(biome_global_sym[biome_short_class %in% "T/S Moist BL Forests"], 
@@ -301,14 +258,8 @@ dataset_trop_forest_diff <- ggplot(biome_global_sym[biome_short_class %in% "T/S 
                                   fill = agreement))+
   geom_tile(color = "white", lwd = 0.8, linetype = 1) +
   scale_fill_manual(values = dataset_diff_cols)+
-  labs(fill = "Change in matching area fraction vs. global", x = "", y = "")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 10), 
-        axis.title = element_text(size = 10),
-        plot.title = element_text(size = 11, hjust = 0.5),
-        axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1))+
-  theme(strip.background = element_rect(fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'), legend.position = "right")+
+  labs(fill = "Change in matching area fraction vs. global", x = "", y = "") +
+  theme_fig6 +  
   ggtitle(label = "T/S Moist BL Forests")
 
 
@@ -321,13 +272,26 @@ dataset_diff_gg <- ggarrange(dataset_desert_diff,
 
 ## composite figure ----
 
-ggarrange(top_row, dataset_gg, dataset_diff_gg,
-          nrow = 3, heights = c(0.55, 0.6, 0.6), common.legend = F)
+fig_6 <- ggarrange(top_row, 
+                   dataset_gg, 
+          nrow = 2, 
+          heights = c(0.56, 0.6), 
+          common.legend = F,
+          align = "hv")
 
-ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "main/fig6_dataset_comparison.png"), 
-       width = 8, height = 11)
+ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, 
+              "main/fig6_dataset_comparison.png"), 
+       plot = fig_6,
+       width = figure_widths, 
+       height = 25, 
+       unit = "cm")
 
 
-ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, "main/fig6_dataset_comparison.pdf"), 
-       width = 10, height = 11)
+ggsave(paste0(PATH_SAVE_PARTITION_EVAP_FIGURES, 
+              "main/fig6_dataset_comparison.pdf"), 
+       plot = fig_6,
+       width = figure_widths, 
+       height = 25, 
+       unit = "cm",
+       device = cairo_pdf)
 
