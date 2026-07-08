@@ -1,5 +1,6 @@
 # Overview figure agreement across ma basins ----
 source('source/partition_evap.R')
+source('source/partition_evap_graphics.R')
 source('source/graphics.R')
 source('source/mask_paths.R')
 
@@ -108,16 +109,16 @@ basin_sum[, ratio_et := fifelse(
 # Panel b and c ----
 ## color ----
 fig5_col_low  <- "#D55E00"   # product ET below WB
-  fig5_col_mid  <- "#F7F7F7"   # close to WB
-    fig5_col_high <- "#0072B2"   # product ET above WB
-      fig5_col_neut <- "grey65"
-        fig5_col_dark <- "grey25"
+fig5_col_mid  <- "#F7F7F7"   # close to WB
+fig5_col_high <- "#0072B2"   # product ET above WB
+fig5_col_neut <- "grey65"
+fig5_col_dark <- "grey25"
           
-        color_ref <- c(
+color_ref <- c(
           "Below WB"   = fig5_col_low,
           "Crosses WB" = fig5_col_neut,
           "Above WB"   = fig5_col_high
-        )
+)
         ## theme ----
         theme_fig5 <- theme_bw(base_size = 11) +
           theme(

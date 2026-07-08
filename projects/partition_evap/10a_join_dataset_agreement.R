@@ -6,6 +6,15 @@ evap_mask <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_masks.rds"))
 evap_grid <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets_grid_mean.rds"))
 distribution <- as.data.table(readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "distribution_agreement_index_gridwise.rds")))
 
+## mean volume
+evap_grid[, count := .N, .(lat,lon)]
+evap_grid <- evap_grid[count > 12]
+evap_grid[, count := NULL]
+evap_mean <- evap_grid[, .(evap_volume = mean(evap_volume), 
+                           evap_mean = mean(evap_mean),
+                           area = first(area)), 
+                       .(lat, lon)]
+
 ## Quartile agreement ----
 levels(evap_mask$rel_dataset_agreement) <- c("High", "Above average", "Average",
                                              "Below average", "Low")
@@ -21,11 +30,11 @@ quant_iqr_0_9 <- quantile(evap_mask$Qdiff, c(0.9))
 thresholds_IQR <- c(min(evap_mask$Qdiff), quant_iqr_0_1, quant_iqr_0_3, quant_iqr_0_7, quant_iqr_0_9, max(evap_mask$Qdiff))
 saveRDS(thresholds_IQR, paste0(PATH_SAVE_PARTITION_EVAP,'thresholds_IQR.RDS'))
 
-evap_mask[Qdiff > quant_iqr_0_9, Qdiff_brk := ordered(1, labels = "High")]
-evap_mask[Qdiff > quant_iqr_0_7 & Qdiff <= quant_iqr_0_9, Qdiff_brk := ordered(2, labels = "Above average")]
+evap_mask[Qdiff > quant_iqr_0_9, Qdiff_brk := ordered(5, labels = "Low")]
+evap_mask[Qdiff > quant_iqr_0_7 & Qdiff <= quant_iqr_0_9, Qdiff_brk := ordered(4, labels = "Below average")]
 evap_mask[Qdiff > quant_iqr_0_3 & Qdiff <= quant_iqr_0_7, Qdiff_brk := ordered(3, labels = "Average")]
-evap_mask[Qdiff> quant_iqr_0_1 & Qdiff <= quant_iqr_0_3, Qdiff_brk := ordered(4, labels = "Below average")]
-evap_mask[Qdiff <= quant_iqr_0_1, Qdiff_brk := ordered(5, labels = "Low")] 
+evap_mask[Qdiff > quant_iqr_0_1 & Qdiff <= quant_iqr_0_3, Qdiff_brk := ordered(2, labels = "Above average")]
+evap_mask[Qdiff <= quant_iqr_0_1, Qdiff_brk := ordered(1, labels = "High")] 
 evap_mask[, IQR_agreement := Qdiff_brk] 
 
 
@@ -51,12 +60,13 @@ grid_wise_agreement_environments <- merge(evap_mask[,.(lon, lat, land_cover_shor
                                                        rel_dataset_agreement, std_quant_range, quant_range = ens_mean_q75-ens_mean_q25, ens_mean_q75, ens_mean_q25,ens_mean_mean)],
                                           distribution[,.(lon, lat, dist_dataset_agreement, match_ratio = index)], by = c("lon", "lat"), all = T)
 
-grid_wise_agreement_environments <- merge(evap_grid [,.(lon, lat, area)], grid_wise_agreement_environments,
+grid_wise_agreement_environments <- merge(evap_mean[,.(lon, lat, area, evap_volume)], grid_wise_agreement_environments,
                                           by = c("lon", "lat"), all = T)
 
 ## Save data ----
 
 grid_wise_agreement_environments <- unique(grid_wise_agreement_environments)
+
 
 saveRDS(grid_wise_agreement_environments, paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
 

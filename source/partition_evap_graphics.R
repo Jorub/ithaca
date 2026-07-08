@@ -212,8 +212,9 @@ theme_map <- theme_fig1 +
 
 theme_map_fig5 <- theme_map +
   theme(
-    plot.title = element_text(size = 12, face = "bold", hjust = 0),
-    plot.margin = unit(c(0.1, 10, 0.1, 0.1), "cm")
+    plot.title = element_text(size = 12, face = "bold", hjust = 0)
+    #,
+    #plot.margin = unit(c(0.1, 10, 0.1, 0.1), "cm")
   )
 
 theme_map_SI <- theme_map + theme(legend.position = "right")
