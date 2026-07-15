@@ -1,17 +1,35 @@
-source("source/main.R")
+RUN_LOCATION <- Sys.getenv("ITHACA_RUN_LOCATION")
+if (!nzchar(RUN_LOCATION)) {
+  RUN_LOCATION <- if (dir.exists(path.expand("~/shared"))) "server" else "local"
+}
+
+switch(
+  RUN_LOCATION,
+  local = {
+    suppressPackageStartupMessages({
+      library(data.table)
+      library(lubridate)
+      library(ggplot2)
+      library(raster)
+      library(ncdf4)
+      library(sp)
+      library(sf)
+      library(stars)
+    })
+
+    N_CORES <- parallel::detectCores() - 2
+    PATH_SAVE <- "data"
+
+    M2_TO_KM2 <- 1e-6
+    MM_TO_M <- 1e-3
+    MM_TO_KM <- 1e-6
+  },
+  server = source("source/main.R"),
+  stop("Unknown run location: ", RUN_LOCATION,
+       ". Use 'local' or 'server'.")
+)
 
 ## Paths
-### Input - Raw data 
-# EVAP_FNAMES_SHORT_2000_2019_FULL_RECORD <-  c("bess","camele","era5-land","etmonitor","etsynthesis","fldas", "gldas-clsm","gldas-noah", 
-#                                               "gldas-vic","gleam", "jra55", "merra2","mod16a", "terraclimate")
-# EVAP_FNAMES_2000_2019_FULL_RECORD <- c(list.files(path = PATH_EVAP_SIM, full.names = TRUE,pattern = "*_e_mm*"))
-# 
-# EVAP_FNAMES_2000_2019_FULL_RECORD <- unique(grep(paste(EVAP_FNAMES_SHORT_2000_2019_FULL_RECORD, collapse = "|"), 
-#                                                  EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE))
-# 
-# EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("land", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE)
-# EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("yearly", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE)
-# EVAP_FNAMES_2000_2019_FULL_RECORD <- grep("e_mm", EVAP_FNAMES_2000_2019_FULL_RECORD, value = TRUE)
 
 ### Output
 PATH_SAVE_PARTITION_EVAP <- paste0(PATH_SAVE, "/partition_evap/")
@@ -22,10 +40,7 @@ PATH_SAVE_PARTITION_EVAP_TABLES <- paste0(PATH_SAVE, "/partition_evap/tables/")
 
 ### Project data
 EVAP_FNAMES_2000_2019 <-  list.files(path = PATH_SAVE_PARTITION_EVAP_RAW, full.names = TRUE)
-dummy <- strsplit(EVAP_FNAMES_2000_2019, split = '//')
-dummy <- sapply(dummy, "[[", 2)
-dummy <- strsplit(dummy, split = '_')
-EVAP_FNAMES_SHORT_2000_2019 <- sapply(dummy, "[[", 1)
+EVAP_FNAMES_SHORT_2000_2019 <- sub("_.*", "", basename(EVAP_FNAMES_2000_2019))
 
 ## Variables
 MIN_N_DATASETS <- 13
@@ -34,8 +49,9 @@ n_datasets_2000_2019 <- 14
 
 ## Specify start/end for the period of analysis 
 period_start <- as.Date("2000-01-01") 
-period_end <- ITHACA_PERIOD_END
-period_months <- interval(period_start, period_end) %/% months(1) + 1
+period_end <- as.Date("2019-12-31")
+period_months <- lubridate::interval(period_start, period_end) %/%
+  lubridate::period(months = 1) + 1
 
 #global space
 global_area_evap <- 125803654946773
@@ -71,4 +87,3 @@ EVAP_DATASETS_REANAL <- c("era5-land", "jra55", "merra2")
 EVAP_DATASETS_REMOTE <- c("bess", "etmonitor", "gleam","mod16a")
 EVAP_DATASETS_HYDROL <- c("fldas", "gldas-clsm", "gldas-noah", "gldas-vic", "terraclimate")
 EVAP_DATASETS_ENSEMB <- c("camele", "etsynthesis", "synthesizedet")
-

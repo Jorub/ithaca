@@ -4,24 +4,18 @@ source("source/partition_evap_graphics.R")
 
 ## data ----
 agreement <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
-evap_datasets <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets_clean.rds"))
-
-evap_datasets[, year := as.numeric(as.character(year))]
+figure1_timeseries <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "figure1_timeseries.rds"))
+selected_locations <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "figure1_selected_locations.rds"))
 
 # Magnitude agreement -----
-agreement_high <- agreement[quant_range > 190  & quant_range < 210 &
-                                  rel_dataset_agreement == "High", ][599,] 
+agreement_high <- selected_locations[example_label == "M1"]
+agreement_low <- selected_locations[example_label == "M2"]
 
-all_low <- agreement[quant_range > 160  & quant_range < 210 & rel_dataset_agreement == "Low", ]
-
-agreement_low <- all_low[dist_dataset_agreement == "High" & std_quant_range < 1]
-
-agreement_merge <- merge(agreement_high, agreement_low, all = T,
-                         by = c("lon", "lat",
-                         "rel_dataset_agreement",
-                         "std_quant_range", "ens_mean_q25",
-                         "ens_mean_mean", "ens_mean_q75",
-                         "quant_range"))
+agreement_merge <- data.table::rbindlist(
+  list(agreement_high, agreement_low),
+  use.names = TRUE,
+  fill = TRUE
+)
 
 agreement_merge <- subset(agreement_merge, select = c("lon", "lat",
                                                       "rel_dataset_agreement",
@@ -36,7 +30,7 @@ agreement_merge[, annotation := sprintf(
   std_quant_range
 )]                          
 
-evap_time_high <- merge(evap_datasets, agreement_high, by = c("lon", "lat"))
+evap_time_high <- figure1_timeseries[example_label == "M1"]
 evap_time_high[, mean_evap_dataset := mean(evap), .(dataset)]
 evap_time_high_sub <- subset(evap_time_high, select = c("lon", "lat", "mean_evap_dataset",
                                                       "rel_dataset_agreement",
@@ -44,7 +38,7 @@ evap_time_high_sub <- subset(evap_time_high, select = c("lon", "lat", "mean_evap
                                                       "ens_mean_mean", "ens_mean_q75",
                                                       "quant_range"))
 
-evap_time_low <- merge(evap_datasets, agreement_low, by = c("lon", "lat"))
+evap_time_low <- figure1_timeseries[example_label == "M2"]
 evap_time_low[, mean_evap_dataset := mean(evap), .(dataset)]
 evap_time_low_sub <- subset(evap_time_low, select = c("lon", "lat", "mean_evap_dataset",
                                                         "rel_dataset_agreement",
@@ -255,18 +249,11 @@ fig1_row1 <- ggarrange(
 
 # Distribution agreement -----
 
-agreement_select_high <- agreement[dist_dataset_agreement == 'High' &
-                                      rel_dataset_agreement == "High"&
-                                     evap_quant == "0.5-0.6"][1,]
+agreement_select_high <- selected_locations[example_label == "D1"]
+agreement_select_low <- selected_locations[example_label == "D2"]
 
-agreement_select_low <- agreement[ dist_dataset_agreement == 'Low' & 
-                                     rel_dataset_agreement == "Low" &
-                                      evap_quant == "0.2-0.3"][2,]
-
-
-time_series_high <- merge(agreement_select_high, evap_datasets, by = c("lon", "lat"))
-
-time_series_low <- merge(agreement_select_low, evap_datasets, by = c("lon", "lat"))
+time_series_high <- figure1_timeseries[example_label == "D1"]
+time_series_low <- figure1_timeseries[example_label == "D2"]
 
 ## panel e ----
 label_e <- data.table(
@@ -505,7 +492,7 @@ panel_g <- ggplot(ks_panel, aes(x = dataset.x, y = dataset.y, fill = match))+
 ## panel h ----
 
 thresholds_dist <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP,'thresholds_distribution_agreement.RDS'))
-distribution <- as.data.table(readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "distribution_agreement_index_gridwise.rds")))
+distribution <- agreement[, .(lon, lat, index = match_ratio)]
 
 match_ratio <- ks_panel[matching == T, .(match_ratio = .N/91), dist_dataset_agreement]
 
@@ -614,12 +601,7 @@ fig1_row2 <- ggarrange(
 
 
 # Patterns ----
-example_locations <- rbind(agreement_merge[,.(lon,lat)],
-                           time_series_high[,.(lon,lat)],
-                           time_series_low[,.(lon,lat)])
-
-example_locations_agreement <- merge(example_locations, agreement, by = c('lon', 'lat'))
-example_locations_data <- merge(example_locations_agreement, evap_datasets, by = c('lon', 'lat'))
+example_locations_data <- data.table::copy(figure1_timeseries)
 
 example_locations_data[dataset %in% EVAP_DATASETS_REANAL, dataset_type := "Reanalysis"]
 example_locations_data[dataset %in% EVAP_DATASETS_REMOTE, dataset_type := "Remote"]
@@ -740,4 +722,3 @@ ggsave(
   units = "cm",
   device = cairo_pdf
 )
-

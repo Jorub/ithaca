@@ -217,17 +217,24 @@ theme_map_fig5 <- theme_map +
     #plot.margin = unit(c(0.1, 10, 0.1, 0.1), "cm")
   )
 
-theme_map_SI <- theme_map + theme(legend.position = "right")
+theme_map_SI <- theme_map +
+  theme(
+    legend.position = "right",
+    axis.text = element_text(color = "gray40", size = 10),
+    axis.ticks = element_line(color = "gray55", linewidth = 0.25),
+    axis.ticks.length = grid::unit(0.12, "cm"),
+    plot.margin = margin(5.5, 5.5, 5.5, 5.5)
+  )
         
 ## figure parameters ----
 figure_widths <- 1.5*25
 
 ## maps
 # Map preparation ----
-earth_box <- readRDS(
-  paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL, "earth_box.rds")
-) %>%
-  st_as_sf(crs = "+proj=longlat +datum=WGS84 +no_defs")
+# earth_box <- readRDS(
+#   paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL, "earth_box.rds")
+# ) %>%
+#   st_as_sf(crs = "+proj=longlat +datum=WGS84 +no_defs")
 
 world_sf <- ne_countries(returnclass = "sf")
 world_no_antarctica <- world_sf[world_sf$continent != "Antarctica", ]
@@ -273,6 +280,22 @@ labs_x <- st_as_sf(
 )
 
 ## extra functions ----
+
+label_longitude <- function(x) {
+  ifelse(
+    x == 0,
+    "0°",
+    paste0(abs(x), "°", ifelse(x < 0, "W", "E"))
+  )
+}
+
+label_latitude <- function(x) {
+  ifelse(
+    x == 0,
+    "0°",
+    paste0(abs(x), "°", ifelse(x < 0, "S", "N"))
+  )
+}
 
 arrow_colourbar_vertical <- function(
     limits,
