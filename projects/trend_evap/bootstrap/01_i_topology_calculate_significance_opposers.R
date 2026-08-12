@@ -16,43 +16,35 @@ evap_index <- evap_index[,.(lat, lon, N_pos_0_01, N_neg_0_01, N_none_0_01,
                             N_pos_0_2, N_neg_0_2, N_none_0_2,
                             N_pos_all, N_neg_all)]
 
-evap_index[N_none_0_01 > N_pos_0_01 & N_none_0_01 > N_neg_0_01, majority_0_01 := "none"]
-evap_index[N_pos_0_01 > N_none_0_01 & N_pos_0_01 > N_neg_0_01, majority_0_01 := "positive"]
-evap_index[N_neg_0_01 > N_pos_0_01 & N_neg_0_01 > N_none_0_01, majority_0_01 := "negative"]
+evap_index[N_none_0_01 > (N_pos_0_01 + N_neg_0_01), majority_0_01 := "none"]
+evap_index[(N_pos_0_01 + N_neg_0_01) > N_none_0_01, majority_0_01 := "significant"]
 
-evap_index[N_none_0_05 > N_pos_0_05 & N_none_0_05 > N_neg_0_05, majority_0_05 := "none"]
-evap_index[N_pos_0_05 > N_none_0_05 & N_pos_0_05 > N_neg_0_05, majority_0_05 := "positive"]
-evap_index[N_neg_0_05 > N_pos_0_05 & N_neg_0_05 > N_none_0_05, majority_0_05 := "negative"]
+evap_index[N_none_0_05 > (N_pos_0_05 + N_neg_0_05), majority_0_05 := "none"]
+evap_index[(N_pos_0_05 + N_neg_0_05) > N_none_0_05, majority_0_05 := "significant"]
 
-evap_index[N_none_0_1 > N_pos_0_1 & N_none_0_1 > N_neg_0_1, majority_0_1 := "none"]
-evap_index[N_pos_0_1 > N_none_0_1 & N_pos_0_1 > N_neg_0_1, majority_0_1 := "positive"]
-evap_index[N_neg_0_1 > N_pos_0_1 & N_neg_0_1 > N_none_0_1, majority_0_1 := "negative"]
+evap_index[N_none_0_1 > (N_pos_0_1 + N_neg_0_1), majority_0_1 := "none"]
+evap_index[(N_pos_0_1 + N_neg_0_1) > N_none_0_1, majority_0_1 := "significant"]
 
-evap_index[N_none_0_2 > N_pos_0_2 & N_none_0_2 > N_neg_0_2, majority_0_2 := "none"]
-evap_index[N_pos_0_2 > N_none_0_2 & N_pos_0_2 > N_neg_0_2, majority_0_2 := "positive"]
-evap_index[N_neg_0_2 > N_pos_0_2 & N_neg_0_2 > N_none_0_2, majority_0_2 := "negative"]
-
-evap_index[N_pos_all > N_neg_all, majority_all := "positive"]
-evap_index[N_neg_all > N_pos_all, majority_all := "negative"]
-
+evap_index[N_none_0_2 > (N_pos_0_2 + N_neg_0_2), majority_0_2 := "none"]
+evap_index[(N_pos_0_2 + N_neg_0_2) > N_none_0_2, majority_0_2 := "significant"]
 
 evap_trend <- evap_index[evap_trend, on = .(lat, lon)]
 evap_trend[, opposing_0_01 := 0]
-evap_trend[(majority_0_01 == "none" & p <= 0.01) | (majority_0_01 == "positive" & p > 0.01 )
-           | (majority_0_01 == "negative" & p > 0.01 ), opposing_0_01 := 1]
+evap_trend[(majority_0_01 == "none" & p <= 0.01) | (majority_0_01 == "significant" & p > 0.01 )
+           , opposing_0_01 := 1]
 
 
 evap_trend[, opposing_0_05 := 0]
-evap_trend[(majority_0_05 == "none" & p <= 0.05) | (majority_0_05 == "positive" & p > 0.05 )
-           | (majority_0_05 == "negative" & p > 0.05 ), opposing_0_05 := 1]
+evap_trend[(majority_0_05 == "none" & p <= 0.05) | (majority_0_05 == "significant" & p > 0.05 )
+           , opposing_0_05 := 1]
 
 evap_trend[, opposing_0_1 := 0]
-evap_trend[(majority_0_1 == "none" & p <= 0.1) | (majority_0_1 == "positive" & p > 0.1 )
-           | (majority_0_1 == "negative" & p > 0.1 ), opposing_0_1 := 1]
+evap_trend[(majority_0_1 == "none" & p <= 0.1) | (majority_0_1 == "significant" & p > 0.1 )
+           , opposing_0_1 := 1]
 
 evap_trend[, opposing_0_2 := 0]
-evap_trend[(majority_0_2 == "none" & p <= 0.2) | (majority_0_2 == "positive" & p > 0.2 )
-           | (majority_0_2 == "negative" & p > 0.2 ), opposing_0_2 := 1]
+evap_trend[(majority_0_2 == "none" & p <= 0.2) | (majority_0_2 == "significant" & p > 0.2 )
+          , opposing_0_2 := 1]
 
 saveRDS(evap_trend, paste0(PATH_SAVE_EVAP_TREND, "global_grid_dataset_opposing_significance.rds"))
 
