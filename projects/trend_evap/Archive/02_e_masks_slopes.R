@@ -38,7 +38,7 @@ data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "land_cover_class_mean.rds"))
 data[, date := paste0(year, "-01-01 00:00:00")]
 data[, date := as.POSIXct(date)]
 data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
-                   .(dataset, land_cover_short_class)]
+                                         .(dataset, land_cover_short_class)]
 
 ### Save data ----
 saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "land_cover_trend_bootstrap.rds"))  
@@ -64,7 +64,7 @@ data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "biome_class_mean.rds"))
 data[, date := paste0(year, "-01-01 00:00:00")]
 data[, date := as.POSIXct(date)]
 data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
-                   .(dataset, biome_class)]
+                                         .(dataset, biome_class)]
 
 ### Save data ----
 saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "biome_trend_bootstrap.rds"))  
@@ -112,53 +112,53 @@ saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "elevation_ensemble_trend_boots
 
 ## Koeppen-Geiger ----
 ### Beck et al 2023 main groups ----
-#### Read data ----
+### Read data ----
 data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_v2_1_mean.rds"))
 
-#### Analysis ----
-data[, date := paste0(year, "-01-01 00:00:00")]
-data[, date := as.POSIXct(date)]
-data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
-                   .(dataset, KG_beck_v2_1)]
-
-#### Save data ----
-saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_v2_1_trend_bootstrap.rds"))  
-
-#### Read ensemble data ----
-data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_v2_1_ensemble_mean.rds"))
-
-#### Analysis ----
-data[, date := paste0(year, "-01-01 00:00:00")]
-data[, date := as.POSIXct(date)]
-data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
-                   .(KG_beck_v2_1)]
-
-#### Save data ----
-saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_v2_1_ensemble_trend_bootstrap.rds"))  
-
-### Beck main groups ----
-#### Read data ----
-data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_mean.rds"))
-
-#### Analysis ----
+### Analysis ----
 data[, date := paste0(year, "-01-01 00:00:00")]
 data[, date := as.POSIXct(date)]
 data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
                    .(dataset, KG_beck_1)]
 
-#### Save data ----
+### Save data ----
 saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_trend_bootstrap.rds"))  
 
-#### Read data ----
+### Read data ----
 data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_ensemble_mean.rds"))
 
-#### Analysis ----
+### Analysis ----
 data[, date := paste0(year, "-01-01 00:00:00")]
 data[, date := as.POSIXct(date)]
 data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
                    .(KG_beck_1)]
 
-#### Save data ----
+### Save data ----
+saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_ensemble_trend_bootstrap.rds"))  
+
+### Beck main groups ----
+### Read data ----
+data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_mean.rds"))
+
+### Analysis ----
+data[, date := paste0(year, "-01-01 00:00:00")]
+data[, date := as.POSIXct(date)]
+data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
+                   .(dataset, KG_beck_1)]
+
+### Save data ----
+saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_trend_bootstrap.rds"))  
+
+### Read data ----
+data <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_ensemble_mean.rds"))
+
+### Analysis ----
+data[, date := paste0(year, "-01-01 00:00:00")]
+data[, date := as.POSIXct(date)]
+data_trend <- data[, TheilSen(.SD, pollutant = "evap_mean", autocor = TRUE, plot = F, silent = T)$data$main.data[1,c(10,12,16,17)], 
+                   .(KG_beck_1)]
+
+### Save data ----
 saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND, "KG_beck_1_ensemble_trend_bootstrap.rds"))  
 
 ## Beck ----

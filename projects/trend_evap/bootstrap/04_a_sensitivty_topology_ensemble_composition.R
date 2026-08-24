@@ -32,7 +32,7 @@ evap_merge <- evap_merge[dataset != dataset_leftout]
 
 evap_merge[, opposing_0_05 := 0]
 evap_merge[DCI_0_05/slope < 0 & DCI_0_05 != 0, opposing_0_05 := 1]
-area_opposing <- evap_merge[opposing_0_05 == 1, .(area_opposing = sum(area)), .(opposing_0_05, dataset, dataset_leftout)]
+area_opposing <- evap_merge[opposing_0_05 == 1, .(area_opposing = sum(area)), .(dataset, dataset_leftout)]
 area_opposing[, trend_opposer := rank(-area_opposing), .(dataset_leftout)]
 
 mean_rank <- area_opposing[, .(mean = mean(trend_opposer)), .(dataset)]
@@ -40,16 +40,6 @@ dataset_order <- mean_rank$dataset[order(mean_rank$mean)]
 
 area_opposing[, dataset := factor(dataset, levels = dataset_order)]
 
-fig_trend_opposer <- ggplot(area_opposing)+
-  geom_boxplot(aes(y = trend_opposer, x = dataset))+
-  labs( y = "Rank\nStrongest \u2192 Weakest", x = "Dataset")+
-  theme_bw()+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))+
-  ggtitle("Trend opposer rank sensitivity with one dataset leftout")
-
-
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_topology_trend_opposer_sensitivity_composition.png"), 
-       width = 8, height = 8, bg = "white")
 
 ## sensitivity opposer ----
 
@@ -58,37 +48,23 @@ evap_merge[(N_pos_0_05+N_neg_0_05) >  N_none_0_05, majority_0_05 := "significant
 
 evap_merge[, sig_opposing_0_05 := 0]
 evap_merge[(majority_0_05 == "none" & p <= 0.05) | (majority_0_05 == "significant" & p > 0.05 ), sig_opposing_0_05 := 1]
-area_sig_opposing <- evap_merge[sig_opposing_0_05 == 1, .(area_opposing = sum(area)), .(dataset, dataset_leftout)]
+area_sig_opposing <- evap_merge[sig_opposing_0_05 == 1, .(area_sig_opposing = sum(area)), .(dataset, dataset_leftout)]
 
-area_sig_opposing[, sig_opposer := rank(-area_opposing), .(dataset_leftout)]
+area_sig_opposing[, sig_opposer := rank(-area_sig_opposing), .(dataset_leftout)]
 
 mean_rank <- area_sig_opposing[, .(mean = mean(sig_opposer)), .(dataset)]
 dataset_order <- mean_rank$dataset[order(mean_rank$mean)]
 
 area_sig_opposing[, dataset := factor(dataset, levels = dataset_order)]
 
-ggplot(area_sig_opposing)+
-  geom_boxplot(aes(y = sig_opposer, x = dataset))+
-  labs( y = "Rank\nStrongest \u2192 Weakest", x = "Dataset")+
-  theme_bw()+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))+
-  ggtitle("Significance opposer rank sensitivity with one dataset leftout")
 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_topology_significance_opposer_sensitivity_composition.png"), 
-       width = 8, height = 8, bg = "white")
-
-# Opposer contributor 
-
-evap_merge[p > 0.05, N_sens := 0]
-evap_merge[p <= 0.05 & slope > 0, N_sens := 1]
-evap_merge[p <= 0.05 & slope < 0, N_sens := -1]
-
+## Opposer contributor ----
 evap_merge[trend_0_05 == "opposing" & 
              ((N_pos_0_05 == 1 & slope > 0) | (N_neg_0_05 == 1 & slope < 1)) 
            & p < 0.05, opposition_contributor := 1]
 
-area_opp_contributor <- evap_merge[opposition_contributor == 1, .(area_opposing = sum(area)), .(dataset, dataset_leftout)]
-area_opp_contributor[, opp_contributor := rank(-area_opposing), .(dataset_leftout)]
+area_opp_contributor <- evap_merge[opposition_contributor == 1, .(area_oc_opposing = sum(area)), .(dataset, dataset_leftout)]
+area_opp_contributor[, opp_contributor := rank(-area_oc_opposing), .(dataset_leftout)]
 
 
 mean_rank <- area_opp_contributor[, .(mean = mean(opp_contributor)), .(dataset)]
@@ -96,12 +72,11 @@ dataset_order <- mean_rank$dataset[order(mean_rank$mean)]
 
 area_opp_contributor[, dataset := factor(dataset, levels = dataset_order)]
 
-ggplot(area_opp_contributor)+
-  geom_boxplot(aes(y = opp_contributor, x = dataset))+
-  labs( y = "Rank\nStrongest \u2192 Weakest", x = "Dataset")+
-  theme_bw()+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))+
-  ggtitle("Opposition contributor rank sensitivity with one dataset leftout")
 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_topology_opposition_contributor_sensitivity_composition.png"), 
-       width = 8, height = 8, bg = "white")
+sensitivity_test <- merge(area_opposing, area_sig_opposing, 
+                          by = c("dataset", "dataset_leftout"))
+
+sensitivity_test <- merge(sensitivity_test, area_opp_contributor, 
+                          by = c("dataset", "dataset_leftout"))
+
+saveRDS(sensitivity_test, paste0(PATH_SAVE_EVAP_TREND, "global_oppositional_topology_sensitivity_analysis_ensemble_composition_a.rds"))

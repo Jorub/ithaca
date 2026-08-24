@@ -672,7 +672,6 @@ KG_trends[KG_beck_1 %in% c("D"), climate := "Continental"]
 KG_trends[KG_beck_1 %in% c("E"), climate := "Polar"]
 KG_trends <- KG_trends[!is.na(KG_beck_1)]
 
-
 ### save data ----
 saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_1_trends_by_product.rds"))
 saveRDS(KG_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_1_problem_area_fraction.rds"))
@@ -681,3 +680,96 @@ saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Ge
 write.csv(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_1_trends_by_product.csv"))
 write.csv(KG_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_1_problem_area_fraction.csv"))
 write.csv(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_1_beck_problem_aggregated.csv"))
+
+## KG beck v2 main class ----
+
+data_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_v2_1_trend_bootstrap.rds"))  
+ensemble_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "KG_beck_v2_1_ensemble_trend_bootstrap.rds"))  
+
+ensemble_trend[, dataset := "ensemble"]
+
+data_trend <- merge(data_trend, ensemble_trend, 
+                    by = c("dataset", "KG_beck_v2_1", "p", "slope", "lower", "upper"),  all = T)
+
+data_trend[, dataset := toupper(dataset)]
+data_trend[dataset == "ETMONITOR", dataset := "ETMonitor"]
+data_trend[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
+data_trend[dataset == "ERA5-LAND", dataset := "ERA5-land"]
+data_trend[dataset == "MERRA2", dataset := "MERRA-2"]
+data_trend[dataset == "JRA55", dataset := "JRA-55"]
+data_trend[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
+data_trend[dataset == "ENSEMBLE", dataset := "Ensemble"]
+
+data_trend[slope >= 0 , trend_direction_detailed :=   "pos. p <= 1   "]
+data_trend[slope > 0 & p <= 0.1 , trend_direction_detailed :=   "pos. p <= 0.1   "]
+data_trend[slope > 0 & p <= 0.05 , trend_direction_detailed :=   "pos. p <= 0.05   "]
+data_trend[slope > 0 & p <= 0.01 , trend_direction_detailed :=   "pos. p <= 0.01   "]
+data_trend[slope < 0  , trend_direction_detailed :=   "neg. p <= 1   "]
+data_trend[slope < 0 & p <= 0.1 , trend_direction_detailed :=   "neg. p <= 0.1   "]
+data_trend[slope < 0 & p <= 0.05 , trend_direction_detailed :=   "neg. p <= 0.05   "]
+data_trend[slope < 0 & p <= 0.01 , trend_direction_detailed :=   "neg. p <= 0.01   "]
+data_trend[, trend_direction_detailed  := factor(trend_direction_detailed, 
+                                                 level = c("pos. p <= 0.01   ",   "pos. p <= 0.05   ",   "pos. p <= 0.1   ",
+                                                           "pos. p <= 1   ",
+                                                           "neg. p <= 1   ",   "neg. p <= 0.1   ",   "neg. p <= 0.05   ",
+                                                           "neg. p <= 0.01   "), ordered = T),]
+
+data_trend_slopes <- data_trend[, .(mean_slope = mean(slope)), dataset]
+data_trend_slopes[, rank := rank(mean_slope)]
+data_trend_slopes[dataset == "Ensemble", rank := 20]
+data_trend_slopes <- data_trend_slopes[order(rank)]
+data_trend[, dataset := factor(dataset, levels = data_trend_slopes$dataset)]
+data_trend <- data_trend[!is.na(KG_beck_v2_1)]
+
+data_trend[KG_beck_v2_1 %in% c("A"), climate := "Equatorial"]
+data_trend[KG_beck_v2_1 %in% c("B"), climate := "Arid"]
+data_trend[KG_beck_v2_1 %in% c("C"), climate := "Temperate"]
+data_trend[KG_beck_v2_1 %in% c("D"), climate := "Continental"]
+data_trend[KG_beck_v2_1 %in% c("E"), climate := "Polar"]
+
+
+### uncertainty for entire region ----
+
+data_trend_env <- data_trend[dataset != "ensemble",.(Q25 = quantile(slope, 0.25),
+                                                     Q75 = quantile(slope, 0.75)), KG_beck_v2_1]
+data_trend_env[, fold := abs(Q75)/abs(Q25)]
+data_trend_env[abs(Q25) > abs(Q75), fold := abs(Q25)/abs(Q75)]
+data_trend_env[Q75/Q25 < 0, sign := "different"]
+data_trend_env[Q75/Q25 >= 0, sign := "same"]
+
+data_trend_env[fold > 3.3 & sign == "different", problem := "Both"] 
+data_trend_env[fold <= 3.3 & sign == "different", problem := "Direction"] 
+data_trend_env[fold > 3.3 & sign == "same", problem := "Magnitude"] 
+data_trend_env[fold <= 3.3 & sign == "same", problem := "None"] 
+
+data_trend_env[, problem:= as.factor(problem)]
+
+data_trend_env[KG_beck_v2_1 %in% c("A"), climate := "Equatorial"]
+data_trend_env[KG_beck_v2_1 %in% c("B"), climate := "Arid"]
+data_trend_env[KG_beck_v2_1 %in% c("C"), climate := "Temperate"]
+data_trend_env[KG_beck_v2_1 %in% c("D"), climate := "Continental"]
+data_trend_env[KG_beck_v2_1 %in% c("E"), climate := "Polar"]
+
+### problems  ----
+evap_trend_masks[, KG_beck_v2_1 := strsplit(as.character(KG_beck_v2), "")[[1]][1], .(lat, lon)]
+KG_trends <- evap_trend_masks[,.(problem_area = sum(area)),.(problem, KG_beck_v2_1)]
+KG_trends <- KG_trends[complete.cases(KG_trends)]
+KG_trends[, KG_area:= sum(problem_area), .(KG_beck_v2_1)]
+KG_trends[, KG_fraction:= problem_area/KG_area]
+KG_trends[KG_beck_v2_1 %in% c("A"), climate := "Equatorial"]
+KG_trends[KG_beck_v2_1 %in% c("B"), climate := "Arid"]
+KG_trends[KG_beck_v2_1 %in% c("C"), climate := "Temperate"]
+KG_trends[KG_beck_v2_1 %in% c("D"), climate := "Continental"]
+KG_trends[KG_beck_v2_1 %in% c("E"), climate := "Polar"]
+KG_trends <- KG_trends[!is.na(KG_beck_v2_1)]
+
+
+### save data ----
+saveRDS(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_v2_1_trends_by_product.rds"))
+saveRDS(KG_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_v2_1_problem_area_fraction.rds"))
+saveRDS(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_1_beck_v2_problem_aggregated.rds"))
+
+write.csv(data_trend, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_v2_1_trends_by_product.csv"))
+write.csv(KG_trends, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_v2_1_problem_area_fraction.csv"))
+write.csv(data_trend_env, paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_1_beck_v2_problem_aggregated.csv"))
+

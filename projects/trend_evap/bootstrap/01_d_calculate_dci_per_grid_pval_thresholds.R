@@ -14,36 +14,44 @@ evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap
 evap_trend_pos <- evap_trend[p <= 0.01 & slope >= 0, .(N_pos_0_01 = .N), .(lat, lon)]
 evap_trend_neg <- evap_trend[p <= 0.01 & slope < 0, .(N_neg_0_01 = .N), .(lat, lon)]
 evap_trend_none <- evap_trend[p > 0.01, .(N_none_0_01 = .N), .(lat, lon)]
+evap_trend_sig <- evap_trend[p <= 0.01, .(N_sig_0_01 = .N), .(lat, lon)]
 
 evap_trend_summary <- merge(evap_trend_pos, evap_trend_neg, by = c("lon", "lat"), all = TRUE)
-evap_trend_summary <- merge(evap_trend_summary , evap_trend_none, by = c("lon", "lat"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_none, by = c("lon", "lat"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_sig, by = c("lon", "lat"), all = TRUE)
 
 ### p value as 0.05 as threshold ----
 evap_trend_pos <- evap_trend[p <= 0.05 & slope >= 0, .(N_pos_0_05 = .N), .(lat, lon)]
 evap_trend_neg <- evap_trend[p <= 0.05 & slope < 0, .(N_neg_0_05 = .N), .(lat, lon)]
 evap_trend_none <- evap_trend[p > 0.05, .(N_none_0_05 = .N), .(lat, lon)]
+evap_trend_sig <- evap_trend[p <= 0.05, .(N_sig_0_05 = .N), .(lat, lon)]
 
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_pos, by = c("lon", "lat"), all = TRUE)
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_neg, by = c("lon", "lat"), all = TRUE)
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_none, by = c("lon", "lat"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_sig, by = c("lon", "lat"), all = TRUE)
 
 ### p value as 0.1 as threshold ----
 evap_trend_pos <- evap_trend[p <= 0.1 & slope >= 0, .(N_pos_0_1 = .N), .(lat, lon)]
 evap_trend_neg <- evap_trend[p <= 0.1 & slope < 0, .(N_neg_0_1 = .N), .(lat, lon)]
 evap_trend_none <- evap_trend[p > 0.1, .(N_none_0_1 = .N), .(lat, lon)]
+evap_trend_sig <- evap_trend[p <= 0.1, .(N_sig_0_1 = .N), .(lat, lon)]
 
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_pos, by = c("lon", "lat"), all = TRUE)
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_neg, by = c("lon", "lat"), all = TRUE)
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_none, by = c("lon", "lat"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_sig, by = c("lon", "lat"), all = TRUE)
 
 ### p value as 0.2 as threshold ----
 evap_trend_pos <- evap_trend[p <= 0.2 & slope >= 0, .(N_pos_0_2 = .N), .(lat, lon)]
 evap_trend_neg <- evap_trend[p <= 0.2 & slope < 0, .(N_neg_0_2 = .N), .(lat, lon)]
 evap_trend_none <- evap_trend[p > 0.2, .(N_none_0_2 = .N), .(lat, lon)]
+evap_trend_sig <- evap_trend[p <= 0.2, .(N_sig_0_2 = .N), .(lat, lon)]
 
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_pos, by = c("lon", "lat"), all = TRUE)
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_neg, by = c("lon", "lat"), all = TRUE)
 evap_trend_summary <- merge(evap_trend_summary, evap_trend_none, by = c("lon", "lat"), all = TRUE)
+evap_trend_summary <- merge(evap_trend_summary, evap_trend_sig, by = c("lon", "lat"), all = TRUE)
 
 ### all slopes ----
 evap_trend_pos <- evap_trend[slope >= 0, .(N_pos_all = .N), .(lat, lon)]

@@ -26,7 +26,29 @@ shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'value'))
 colnames(shape_mask_df) <- c('lon', 'lat', 'KG_beck')
 shape_mask_df$KG_beck <- factor(shape_mask_df$KG_beck)
 shape_mask_dt <- as.data.table(shape_mask_df)
-shape_mask_dt <- shape_mask_dt[KG_beck != 'O',]
+shape_mask_dt <- shape_mask_dt[KG_beck != "O",]
+
+### Koppen-Geiger according to BECK et al 2023 - 1991-2020
+fname <- list.files(path = PATH_MASKS_BECK_KOEPPEN_v2, full.names = TRUE, pattern = "kg_modal_0.25deg_v2.nc")
+shape_mask <- raster(paste0(fname[1]))
+shape_mask <- ratify(shape_mask)
+
+# beck et al 2023
+kg_meta <- as.data.frame(read.table(paste0(PATH_MASKS_BECK_KOEPPEN_v2,"/KG_legend.csv"), sep =';',
+                                    col.names = c('KG', 'R', 'G', 'B')))
+
+kg_meta$ID <- 1:30
+kg_meta <- kg_meta[,c(5,1)]
+kg_meta <- rbind(data(ID = 0, KG = "O"), kg_meta)
+
+levels(shape_mask) <- kg_meta
+
+shape_mask_df <- shape_mask %>% as.data.frame(xy = TRUE, long = TRUE, na.rm = TRUE)
+shape_mask_df <- subset(shape_mask_df, select = c('x', 'y', 'value'))
+colnames(shape_mask_df) <- c('lon', 'lat', 'KG_beck_v2')
+shape_mask_df$KG_beck_v2 <- factor(shape_mask_df$KG_beck_v2)
+shape_mask_dt <- merge(shape_mask_dt, shape_mask_df, by = c('lon', 'lat'), all = TRUE)
+shape_mask_dt <- shape_mask_dt[KG_beck_v2 != "O",]
 
 ### Koppen-Geiger
 fname_shape <- list.files(path = PATH_MASKS_KOPPEN, full.names = TRUE, pattern = "climate_beck_level3.shp")
@@ -169,7 +191,7 @@ shape_mask_dt <- merge(shape_mask_dt, shape_mask_df, by = c('lon', 'lat'), all =
 
 
 ## Clean data
-shape_mask_dt <- shape_mask_dt[, .(lon, lat, elev_class, KG_beck, KG_class_1,  KG_class_2,  KG_class_3, KG_class_1_name, 
+shape_mask_dt <- shape_mask_dt[, .(lon, lat, elev_class, KG_beck, KG_beck_v2, KG_class_1,  KG_class_2,  KG_class_3, KG_class_1_name, 
                                    land_cover_class = land_class, land_cover_short_class = land_use_short_class, biome_class, biome_short_class,
                                    IPCC_ref_region, ma_basin)]
 

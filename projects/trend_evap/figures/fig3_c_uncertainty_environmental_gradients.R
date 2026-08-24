@@ -10,7 +10,7 @@ cols_problem <- c("Both" = "#330000", "Direction" = "darkred",
 ## data
 elev_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_elevation_problem_area_fraction.rds"))
 evap_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_evap_quantiles_problem_area_fraction.rds"))
-KG_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_1_problem_area_fraction.rds"))
+KG_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_Koeppen_Geiger_beck_v2_1_problem_area_fraction.rds"))
 lat_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_lat_groups_problem_area_fraction.rds"))
 
 lat_trends[, lat_fraction_combined := lat_fraction]
@@ -34,8 +34,8 @@ evap_trends[problem %in% c("Both", "None"), evap_fraction_combined := evap_fract
 evap_trends[, problem:= factor(problem, levels = c( "Direction", "Magnitude", "Both", "None"))]
 
 KG_trends[, KG_fraction_combined := KG_fraction]
-KG_trends[problem %in% c("Both", "Direction"), KG_fraction_combined := sum(KG_fraction), KG_beck_1]
-KG_trends[problem %in% c("Both", "Magnitude"), KG_fraction_combined := sum(KG_fraction), KG_beck_1]
+KG_trends[problem %in% c("Both", "Direction"), KG_fraction_combined := sum(KG_fraction), KG_beck_v2_1]
+KG_trends[problem %in% c("Both", "Magnitude"), KG_fraction_combined := sum(KG_fraction), KG_beck_v2_1]
 KG_trends[problem %in% c("Both", "None"), KG_fraction_combined := KG_fraction]
 KG_trends[, problem:= factor(problem, levels = c( "Direction", "Magnitude", "Both", "None"))]
 
@@ -48,7 +48,7 @@ fig_lat <- ggplot(lat_trends)+
   scale_fill_manual(values = cols_problem)+  
   theme_bw()+
   labs(fill = '', y = "Area fraction [%]", x = "Latitude [°]")+
-  theme(axis.title.y = element_blank(), axis.text = element_text(size = 12),
+  theme(axis.text = element_text(size = 12),
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         axis.title = element_text(size = 12),
         plot.title = element_text(size = 12, hjust = 0.5),
@@ -68,7 +68,7 @@ fig_elev <- ggplot(elev_trends)+
   scale_fill_manual(values = cols_problem)+  
   theme_bw()+
   labs(fill = '', y = "Area fraction [%]", x = "Elevation [m]")+
-  theme(axis.title.y = element_blank(), axis.text = element_text(size = 12),
+  theme(axis.text = element_text(size = 12),
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         axis.title = element_text(size = 12),
         plot.title = element_text(size = 12, hjust = 0.5),
@@ -88,7 +88,7 @@ fig_evap <- ggplot(evap_trends)+
   scale_fill_manual(values = cols_problem)+  
   theme_bw()+
   labs(fill = '', y = "Area fraction [%]", x = "ET quantiles")+
-  theme(axis.title.y = element_blank(), axis.text = element_text(size = 12),
+  theme(axis.text = element_text(size = 12),
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         axis.title = element_text(size = 12),
         plot.title = element_text(size = 12, hjust = 0.5),
@@ -108,7 +108,7 @@ fig_climate <- ggplot(KG_trends)+
   scale_fill_manual(values = cols_problem)+  
   theme_bw()+
   labs(fill = '', y = "Area fraction [%]", x = "Koeppen Geiger classes")+
-  theme(axis.title.y = element_blank(), axis.text = element_text(size = 12),
+  theme(axis.text = element_text(size = 12),
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         axis.title = element_text(size = 12),
         plot.title = element_text(size = 12, hjust = 0.5),
