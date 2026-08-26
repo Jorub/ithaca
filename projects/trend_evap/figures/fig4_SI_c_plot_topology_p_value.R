@@ -1,4 +1,4 @@
-# Figure 3 - Topology -----
+# Figure 4 - Topology -----
 ## P-value stability
 source('source/evap_trend.R')
 
@@ -40,8 +40,8 @@ ggplot(topology_melt[p_value %in% c("\u2264 0.01", "\u2264 0.1", "\u2264 0.2")])
   geom_raster(aes(x = plot_name, fill = as.factor(rank_difference_fac), y = p_value))+
   labs(x = "Topology", 
        title = "Global topology stability across p-value thresholds", 
-       y = "P-value threshold", fill = "Rank difference\nstronger \u2192 weaker")+
-  scale_fill_manual(values = fill_topology_rank)+
+       y = "P-value threshold", fill = "Alternative p-value thresholds \nstronger \u2190 0 \u2192 weaker")+
+  scale_fill_manual(values = fill_topology_rank)
   facet_grid(rows = vars(dataset), scales = "free", space = "free")+
   geom_hline(yintercept = 0, color = "black", lwd = 1)+
   theme_bw()+
