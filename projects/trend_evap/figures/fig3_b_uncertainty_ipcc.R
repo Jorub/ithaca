@@ -6,7 +6,7 @@ source('source/evap_trend_graphics.R')
 
 ## colors ----
 cols_problem <- c("Both" = "#330000", "Direction" = "darkred","Magnitude" = "orange2",
-                  "None" = "#7CA8F3")
+                  "None" = "gray80")
 
 
 
@@ -32,6 +32,11 @@ data_trend[, IPCC_ref_region := factor(IPCC_ref_region,
 data_trend[IPCC_ref_region %in% c("SAH", "ECA", "NCA", "NWN"), highlight := TRUE]
 
 
+data_trend[, trend_label := fifelse(
+  abs(slope) >= 10,
+  sprintf("%.0f", slope),
+  sub("\\.0$", "", sprintf("%.1f", slope))
+)]
 
 ### trends ----
 ipcc_slopes <- ggplot(data_trend)+
@@ -49,7 +54,7 @@ ipcc_slopes <- ggplot(data_trend)+
     color = "black",
     linewidth = 1.4
   ) +
-  geom_text(aes(label = round(slope, 1), y = dataset, 
+  geom_text(aes(label = trend_label, y = dataset, 
                 x = IPCC_ref_region, 
                 col = trend_direction_detailed), size = 3.5)+
   scale_fill_manual(values = c(
@@ -97,6 +102,13 @@ quantile_plot <- ggplot(quantiles, aes(x = IPCC_ref_region)) +
     ),
     linewidth = 1.1, lineend = "round", col = "gray20"
   ) +
+  scale_y_continuous(
+    breaks = -4:5,
+    labels = function(x) {
+      ifelse(x %in% c(-4,-2, 0, 2, 4), x, "")
+    },
+    minor_breaks = NULL
+  )+
   facet_grid(cols = vars(region), scales = "free", space = "free")+
   labs( x = "", y = expression(paste("ET trend [mm year"^{-2},"]")), 
         title = "25th–75th percentiles of ET trends across datasets"
@@ -190,7 +202,7 @@ ipcc_problems <- ggplot(ipcc_trends)+
   labs(fill = '', y = "Area fraction [%]", x = "",
        title = "Quartile uncertainty across IPCC reference regions")+
   theme_fig3+
-  geom_hline(yintercept = seq(25, 75, 25), color = "gray80") + 
+  #geom_hline(yintercept = seq(25, 75, 25), color = "gray80") + 
   facet_grid(cols = vars(region), scales = "free", space = "free")+
   guides(fill = "none")
 
@@ -240,4 +252,3 @@ ggarrange(fig, hex_left,
 ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_MAIN, "fig3_quartile_uncertainty_ipcc.png"), 
         width = 18, height = 18,
        bg = "white")
-

@@ -12,9 +12,10 @@ evap_trend_summary <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_topology
 evap_trend[, dataset := toupper(dataset)]
 evap_trend[dataset == "ETMONITOR", dataset := "ETMonitor"]
 evap_trend[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
-evap_trend[dataset == "ERA5-LAND", dataset := "ERA5-land"]
+evap_trend[dataset == "ERA5-LAND", dataset := "ERA5-Land"]
 evap_trend[dataset == "MERRA2", dataset := "MERRA-2"]
 evap_trend[dataset == "JRA55", dataset := "JRA-55"]
+evap_trend[dataset == "GLDAS-NOAH", dataset := "GLDAS-Noah"]
 evap_trend[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
 
 ### Positive trend booster ----
@@ -43,7 +44,7 @@ evap_trend_merge[(N_none_0_05 > N_sig_0_05) & p <= 0.05, opposing_significance:=
 
 evap_trend_merge[, opposition_contributor := 0]
 evap_trend_merge[trend_0_05 == "opposing" & 
-                   ((N_pos_0_05 == 1 & slope > 0) | (N_neg_0_05 == 1 & slope < 1)) 
+                   ((N_pos_0_05 == 1 & slope > 0) | (N_neg_0_05 == 1 & slope < 0)) 
                  & p < 0.05, opposition_contributor := 1]
 
 saveRDS(evap_trend_merge[,.(lon, lat, dataset, pos_signal, neg_signal, signal_dampener,

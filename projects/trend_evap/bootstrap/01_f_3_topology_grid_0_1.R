@@ -6,6 +6,14 @@ source('source/evap_trend.R')
 evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_intersection_lat_lon_bootstrap.rds"))  
 evap_trend_summary <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_DCI_trend_groups_p_thresholds_bootstrap.rds"))
 
+evap_trend[, dataset := toupper(dataset)]
+evap_trend[dataset == "ETMONITOR", dataset := "ETMonitor"]
+evap_trend[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
+evap_trend[dataset == "ERA5-LAND", dataset := "ERA5-Land"]
+evap_trend[dataset == "MERRA2", dataset := "MERRA-2"]
+evap_trend[dataset == "JRA55", dataset := "JRA-55"]
+evap_trend[dataset == "GLDAS-NOAH", dataset := "GLDAS-Noah"]
+evap_trend[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
 ### Positive trend booster ----
 evap_trend[, pos_signal := 0]
 evap_trend[slope > 0 & p <= 0.1, pos_signal := 1]
@@ -32,8 +40,8 @@ evap_trend_merge[(N_none_0_1 > N_sig_0_1) & p <= 0.1, opposing_significance := 1
 
 evap_trend_merge[, opposition_contributor := 0]
 evap_trend_merge[trend_0_1 == "opposing" & 
-                   ((N_pos_0_1 == 1 & slope > 0) | (N_neg_0_1 == 1 & slope < 1)) 
-                 & p < 0.1, opposition_contributor := 1]
+                   ((N_pos_0_1 == 1 & slope > 0) | (N_neg_0_1 == 1 & slope < 0)) 
+                 & p <= 0.1, opposition_contributor := 1]
 
 saveRDS(evap_trend_merge[,.(lon, lat, dataset, pos_signal, neg_signal, signal_dampener,
                             opposing_majority_trend, opposing_significance,

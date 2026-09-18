@@ -16,10 +16,11 @@ evap_annual_trend_fig_2 <- evap_annual_trend[, .(dataset, slope, trend_significa
 evap_annual_trend_fig_2[, dataset := toupper(dataset)]
 evap_annual_trend_fig_2[dataset == "ETMONITOR", dataset := "ETMonitor"]
 evap_annual_trend_fig_2[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
-evap_annual_trend_fig_2[dataset == "ERA5-LAND", dataset := "ERA5-land"]
+evap_annual_trend_fig_2[dataset == "ERA5-LAND", dataset := "ERA5-Land"]
 evap_annual_trend_fig_2[dataset == "MERRA2", dataset := "MERRA-2"]
 evap_annual_trend_fig_2[dataset == "JRA55", dataset := "JRA-55"]
 evap_annual_trend_fig_2[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
+evap_annual_trend_fig_2[dataset == "GLDAS-NOAH", dataset := "GLDAS-Noah"]
 
 
 ### Save evap data ----
@@ -50,7 +51,7 @@ evap_trend_min_max <- evap_trend[dataset_count >= 12,.(max = max(slope), min = m
 evap_trend_min_max[abs(Q25) > Q75, fold := abs(Q25)/abs(Q75)]
 evap_trend_min_max[abs(Q25) <= Q75, fold := abs(Q75)/abs(Q25)]
 evap_trend_min_max[, fold_brk := cut(fold, breaks = c(1, global_fold, Inf))]
-evap_trend_min_max[, fold_brk_detailed := cut(fold, breaks = c(1, global_fold, 5, 10, 20, Inf))]
+evap_trend_min_max[, fold_brk_detailed := cut(fold, breaks = c(1, global_fold, 5, 10, Inf))]
 
 evap_trend_min_max[, fold_abs := Q75_abs/Q25_abs]
 evap_trend_min_max[, fold_abs_brk := cut(fold_abs, breaks = c(1, global_fold, Inf))]

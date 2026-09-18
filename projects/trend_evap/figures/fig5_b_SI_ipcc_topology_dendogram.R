@@ -5,9 +5,7 @@ source('source/evap_trend_graphics.R')
 library(data.table)
 
 ## data ----
-PATH_SAVE_EVAP_TREND <- "data/evap_trend/"
 ipcc_topo <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "IPCC_ref_regions_topology_rank_roles.rds"))
-global_topo <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_topology_rank_roles.rds"))
 
 ipcc_regions <- unique(ipcc_topo$IPCC_ref_region)
 
@@ -80,32 +78,28 @@ regional_clustering_complete <- hclust(
   method = "complete"
 )
 
+group_colors <- c(
+  "#E58B35",# Group 1
+           "#8666A0",  # Group 2
+            "#A5483A",# Group 3
+           "#3E875D", # Group 4
+           "#D8B72B", # Group 5
+           "#397594", # Group 6
+           "#817239" # Group 7
+)
+
 png(
-  filename = "regional_clustering_dendrogram.png",
+  filename = paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig_5_SI_regional_clustering_dendogram.png"),
   width = 2400,
-  height = 1400,
+  height = 1600,
   res = 300
 )
 
 plot(
   regional_clustering_complete,
-  ylab = expression("Dissimilarity (1 - mean " * rho * ")"),
+  ylab = expression("Dissimilarity (1 - mean spearman correlation)"),
   xlab = "IPCC reference region",
   sub = ""
-)
-
-# mean rho = 0.4 corresponds to dissimilarity = 0.6
-abline(
-  h = 1 - 0.6,
-  lty = 2,
-  lwd = 1.5,
-  col = "gray60"
-)
-abline(
-  h = 1 - 0.4,
-  lty = 2,
-  lwd = 1.5,
-  col = "gray60"
 )
 
 abline(
@@ -114,5 +108,20 @@ abline(
   lwd = 1.5,
   col = "gray60"
 )
+
+abline(
+  h = 1 - 0.6,
+  lty = 2,
+  lwd = 1.5,
+  col = "gray60"
+)
+
+par(lwd = 2)
+rect.hclust(
+  regional_clustering_complete,
+  k = 7,
+  border = group_colors
+)
+
 
 dev.off()

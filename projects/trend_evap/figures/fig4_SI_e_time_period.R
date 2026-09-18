@@ -3,8 +3,6 @@
 source('source/evap_trend.R')
 
 ## Data ----
-PATH_SAVE_EVAP_TREND <- "data/evap_trend/"
-
 diff_period_a_topology <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "rank_diff_global_topology_period_a.rds"))
 diff_period_b_topology <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "rank_diff_global_topology_period_b.rds"))
 
@@ -31,11 +29,13 @@ topology_melt[, plot_name := factor(plot_name, levels = c("Trend\nopposer",
                                                           "Signal \ndampener"
 ))]
 
-topology_melt[, rank_difference_fac := cut(value, breaks = c(-8,-6,-4,-1.1,1.1,4,6,8),
-                                           labels = c("[-7,-6]", "[-5,-4]","[-3,-2]",
+topology_melt[, rank_difference_fac := cut(value, breaks = c(-9.5,-7.5,-6,-4,-1.1,1.1,4,6,8),
+                                           labels = c("[-9,-8]","[-7,-6]", "[-5,-4]","[-3,-2]",
                                                       "[-1,1]", "[2,3]", "[4,5]", "[6,7]"))]
 
-fill_topology_rank <- c("[-7,-6]" = "#440154FF", "[-5,-4]"= "#414487FF","[-3,-2]" = "#7378BE",
+fill_topology_rank <- c("[-9,-8]" = "#35103F",
+                        "[-7,-6]" = "#440154FF", "[-5,-4]"= "#414487FF",
+                        "[-3,-2]" = "#7378BE",
                         "[-1,1]" ="gray90", "[2,3]" = "#E6F000", 
                         "[4,5]" = "#C7E020FF", "[6,7]"= "#7AD151FF")
 
@@ -53,5 +53,5 @@ ggplot(topology_melt)+
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
   )
 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig_global_topology_time_period_stability.png"), 
+ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig_4_SI_global_topology_time_period_stability.png"), 
        width = 8, height = 8)

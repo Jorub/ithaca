@@ -10,7 +10,6 @@ evap_datasets <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "evap_datasets_clean.rds")
 ## Analysis ----
 evap_datasets[, year := as.numeric(as.character(year))]
 evap_datasets_grid_mean <- evap_datasets[, .(evap = mean(evap, na.rm = T), count = .N), .(lat, lon, year)]
-evap_datasets_grid_mean <- evap_datasets_grid_mean[count >= 12]
 evap_datasets_grid_mean[, date := paste0(year, "-01-01 00:00:00")]
 evap_datasets_grid_mean[, date := as.POSIXct(date)]
 mean_evap <- evap_datasets_grid_mean[, .(mean_evap = mean(evap, na.rm = T)), .(lat, lon)]

@@ -1,24 +1,93 @@
-# Figure 6 - Topology -----
-## Where does Gleam oppose the majority the most ----
-
 source('source/evap_trend.R')
+source('source/evap_trend_graphics.R')
 
-# data ----
-topology <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "ipcc_ref_regions_dataset_trend_topology.rds"))
+library(data.table)
 
-topology_sel <- topology[p_value == "p <= 0.05"]
-topology_sel_melt <- melt(topology_sel, id.vars = c("dataset", "p_value", "IPCC_ref_region"))
-topology_sel_melt[variable == "rank_pos_signal", plot_name := "Positive \nbooster"]
-topology_sel_melt[variable == "rank_neg_signal", plot_name := "Negative \nbooster"]
-topology_sel_melt[variable == "rank_dampener", plot_name := "Signal \ndampener"]
-topology_sel_melt[variable == "rank_trend_opposer", plot_name := "Majority trend\nopposer"]
-topology_sel_melt[variable == "rank_opposition_contributor", plot_name := "Opposition\ncontributor"]
-topology_sel_melt[variable == "rank_significance_opposer", plot_name := "Majority Significance \nopposer"]
-setnames(topology_sel_melt, "IPCC_ref_region", "Acronym")
+color_key <- data.table(
+  broad_group = c(
+    1, 1,
+    2, 2, 2, 2, 2,
+    3, 3,
+    4, 4,
+    5, 5, 5,
+    6, 6, 6,
+    7, 7, 7, 7, 7
+  ),
+  color = c(
+    "#F7E7A9", "#D8AE38",
+    "#86B6D8", "#2166AC", "#238B9F", "#8996C7", "#4E5AA7",
+    "#FAD7A0", "#E6953B",
+    "#F1C2BA", "#C9786B",
+    "#D7E9CC", "#8EBD69", "#347C52",
+    "#E6DFC0", "#AA9C59", "#68652D",
+    "#9B88C7", "#5B3F99", "#C184B3", "#B36F91", "#763457"
+  ),
+  level = c(
+    0.2, 0.4,
+    0.4, 0.6, 0.6, 0.4, 0.6,
+    0.2, 0.4,
+    0.2, 0.4,
+    0.2, 0.4, 0.6,
+    0.2, 0.4, 0.6,
+    0.4, 0.6, 0.4, 0.4, 0.6
+  )
+)
 
-topology_sel_dataset <- topology_sel_melt[dataset == "GLEAM" & plot_name == "Majority trend\nopposer"]
-topology_sel_dataset[,p_value := NULL]
-topology_sel_dataset[,variable := NULL]
+color_key[, subgroup := c(
+  "1a", "1b",
+  "2a", "2a1", "2a2", "2b", "2b1",
+  "3a", "3b",
+  "4a", "4b",
+  "5a", "5b", "5c",
+  "6a", "6b", "6c",
+  "7a", "7a1", "7b", "7c", "7c1"
+)]
+
+color_key[, x_plot := as.numeric(broad_group)]
+
+color_key[, x_plot := fcase(
+  subgroup == "2a",  1.90,
+  subgroup == "2a1", 1.8,
+  subgroup == "2a2", 2,
+  subgroup == "2b",  2.30,
+  subgroup == "2b1", 2.30,
+  
+  subgroup == "7a",  6.8,
+  subgroup == "7a1", 6.8,
+  subgroup == "7b",  7.10,
+  subgroup == "7c",  7.3,
+  subgroup == "7c1", 7.3,
+  
+  default = x_plot
+)]
+
+colors <- color_key$color
+names(colors) <- color_key$color
+
+ggplot() +
+  geom_point(
+    data = color_key,
+    aes(x = x_plot, y = level, col = color),
+    size = 5
+  ) +
+  scale_color_identity() +
+  scale_x_continuous(
+    breaks = 1:7,
+    labels = paste("Group", 1:7)
+  ) +
+  scale_y_continuous(
+    breaks = c(0.2, 0.4, 0.6),
+    labels = c("≥ 0.2", "≥ 0.4", "≥ 0.6")
+  ) +
+  labs(
+    x = "",
+    y = "Mean Spearman correlation threshold"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "none"
+  )
 
 
 # IPCC prep ----
@@ -67,22 +136,9 @@ data$lat[med_rows_nz] <- data$lat[med_rows_nz] + shift_lat_amount_nz
 data$V1[med_rows_nz] <- data$V1[med_rows_nz] + shift_lon_amount_nz
 data$V2[med_rows_nz] <- data$V2[med_rows_nz] + shift_lat_amount_nz
 
-# plot ----
-summary(data)
-data_acron <- data[value > 8]
-
-data[, Rank := cut(value, breaks = c(0,2,4,6,8,10,12,14),
-                                labels = c("[1,2]", "[3,4]", "[5,6]",
-                                           "[7,8]", "[9,10]", "[11,12]",
-                                           "[13,14]"))]
-
-fill_topology_rank <- c("[1,2]" = "#440154FF", "[3,4]" = "#414487FF",
-                        "[5,6]" = "#2A7B8EFF",  "[7,8]" = "#22A384FF",
-                        "[9,10]" = "#7AD151FF", "[11,12]" = "#C7E020FF",
-                        "[13,14]" = "#FDE725FF")
 
 ggplot(data) +
-  geom_polygon(aes(x = long, y = lat, fill = Rank, group = group), colour = "black") +
+  geom_polygon(aes(x = long, y = lat, fill = cluster, group = group), colour = "black") +
   geom_text(aes(V1, V2, label = Acronym), size = 4, color = "White") +
   geom_text(data = data_acron, aes(V1, V2, label = Acronym), size = 4, color = "black") +
   coord_equal() + 
@@ -95,7 +151,7 @@ ggplot(data) +
         legend.position = "right",
         legend.text = element_text(size = 12), 
         legend.title = element_text(size = 12)
-        ) +
+  ) +
   theme(strip.background = element_blank(), panel.border=element_blank()) + 
   scale_x_discrete(breaks = NULL) + 
   scale_y_discrete(breaks = NULL)

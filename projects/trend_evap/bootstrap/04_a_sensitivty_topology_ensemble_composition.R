@@ -7,9 +7,10 @@ evap_index <- evap_index[,.(lat, lon, dataset_leftout, DCI_0_05, trend_0_05, N_p
 evap_index[, dataset_leftout := toupper(dataset_leftout)]
 evap_index[dataset_leftout == "ETMONITOR", dataset_leftout := "ETMonitor"]
 evap_index[dataset_leftout == "SYNTHESIZEDET", dataset_leftout := "SynthesizedET"]
-evap_index[dataset_leftout == "ERA5-LAND", dataset_leftout := "ERA5-land"]
+evap_index[dataset_leftout == "ERA5-LAND", dataset_leftout := "ERA5-Land"]
 evap_index[dataset_leftout == "MERRA2", dataset_leftout := "MERRA-2"]
 evap_index[dataset_leftout == "JRA55", dataset_leftout := "JRA-55"]
+evap_index[dataset_leftout == "GLDAS-NOAH", dataset_leftout := "GLDAS-Noah"]
 evap_index[dataset_leftout == "TERRACLIMATE", dataset_leftout := "TerraClimate"]
 
 evap_trend <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_per_dataset_evap_slope_intersection_lat_lon_bootstrap.rds"))
@@ -20,9 +21,10 @@ evap_trend <- grid_cell_area[evap_trend, on = .(lon, lat)]
 evap_trend[, dataset := toupper(dataset)]
 evap_trend[dataset == "ETMONITOR", dataset := "ETMonitor"]
 evap_trend[dataset == "SYNTHESIZEDET", dataset := "SynthesizedET"]
-evap_trend[dataset == "ERA5-LAND", dataset := "ERA5-land"]
+evap_trend[dataset == "ERA5-LAND", dataset := "ERA5-Land"]
 evap_trend[dataset == "MERRA2", dataset := "MERRA-2"]
 evap_trend[dataset == "JRA55", dataset := "JRA-55"]
+evap_trend[dataset == "GLDAS-NOAH", dataset := "GLDAS-Noah"]
 evap_trend[dataset == "TERRACLIMATE", dataset := "TerraClimate"]
 
 ## trend opposer ----
@@ -60,7 +62,7 @@ area_sig_opposing[, dataset := factor(dataset, levels = dataset_order)]
 
 ## Opposer contributor ----
 evap_merge[trend_0_05 == "opposing" & 
-             ((N_pos_0_05 == 1 & slope > 0) | (N_neg_0_05 == 1 & slope < 1)) 
+             ((N_pos_0_05 == 1 & slope > 0) | (N_neg_0_05 == 1 & slope < 0)) 
            & p < 0.05, opposition_contributor := 1]
 
 area_opp_contributor <- evap_merge[opposition_contributor == 1, .(area_oc_opposing = sum(area)), .(dataset, dataset_leftout)]

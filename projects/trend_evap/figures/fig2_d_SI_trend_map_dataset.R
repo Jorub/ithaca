@@ -1,5 +1,6 @@
 # Figure to support - trend by dataset ----
 source('source/evap_trend.R')
+source('source/evap_trend_graphics.R')
 source('source/geo_functions.R')
 
 library(rnaturalearth)
@@ -17,7 +18,7 @@ earth_box <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL,
 world_sf <- ne_countries(returnclass = "sf")
 
 ## Labels ----
-labs_y <- data.frame(lon = -165, lat = c(50, 25, -5, -35, -65))
+labs_y <- data.frame(lon = c(-160, -167, -168, -167, -158), lat = c(53, 25, -5, -35, -65))
 labs_y_labels <- seq(60, -60, -30)
 labs_y$label <- ifelse(labs_y_labels == 0, "°", ifelse(labs_y_labels > 0, "°N", "°S"))
 labs_y$label <- paste0(abs(labs_y_labels), labs_y$label)
@@ -71,20 +72,10 @@ fig_slope <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill = expression(paste("ET trend \n[mm year"^-~2,"]   "))) +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 4) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 16), 
-        legend.text = element_text(size = 16), 
-        legend.title = element_text(size = 16),        
-        legend.spacing.x = unit(1, "cm"),
-        legend.spacing.y = unit(1, "cm"),
-        plot.title = element_text(size = 20))+
+  map_theme_trend+
   guides(fill = guide_legend(ncol = 1, byrow = TRUE))
 
 
@@ -107,20 +98,10 @@ fig_pval <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill = expression(paste("P-value"))) +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 4) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 16), 
-        legend.text = element_text(size = 16), 
-        legend.title = element_text(size = 16),        
-        legend.spacing.x = unit(1, "cm"),
-        legend.spacing.y = unit(1, "cm"),
-        plot.title = element_text(size = 20))+
+  map_theme_trend+
   guides(fill = guide_legend(ncol = 1, byrow = TRUE))
 
 

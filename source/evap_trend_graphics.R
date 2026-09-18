@@ -7,7 +7,8 @@ packages <- c(
   "ggrepel",
   "cowplot",
   "scales",
-  "rnaturalearth"
+  "rnaturalearth",
+  "colorspace"
 )
 
 missing_packages <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
@@ -51,37 +52,64 @@ theme_fig3 <- theme(axis.text = element_text(size = 18),
       axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
       strip.text = element_text(size = 16))
 
-## colors ----
 
-region_colors <- c(
-  ARP = "#F7E7A9",
-  SAH = "#D8AE38", WAF = "#D8AE38",
+standardize_level_colors <- function(colors, levels) {
   
-  CAR = "#86B6D8", EAS = "#86B6D8",
-  CAF = "#2166AC", ECA = "#2166AC",
-  SCA = "#2166AC", SEA = "#2166AC",
-  ESB = "#238B9F", TIB = "#238B9F",
-  SAM = "#8996C7", SAS = "#8996C7", SEAF = "#8996C7",
-  SES = "#4E5AA7", WNA = "#4E5AA7",
+  # Extract the hue of each existing colour
+  hcl_coordinates <- coords(
+    as(hex2RGB(colors), "polarLUV")
+  )
   
-  CAU = "#FAD7A0",
-  EAU = "#E6953B", SAU = "#E6953B",
+  hue <- hcl_coordinates[, "H"]
   
-  CNA = "#F1C2BA", EEU = "#F1C2BA", NAU = "#F1C2BA",
-  MED = "#C9786B", WCE = "#C9786B",
+  # Fixed perceptual lightness and chroma for each level
+  target_lightness <- fifelse(
+    levels == 0.2, 90,
+    fifelse(levels == 0.4, 68, 48)
+  )
   
-  NES = "#D7E9CC",
-  ENA = "#8EBD69", MDG = "#8EBD69", NZ = "#8EBD69",
-  GIC = "#347C52", SWS = "#347C52",
+  target_chroma <- fifelse(
+    levels == 0.2, 30,
+    fifelse(levels == 0.4, 45, 50)
+  )
   
-  NCA = "#E6DFC0",
-  NEAF = "#AA9C59",
-  ESAF = "#68652D", WSAF = "#68652D",
+  hex(
+    polarLUV(
+      L = target_lightness,
+      C = target_chroma,
+      H = hue
+    ),
+    fixup = TRUE
+  )
+}
+
+map_theme <- theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
+                           panel.border = element_blank(),
+                           axis.ticks.length = unit(0, "cm"),
+                           panel.grid.major = element_line(colour = "gray60"),
+                           axis.text = element_blank(), 
+                           axis.title = element_text(size = 16), 
+                           legend.text = element_text(size = 12), 
+                           legend.title = element_text(size = 16),
+                           legend.position = "none",
+                           margin(t = 0.1, r = 0.1, b = 1, l = 2.5, unit = "cm"))
+
+bar_theme <- theme(plot.title = element_text(size = 8, hjust = 0), 
+                   axis.text.y = element_text(size = 9), 
+                   axis.text.x = element_text(size = 9),
+                   axis.line = element_blank(),
+                   axis.ticks = element_blank(),
+                   legend.position = "none",
+                   panel.background = element_rect(fill = "transparent",colour = NA),
+                   plot.background = element_rect(fill = "transparent",colour = NA))
   
-  NWN = "#9B88C7", WSB = "#9B88C7",
-  NEN = "#5B3F99", NSA = "#5B3F99", WCA = "#5B3F99",
-  NEU = "#C184B3", SSA = "#C184B3",
-  NWS = "#B36F91",
-  RAR = "#763457", RFE = "#763457"
-)
-  
+
+map_theme_trend <- theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
+                   panel.border = element_blank(),
+                   axis.ticks.length = unit(0, "cm"),
+                   panel.grid.major = element_line(colour = "gray60"),
+                   axis.text = element_blank(), 
+                   axis.title = element_text(size = 16), 
+                   legend.text = element_text(size = 12), 
+                   legend.title = element_text(size = 16),
+                   margin(t = 0.1, r = 0.1, b = 1, l = 2.5, unit = "cm"))

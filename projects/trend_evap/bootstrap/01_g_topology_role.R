@@ -7,6 +7,8 @@ topo_grid <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_grid_cell_topology.rds
 grid_cell_area <- unique(topo_grid [, .(lon, lat)]) %>% grid_area() # m2
 topo_grid   <- grid_cell_area[topo_grid , on = .(lon, lat)]
 
+write.table(topo_grid, paste0(PATH_SAVE_EVAP_TREND_TABLES, "grid_dataset_trend_topology.csv"))
+
 topo_grid_melt <- melt(topo_grid, id.vars = c("lon", "lat", "area", "dataset"))
 
 topo_grid_area <- topo_grid_melt[value == 1, .(sum_area = sum(area)), .(dataset, variable)]

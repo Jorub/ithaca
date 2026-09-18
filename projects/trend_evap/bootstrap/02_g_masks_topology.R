@@ -30,3 +30,4 @@ data_topo_cast[, rank := rank(-sum_area, ties = "first"), .(variable, IPCC_ref_r
 
 topo_grid_cast <- dcast(data_topo_cast, dataset+IPCC_ref_region ~variable, value.var = "rank")
 saveRDS(topo_grid_cast, paste0(PATH_SAVE_EVAP_TREND, "IPCC_ref_regions_topology_rank_roles.rds"))
+write.csv(topo_grid_cast, paste0(PATH_SAVE_EVAP_TREND_TABLES, "IPCC_ref_regions_dataset_trend_topology.csv"))

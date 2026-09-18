@@ -3,6 +3,7 @@
 # b. Quartile ratio
 # c. Quartile direction (dis)agreement
 source('source/evap_trend.R')
+source('source/evap_trend_graphics.R')
 source('source/geo_functions.R')
 
 # library -----
@@ -19,7 +20,7 @@ earth_box <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP_SPATIAL,
 world_sf <- ne_countries(returnclass = "sf")
 
 ## Labels ----
-labs_y <- data.frame(lon = -160, lat = c(50, 25, -5, -35, -65))
+labs_y <- data.frame(lon = c(-162, -167, -168, -167, -160), lat = c(53, 25, -5, -35, -65))
 labs_y_labels <- seq(60, -60, -30)
 labs_y$label <- ifelse(labs_y_labels == 0, "°", ifelse(labs_y_labels > 0, "°N", "°S"))
 labs_y$label <- paste0(abs(labs_y_labels), labs_y$label)
@@ -74,19 +75,10 @@ fig_map_sig_trends <- ggplot(to_plot_sf) +
        subtitle = "Significance level of p-value 0.05") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 4) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 18), 
-        legend.text = element_text(size = 18), 
-        legend.title = element_text(size = 18),
-        legend.position = "none",
-        margin(t = 0, r = 0, b = 2, l = 2, unit = "cm"))
+  map_theme
 
 grid_cell_area <- unique(evap_data_sel[, .(lon, lat)]) %>% grid_area() # m2
 evap_data_sel <- grid_cell_area[evap_data_sel, on = .(lon, lat)]
@@ -102,15 +94,8 @@ bar_sig_trends <- ggplot(area_stats , aes(x = "", y = area_fraction*100))+
   ylab('')  +
   scale_fill_manual(values = cols_sig)+
   labs(fill = '', title = "Area fraction [%]")  +
-  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0), 
-        axis.text.y = element_text(size = 12), 
-        axis.text.x = element_text(size = 12),
-        axis.line = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "none",
-        panel.background = element_rect(fill = "transparent",colour = NA),
-        plot.background = element_rect(fill = "transparent",colour = NA)) +
-  geom_hline(yintercept = seq(0, 40, 10), color = "white") + 
+  bar_theme+
+  geom_hline(yintercept = seq(0, 20, 10), color = "white") + 
   coord_flip()
 
 
@@ -127,15 +112,16 @@ y_height <- diff(y_range)
 final_sig_trends_plot <- fig_map_sig_trends +
   annotation_custom(
     grob = legend_grob,
-    xmin = x_range[1] - 0.1 * x_width,
-    xmax = x_range[1] + 0.15 * x_width,
-    ymin = y_range[1] - 0.25 * y_height,
-    ymax = y_range[1] + 0.15 * y_height)
+    xmin = x_range[1] - 0.13 * x_width,
+    xmax = x_range[1] + 0.13 * x_width,
+    ymin = y_range[1] - 0.33 * y_height,
+    ymax = y_range[1] + 0.10 * y_height)
 
 fig <- final_sig_trends_plot+
-  theme(plot.margin = margin(0.1, 0.1, 1, 2.5, "cm")) 
-ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_number_significante_trends.png"), 
-       width = 12, height = 8)
+  theme(plot.margin = margin(0.1, 0.1, 2.5, 2.5, "cm")) 
+ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_number_significante_trends.png"),
+       plot = fig,
+       width = 8, height = 5)
 
 # b. Quartile ratio ----
 
@@ -172,18 +158,10 @@ fig_map_quartile_fold <- ggplot(to_plot_sf) +
        subtitle = "Symmetric ratio of ensemble quartiles") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 4) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 18), 
-        legend.text = element_text(size = 18), 
-        legend.title = element_text(size = 18),
-        legend.position = "none")
+  map_theme
 
 grid_cell_area <- unique(evap_trend_stats[, .(lon, lat)]) %>% grid_area() # m2
 evap_trend_stats <- grid_cell_area[evap_trend_stats, on = .(lon, lat)]
@@ -199,17 +177,9 @@ bar_quartile_fold <- ggplot(area_stats , aes(x = "", y = area_fraction*100))+
   ylab('')  +
   scale_fill_manual(values = cols_fold)+
   labs(fill = '', title = "Area fraction [%]")  +
-  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0), 
-        axis.text.y = element_text(size = 12), 
-        axis.text.x = element_text(size = 12),
-        axis.line = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "none",
-        panel.background = element_rect(fill = "transparent",colour = NA),
-        plot.background = element_rect(fill = "transparent",colour = NA)) +
+  bar_theme+
   geom_hline(yintercept = seq(0, 40, 10), color = "white") + 
   coord_flip()
-
 
 ## merge ----
 legend_grob = ggplotGrob(bar_quartile_fold)
@@ -224,16 +194,16 @@ y_height <- diff(y_range)
 final_map_quartile_fold <- fig_map_quartile_fold +
   annotation_custom(
     grob = legend_grob,
-    xmin = x_range[1] - 0.1 * x_width,
-    xmax = x_range[1] + 0.15 * x_width,
+    xmin = x_range[1] - 0.15 * x_width,
+    xmax = x_range[1] + 0.1 * x_width,
     ymin = y_range[1] - 0.25 * y_height,
     ymax = y_range[1] + 0.15 * y_height)
 
 fig <- final_map_quartile_fold+
-  theme(plot.margin = margin(0.1, 0.1, 1, 2.5, "cm")) 
+  theme(plot.margin = margin(0.1, 0.1, 2.5, 2.5, "cm")) 
 
 ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_quartile_uncertainty_magnitude.png"), 
-       width = 12, height = 8)
+       width = 8, height = 5)
 
 
 # c. Quartile direction (dis)agreement -----
@@ -267,18 +237,10 @@ fig_map_quartile_direction <- ggplot(to_plot_sf) +
        subtitle = "Trend direction of ensemble quartiles") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 4) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 18), 
-        legend.text = element_text(size = 18), 
-        legend.title = element_text(size = 18),
-        legend.position = "none")
+  map_theme
 
 area_stats <- evap_trend_stats[, .(area_fraction = sum(area)/total_area), .(sign)]
 
@@ -290,15 +252,8 @@ bar_quartile_direction <- ggplot(area_stats , aes(x = "", y = area_fraction*100)
   ylab('')  +
   scale_fill_manual(values = cols_sign)+
   labs(fill = '', title = "Area fraction [%]")  +
-  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0), 
-        axis.text.y = element_text(size = 12), 
-        axis.text.x = element_text(size = 12),
-        axis.line = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "none",
-        panel.background = element_rect(fill = "transparent",colour = NA),
-        plot.background = element_rect(fill = "transparent",colour = NA)) +
-  geom_hline(yintercept = seq(0, 50, 10), color = "white") + 
+  bar_theme+
+  geom_hline(yintercept = seq(0, 40, 10), color = "white") + 
   coord_flip()
 
 
@@ -315,17 +270,17 @@ y_height <- diff(y_range)
 final_map_quartile_direction <- fig_map_quartile_direction +
   annotation_custom(
     grob = legend_grob,
-    xmin = x_range[1] - 0.1 * x_width,
+    xmin = x_range[1] - 0.15 * x_width,
     xmax = x_range[1] + 0.15 * x_width,
-    ymin = y_range[1] - 0.15 * y_height,
-    ymax = y_range[1] + 0.15 * y_height)
+    ymin = y_range[1] - 0.25 * y_height,
+    ymax = y_range[1] + 0.05 * y_height)
 
 
 fig <- final_map_quartile_direction+
-  theme(plot.margin = margin(0.1, 0.1, 1, 2.5, "cm")) 
+  theme(plot.margin = margin(0.1, 0.1, 2.5, 2.5, "cm")) 
 
 ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_quartile_uncertainty_direction.png"), 
-       width = 12, height = 8)
+       width = 8, height = 5)
 
 ## Read data
 evap_trend_min_max <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_2_grid_quartile_stats.rds"))
@@ -369,22 +324,11 @@ fig_Q25 <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill =  "") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 6) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 6) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
   ggtitle(expression(paste("Lower Quartile ET Trend (Q25) [mm year"^-~2,"]")))+
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 18), 
-        legend.text = element_text(size = 18), 
-        legend.title = element_text(size = 18),
-        legend.spacing.x = unit(1, "cm"),
-        legend.spacing.y = unit(1, "cm"),
-        plot.title = element_text(size = 20),
-        legend.position = "none")
+  map_theme
 
 grid_cell_area <- unique(evap_trend_min_max[, .(lon, lat)]) %>% grid_area() # m2
 evap_trend_min_max<- grid_cell_area[evap_trend_min_max, on = .(lon, lat)]
@@ -398,14 +342,7 @@ bar_Q25 <- ggplot(area_stats , aes(x = "", y = area_fraction*100))+
   ylab('')  +
   scale_fill_manual(values = cols_Q)+
   labs(fill = '', title = "Area fraction [%]")  +
-  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0), 
-        axis.text.y = element_text(size = 12), 
-        axis.text.x = element_text(size = 12),
-        axis.line = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "none",
-        panel.background = element_rect(fill = "transparent",colour = NA),
-        plot.background = element_rect(fill = "transparent",colour = NA)) +
+  bar_theme+
   geom_hline(yintercept = seq(0, 20, 10), color = "white") + 
   coord_flip()
 
@@ -425,15 +362,15 @@ final_map_Q25 <- fig_Q25 +
     grob = legend_grob,
     xmin = x_range[1] - 0.15 * x_width,
     xmax = x_range[1] + 0.15 * x_width,
-    ymin = y_range[1] - 0.25 * y_height,
-    ymax = y_range[1] + 0.15 * y_height)
+    ymin = y_range[1] - 0.4 * y_height,
+    ymax = y_range[1] + 0.12 * y_height)
 
 
 fig <- final_map_Q25+
-  theme(plot.margin = margin(0.1, 0.1, 1.0, 4, "cm")) 
+  theme(plot.margin = margin(0.1, 0.1, 2.5, 2.5, "cm")) 
 
 ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_Q25.png"), 
-       width = 12, height = 8)
+       width = 8, height = 5)
 
 ## Q75 ----
 to_plot_sf <- evap_trend_min_max[, .(lon, lat, Q75_brk)
@@ -459,22 +396,11 @@ fig_Q75 <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill =  "") +
   coord_sf(expand = FALSE, crs = "+proj=robin") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 6) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 6) +
+  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
+  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   theme_bw() +
   ggtitle(expression(paste("Upper Quartile ET Trend (Q75) [mm year"^-~2,"]")))+
-  theme(panel.background = element_rect(fill = NA), panel.ontop = TRUE,
-        panel.border = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        panel.grid.major = element_line(colour = "gray60"),
-        axis.text = element_blank(), 
-        axis.title = element_text(size = 18), 
-        legend.text = element_text(size = 18), 
-        legend.title = element_text(size = 18),
-        legend.spacing.x = unit(1, "cm"),
-        legend.spacing.y = unit(1, "cm"),
-        plot.title = element_text(size = 20),
-        legend.position = "none")
+  map_theme
 
 
 area_stats <- evap_trend_min_max[, .(area_fraction = sum(area)/total_area), .(Q75_brk)]
@@ -486,15 +412,8 @@ bar_Q75 <- ggplot(area_stats , aes(x = "", y = area_fraction*100))+
   ylab('')  +
   scale_fill_manual(values = cols_Q)+
   labs(fill = '', title = "Area fraction [%]")  +
-  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0), 
-        axis.text.y = element_text(size = 12), 
-        axis.text.x = element_text(size = 12),
-        axis.line = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "none",
-        panel.background = element_rect(fill = "transparent",colour = NA),
-        plot.background = element_rect(fill = "transparent",colour = NA)) +
-  geom_hline(yintercept = seq(0, 50, 10), color = "white") + 
+  bar_theme+
+  geom_hline(yintercept = seq(0, 30, 10), color = "white") + 
   coord_flip()
 
 
@@ -513,13 +432,13 @@ final_map_Q75 <- fig_Q75 +
     grob = legend_grob,
     xmin = x_range[1] - 0.15 * x_width,
     xmax = x_range[1] + 0.15 * x_width,
-    ymin = y_range[1] - 0.25 * y_height,
-    ymax = y_range[1] + 0.15 * y_height)
+    ymin = y_range[1] - 0.4 * y_height,
+    ymax = y_range[1] + 0.12 * y_height)
 
 
 fig <- final_map_Q75+
-  theme(plot.margin = margin(0.1, 0.1, 1.0, 4, "cm")) 
+  theme(plot.margin = margin(0.1, 0.1, 2.5, 2.5, "cm")) 
 
 ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "SI_fig_Q75.png"), 
-       width = 12, height = 8)
+       width = 8, height = 5)
 

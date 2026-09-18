@@ -5,7 +5,7 @@ library(ggpubr)
 
 ## colors ----
 cols_problem <- c("Both" = "#330000", "Direction" = "darkred",
-                  "Magnitude" = "orange2","None" = "forestgreen")
+                  "Magnitude" = "orange2","None" = "gray80")
 
 ## data
 elev_trends <- readRDS(paste0(PATH_SAVE_EVAP_TREND_TABLES, "data_fig_elevation_problem_area_fraction.rds"))

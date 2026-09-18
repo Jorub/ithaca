@@ -1,4 +1,5 @@
 source('source/evap_trend.R')
+source('source/evap_trend_graphics.R')
 
 topo_pos_out <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_topology_pos_out.rds"))
 topo_neg_out <- readRDS(paste0(PATH_SAVE_EVAP_TREND, "global_topology_neg_out.rds"))
@@ -54,28 +55,35 @@ fill_topology_rank <- c("[-7,-6]" = "#440154FF", "[-5,-4]"= "#414487FF","[-3,-2]
                         "[-1,1]" ="gray90", "[2,3]" = "#E6F000", 
                         "[4,5]" = "#C7E020FF", "[6,7]"= "#7AD151FF")
 
-ggplot(merge_pos_out)+
+pos_out <- ggplot(merge_pos_out)+
   geom_raster(aes(x = plot_name, fill = as.factor(rank_difference_fac), y = dataset))+
   labs(x = "Topology", 
-       title = "Global topology stability for ensemble composition\nTwo strongest positive signal boosters removed", 
+       title = "Two strongest positive signal boosters removed", 
        y = "Dataset", fill = "After removal\nstronger \u2190 0 \u2192 weaker")+
   scale_fill_manual(values = fill_topology_rank)+
   geom_hline(yintercept = 0, color = "black", lwd = 1)+
   theme_bw()+
   theme(
-    strip.text.y = element_text(angle = 0),
+    strip.text.y = element_text(angle = 0), plot.margin = margin(5.5, 12, 5.5, 5.5),
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
   )
 
-ggplot(merge_neg_out)+
+neg_out <- ggplot(merge_neg_out)+
   geom_raster(aes(x = plot_name, fill = as.factor(rank_difference_fac), y = dataset))+
   labs(x = "Topology", 
-       title = "Global topology stability for ensemble composition\nTwo strongest negative signal boosters removed", 
+       title = "Two strongest negative signal boosters removed", 
        y = "Dataset", fill = "After removal\nstronger \u2190 0 \u2192 weaker")+
   scale_fill_manual(values = fill_topology_rank)+
   geom_hline(yintercept = 0, color = "black", lwd = 1)+
   theme_bw()+
   theme(
-    strip.text.y = element_text(angle = 0),
+    strip.text.y = element_text(angle = 0), plot.margin = margin(5.5, 12, 5.5, 5.5),
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
   )
+
+
+ggarrange(pos_out, neg_out, nrow = 2, 
+           labels = c("a", "b"))
+
+ggsave(paste0(PATH_SAVE_EVAP_TREND_FIGURES_SUPP, "fig_4_SI_global_topology_boosters_out.png"), 
+       width = 8, height = 8)
