@@ -90,6 +90,11 @@ color_ref <- c(
           "Above WB"   = fig5_col_high
         )
         
+map_wb_cols <- c(
+  "Below WB"   = fig5_col_low,  # products underestimate ET
+  "Above WB"   = fig5_col_high,  # products overestimate ET
+  "Crosses WB" = "#4DAF4A"  # ET_WB within the central range
+)
 
 colors_agreement_strip <- c(
   "[0,2]" = "#EEF1F6",
@@ -204,9 +209,10 @@ theme_map <- theme_fig1 +
     panel.background = element_rect(fill = NA),
     panel.ontop = TRUE,
     panel.grid.major = element_line(colour = "gray70", linewidth = 0.2),
-    axis.ticks.length = unit(0, "cm"),
-    axis.text = element_blank(),
-    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm")
+    axis.text = element_text(color = "gray40", size = 10),
+    axis.ticks = element_line(color = "gray55", linewidth = 0.25),
+    axis.ticks.length = grid::unit(0.12, "cm"),
+    plot.margin = margin(5.5, 5.5, 5.5, 5.5)
   )
 
 
@@ -225,7 +231,12 @@ theme_map_SI <- theme_map +
     axis.ticks.length = grid::unit(0.12, "cm"),
     plot.margin = margin(5.5, 5.5, 5.5, 5.5)
   )
-        
+
+theme_scale <- theme_fig1
+theme_scale_grid <- theme_fig1 + theme(
+  panel.grid.major = element_line(colour = "gray90")
+)
+
 ## figure parameters ----
 figure_widths <- 1.5*25
 

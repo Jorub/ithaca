@@ -115,8 +115,6 @@ fig_a <- ggplot() +
   labs(x = NULL, y = NULL, fill = "",
        title = "Magnitude agreement") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   coord_sf(ylim = c(-70, 90), expand = F)+
   theme_map
 
@@ -178,8 +176,6 @@ fig_b <- ggplot() +
   labs(x = NULL, y = NULL, fill = "",
        title = "Distribution agreement") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   coord_sf(ylim = c(-70, 90), expand = F)+
   theme_map
 
@@ -239,8 +235,6 @@ fig_c <-  ggplot() +
   labs(x = NULL, y = NULL, fill = "",
        title = "Spatial overlap of higher (high and above average) and lower (low and below average) agreement") +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray20", size = 3) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray20", size = 3) +
   coord_sf(ylim = c(-70, 90), expand = F)+
   theme_map
 

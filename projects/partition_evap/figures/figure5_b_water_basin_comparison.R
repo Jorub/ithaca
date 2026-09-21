@@ -96,20 +96,19 @@ not_basin <- c(20, 12, 19, 13, 34, 43, 26, 27, 53, 54, 40,
 
 summary(lm(sIQR ~ rel_da_higher, data = data_stats[!(ma_basin %in% not_basin)]))
 
-data_mean[, ratio_ET := mean_evap/water_balance]
-data_mean[ratio_ET < 1, diff := 'under']
-data_mean[ratio_ET > 1, diff := 'over']
+data_mean[, mean_RE := (mean_evap-water_balance)/water_balance]
+data_mean[mean_RE < 0, diff := 'under']
+data_mean[mean_RE > 0, diff := 'over']
 data_mean <- data_mean[!is.na(diff)]
 
-plot_dt <- merge(
-  data_mean,
-  agreement_summary,
-  by = "ma_basin",
-  all.x = TRUE
-)
+basin_siqr <- merge(data_mean, data_stats, by = "ma_basin")
+
+plot_dt <- merge(data_mean, agreement_summary, by = "ma_basin", all.x = TRUE)
 
 x_scale <- if (max(plot_dt$joint_da_higher, na.rm = TRUE) <= 1) 100 else 1
 plot_dt[, joint_high_pct := joint_da_higher * x_scale]
+
+plot_dt <- merge(plot_dt, data_stats[,.(sIQR, ma_basin)], by = "ma_basin")
 
 
 ## prepare penal a map data ----
@@ -117,21 +116,19 @@ fill_min <- min(plot_dt$joint_high_pct, na.rm = TRUE)
 fill_max <- max(plot_dt$joint_high_pct, na.rm = TRUE)
 
 basin_sum <- plot_dt[, .(
-  ratio_min = min(ratio_ET, na.rm = TRUE),
-  ratio_q25 = quantile(ratio_ET, 0.25, na.rm = TRUE),
-  ratio_med = median(ratio_ET, na.rm = TRUE),
-  ratio_mean = mean(ratio_ET, na.rm = TRUE),
-  ratio_q75 = quantile(ratio_ET, 0.75, na.rm = TRUE),
-  ratio_max = max(ratio_ET, na.rm = TRUE),
-  ratio_q25_log = exp(quantile(log(ratio_ET), 0.25, na.rm = TRUE)),
-  ratio_mean_log = exp(mean(log(ratio_ET), na.rm = TRUE)),
-  ratio_q75_log = exp(quantile(log(ratio_ET), 0.75, na.rm = TRUE)),
-  joint_high_pct = first(joint_high_pct)
+  mean_RE_min = min(mean_RE, na.rm = TRUE),
+  mean_RE_q25 = quantile(mean_RE, 0.25, na.rm = TRUE),
+  mean_RE_med = median(mean_RE, na.rm = TRUE),
+  mean_RE_mean = mean(mean_RE, na.rm = TRUE),
+  mean_RE_q75 = quantile(mean_RE, 0.75, na.rm = TRUE),
+  mean_RE_max = max(mean_RE, na.rm = TRUE),
+  joint_high_pct = first(joint_high_pct),
+  sIQR = first(sIQR)
 ), by = .(ma_basin)]
 
-basin_sum[, ratio_et := fifelse(
-  ratio_q75 < 1, "Below WB",
-  fifelse(ratio_q25 > 1, "Above WB",
+basin_sum[, mean_RE_basin := fifelse(
+  mean_RE_q75 < 0, "Below WB",
+  fifelse(mean_RE_q25 > 0, "Above WB",
           "Crosses WB")
 )]
 
@@ -142,8 +139,8 @@ ma_sf <- ma_sf %>%
     by = c("BasinID" = "ma_basin")
   ) %>%
   mutate(
-    ratio_et = factor(
-      ratio_et,
+    mean_RE = factor(
+      mean_RE_basin,
       levels = names(color_ref)
     )
   )
@@ -157,12 +154,12 @@ ma_sf_dt <- data.table(st_drop_geometry(ma_sf))
 
 basin_count <- ma_sf %>%
   st_drop_geometry() %>%
-  filter(!is.na(ratio_et)) %>%
-  count(ratio_et, name = "n") %>%
+  filter(!is.na(mean_RE)) %>%
+  count(mean_RE, name = "n") %>%
   mutate(
-    ratio_et = factor(ratio_et, levels = names(color_ref)),
-    ratio_et_label = factor(
-      as.character(ratio_et),
+    mean_RE_basin = factor(mean_RE, levels = names(color_ref)),
+    mean_RE_label = factor(
+      as.character(mean_RE),
       levels = c("Below WB", "Crosses WB", "Above WB"),
       labels = c(
         "Below~ET[WB]",
@@ -183,32 +180,32 @@ plot_dt_heat <- merge(
 )
 
 basin_order <- plot_dt_heat[, .(
-  joint_high_pct = first(joint_high_pct)
-), by = ma_basin][order(joint_high_pct, ma_basin)]
+  sIQR = first(sIQR)
+), by = ma_basin][order(sIQR, ma_basin)]
 
 plot_dt_heat[, ma_basin_ord := factor(
   ma_basin,
   levels = basin_order$ma_basin, order = T
 )]
 
-mean_dataset_ratio <- 
-  plot_dt_heat[,.(mean_ratio = mean(ratio_ET)),
+mean_dataset_mean_RE <- 
+  plot_dt_heat[,.(mean_mean_RE = mean(mean_RE)),
                .(dataset)]
 
-dataset_ratio_summary <- 
-  plot_dt_heat[,.(ratio_ET = exp(mean(log(ratio_ET)))),
+dataset_mean_RE_summary <- 
+  plot_dt_heat[,.(mean_RE = mean(mean_RE)),
                .(dataset)]
 
-dataset_ratio_summary[, group := "Mean"]
-dataset_ratio_summary[, ma_basin := "Mean"]
-dataset_ratio_summary[, ma_basin_ord := "Mean"]
-dataset_ratio_summary[dataset %in% EVAP_DATASETS_REMOTE, dataset_type := "Remote sensing"]
-dataset_ratio_summary[dataset %in% EVAP_DATASETS_REANAL, dataset_type := "Reanalysis"]
-dataset_ratio_summary[dataset %in% EVAP_DATASETS_HYDROL, dataset_type := "Hydr./LSM model"]
-dataset_ratio_summary[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Composite"]
+dataset_mean_RE_summary[, group := "Mean"]
+dataset_mean_RE_summary[, ma_basin := "Mean"]
+dataset_mean_RE_summary[, ma_basin_ord := "Mean"]
+dataset_mean_RE_summary[dataset %in% EVAP_DATASETS_REMOTE, dataset_type := "Remote sensing"]
+dataset_mean_RE_summary[dataset %in% EVAP_DATASETS_REANAL, dataset_type := "Reanalysis"]
+dataset_mean_RE_summary[dataset %in% EVAP_DATASETS_HYDROL, dataset_type := "Hydr./LSM model"]
+dataset_mean_RE_summary[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Composite"]
 
-dataset_order <- mean_dataset_ratio[,order(mean_ratio)]
-dataset_level <- mean_dataset_ratio$dataset[dataset_order]
+dataset_order <- mean_dataset_mean_RE[,order(mean_mean_RE)]
+dataset_level <- mean_dataset_mean_RE$dataset[dataset_order]
 
 plot_dt_heat[, dataset := factor(dataset,
                                  levels = dataset_level
@@ -217,16 +214,16 @@ plot_dt_heat[, dataset := factor(dataset,
 plot_dt_heat[, group:= "Basin"]
 
 ### Ensemble-mean row for each basin ----
-ensemble_basin_ratio <- plot_dt_heat[
+ensemble_basin_mean_RE <- plot_dt_heat[
   ,
   .(
-    ratio_ET = exp(mean(log(ratio_ET), na.rm = TRUE)),
-    joint_high_pct = first(joint_high_pct)
+    mean_RE = mean(mean_RE_mean, na.rm = TRUE),
+    sIQR = first(sIQR)
   ),
   by = .(ma_basin, ma_basin_ord)
 ]
 
-ensemble_basin_ratio[
+ensemble_basin_mean_RE[
   ,
   `:=`(
     dataset = "mean",
@@ -240,21 +237,21 @@ ensemble_basin_ratio[
 
 plot_dt_melt <- melt(plot_dt_heat[,.(ma_basin, dataset,
                                      dataset_type, continent_abr,
-                                     ratio_ET, ratio_min, ratio_q25,
-                                     ratio_mean, ratio_q75, ratio_max,
-                                     joint_high_pct, ratio_et, ma_basin_ord,
+                                     mean_RE, mean_RE_min, mean_RE_q25,
+                                     mean_RE_mean, mean_RE_q75, mean_RE_max,
+                                     joint_high_pct, mean_RE, ma_basin_ord,
                                      group)], 
-                     value.name = "ratio_ET", 
-                     measure.vars = c("ratio_ET", "ratio_min", "ratio_q25", 
-                                 "ratio_mean", "ratio_q75", "ratio_max"))
+                     value.name = "mean_RE", 
+                     measure.vars = c("mean_RE", "mean_RE_min", "mean_RE_q25", 
+                                 "mean_RE_mean", "mean_RE_q75", "mean_RE_max"))
 
-plot_dt_melt[variable != "ratio_ET", dataset_type := "Ensemble"]
+plot_dt_melt[variable != "mean_RE", dataset_type := "Ensemble"]
 
-plot_dt_melt[variable == "ratio_min", dataset := "minimum"]
-plot_dt_melt[variable == "ratio_max", dataset := "maximum"]
-plot_dt_melt[variable == "ratio_q25", dataset := "Q25"]
-plot_dt_melt[variable == "ratio_q75", dataset := "Q75"]
-plot_dt_melt[variable == "ratio_mean", dataset := "mean"]
+plot_dt_melt[variable == "mean_RE_min", dataset := "minimum"]
+plot_dt_melt[variable == "mean_RE_max", dataset := "maximum"]
+plot_dt_melt[variable == "mean_RE_q25", dataset := "Q25"]
+plot_dt_melt[variable == "mean_RE_q75", dataset := "Q75"]
+plot_dt_melt[variable == "mean_RE_mean", dataset := "mean"]
 
 plot_dt_melt <- unique(plot_dt_melt)
 
@@ -264,7 +261,7 @@ plot_dt_melt[!(dataset %in% not_dataset) & dataset_type == "Ensemble", dataset :
 plot_dt_melt <- unique(plot_dt_melt)
 
 ens_stat_means <- plot_dt_melt[(dataset %in% not_dataset),
-             .(ratio_ET = exp(mean(log(ratio_ET)))), .(dataset)]
+             .(mean_RE = mean(mean_RE)), .(dataset)]
 
 
 ens_stat_means[
@@ -277,15 +274,15 @@ ens_stat_means[
   )
 ]
 
-plot_dt_heat_merge <- merge(plot_dt_heat, dataset_ratio_summary, 
-                            by = c("dataset", "ratio_ET", "group", 
+plot_dt_heat_merge <- merge(plot_dt_heat, dataset_mean_RE_summary, 
+                            by = c("dataset", "mean_RE", "group", 
                                    "dataset_type", "ma_basin", "ma_basin_ord"),
                             all = T)
 
 plot_dt_heat_merge_summary <- rbindlist(
   list(
     plot_dt_melt,
-    dataset_ratio_summary,
+    dataset_mean_RE_summary,
     ens_stat_means
     
   ),
@@ -293,8 +290,6 @@ plot_dt_heat_merge_summary <- rbindlist(
 )
 
 plot_dt_heat_merge_summary <- unique(plot_dt_heat_merge_summary)
-plot_dt_heat_merge_summary[, log2_ratio := log2(ratio_ET)]
-
 ma_sf_dt[, BasinID_fac := as.factor(BasinID)]
 
 ### basin label ----
@@ -363,18 +358,18 @@ plot_dt[, joint_high_pct_fac := cut(joint_high_pct,
                                     breaks = c(20, 40, 60, 100))]
 
 qs_dt <- data.table(qs_percent)
-### ggplot ----
+### ggplot fig 5b ----
 fig_5b <- ggplot() +
   geom_point(
     data = plot_dt,
-    aes(x = joint_high_pct, y = ratio_ET),
+    aes(x = joint_high_pct, y = mean_RE),
     color = "grey70",
     alpha = 0.35,
     size = 1.0
   ) +
   geom_linerange(
     data = basin_sum,
-    aes(x = joint_high_pct, ymin = ratio_min, ymax = ratio_max),
+    aes(x = joint_high_pct, ymin = mean_RE_min, ymax = mean_RE_max),
     color = "grey70",
     linewidth = 0.25,
     alpha = 0.65
@@ -383,22 +378,22 @@ fig_5b <- ggplot() +
     data = basin_sum,
     aes(
       x = joint_high_pct,
-      ymin = ratio_q25,
-      ymax = ratio_q75,
-      color = ratio_et
+      ymin = mean_RE_q25,
+      ymax = mean_RE_q75,
+      color = mean_RE_basin
     ),
     linewidth = 1.15
   ) +
   geom_point(
     data = basin_sum,
-    aes(x = joint_high_pct, y = ratio_med, fill = ratio_et),
+    aes(x = joint_high_pct, y = mean_RE_med, fill = mean_RE_basin),
     shape = 21,
     color = "grey15",
     size = 2.3,
     stroke = 0.25
   ) +
   geom_hline(
-    yintercept = 1,
+    yintercept = 0,
     linetype = "dashed",
     color = "grey15",
     linewidth = 0.4
@@ -419,15 +414,11 @@ fig_5b <- ggplot() +
   scale_fill_manual(values = color_ref) +
   labs(
     x = "Area fraction of high or above-average agreement overlap [%]",
-    y = expression(ET[Product] / ET[WB]),
+    y = expression((ET[Product] - ET[WB])/ET[WB]),
     color = "Central ensemble range",
     fill = "Central ensemble range"
   ) +
-  coord_cartesian(ylim = c(0.4, 2.5)) +
-  scale_y_log10(
-    breaks = c(0.5, 0.67, 1, 1.5, 2),
-    labels = c("0.5", "0.67", "1", "1.5", "2")
-  )+
+  coord_cartesian(ylim = c(-1, 1)) +
   theme_fig5 +
   theme(
     plot.margin = margin(8, 8, 10, 18),
@@ -436,6 +427,63 @@ fig_5b <- ggplot() +
 
 fig_5b
 
+### ggplot fig 5b basin sqir ----
+
+fig_5b_basin <- ggplot() +
+  geom_point(
+    data = plot_dt,
+    aes(x = sIQR, y = mean_RE),
+    color = "grey70",
+    alpha = 0.35,
+    size = 1.0
+  ) +
+  geom_linerange(
+    data = basin_sum,
+    aes(x = sIQR, ymin = mean_RE_min, ymax = mean_RE_max),
+    color = "grey70",
+    linewidth = 0.25,
+    alpha = 0.65
+  ) +
+  geom_linerange(
+    data = basin_sum,
+    aes(
+      x = sIQR,
+      ymin = mean_RE_q25,
+      ymax = mean_RE_q75,
+      color = mean_RE_basin
+    ),
+    linewidth = 1.15
+  ) +
+  geom_point(
+    data = basin_sum,
+    aes(x = sIQR, y = mean_RE_med, fill = mean_RE_basin),
+    shape = 21,
+    color = "grey15",
+    size = 2.3,
+    stroke = 0.25
+  ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey15",
+    linewidth = 0.4
+  ) +
+  scale_color_manual(values = color_ref) +
+  scale_fill_manual(values = color_ref) +
+  labs(
+    x = "Basin sIQR [-]",
+    y = expression((ET[Product] - ET[WB])/ET[WB]),
+    color = "Central ensemble range",
+    fill = "Central ensemble range"
+  ) +
+  coord_cartesian(ylim = c(-1, 1)) +
+  theme_fig5 +
+  theme(
+    plot.margin = margin(8, 8, 10, 18),
+    legend.position = "none"
+  )
+
+fig_5b_basin
 
 # Figure 5 d ----
 
@@ -446,7 +494,7 @@ basin_axis_labels <- setNames(
 
 fig_5d <- ggplot() +
   geom_tile(data = plot_dt_heat_merge_summary,
-            aes(x = ma_basin_ord, y = dataset, fill = log2_ratio),
+            aes(x = ma_basin_ord, y = dataset, fill = mean_RE),
             color = "white",
             linewidth = 0.25
   ) +
@@ -463,9 +511,7 @@ fig_5d <- ggplot() +
     high = fig5_col_high,
     midpoint = 0,
     limits = c(-1, 1),
-    breaks = log2(c(0.5, 0.75, 1, 1.5, 2)),
-    labels = c("0.5", "0.75", "1", "1.5", "2"),
-    name = expression(ET[product] / ET[WB]),
+    name = expression((ET[product] - ET[WB])/ET[WB]),
     oob = scales::squish
   ) +
   
@@ -499,13 +545,10 @@ geom_vline(xintercept = c(15.5, 28.5, 42.5),
 
 fig_5d
 
-# map data ----
-
-
 # Figure 5 c ----
 fig_5c <- ggplot(
   basin_count,
-  aes(x = n, y = ratio_et_label, fill = ratio_et)
+  aes(x = n, y = mean_RE_label, fill = mean_RE)
 ) +
   geom_col(width = 0.25) +
   geom_text(
@@ -538,35 +581,6 @@ fig_5c <- ggplot(
 
 # Figure 5 a plot basin ----
 
-fig_map_5a <- 
-  ggplot() +
-  geom_sf(data = world_no_antarctica, fill = "light gray", color = "light gray") +
-  geom_sf(data = ma_sf, aes(fill = joint_high_pct) ,color = "gray35", alpha = 1) +
-  geom_label_repel(
-    data = ma_sf,
-    aes(label = BasinID, geometry = geometry),
-    stat = "sf_coordinates",
-    min.segment.length = 0,  # always draw the line
-    box.padding = 0.5,
-    point.padding = 0.1,
-    size = 2,
-    segment.color = "black",
-    nudge_x = 0.2,          # adjust nudging as needed
-    nudge_y = 0.2,
-    max.overlaps = Inf
-  ) +
-  scale_fill_gradientn(
-    colours = c("#EEF1F6", "#4D648D", "#5E9C76"),
-    values = rescale(c(fill_min, qs_percent[4], fill_max)),
-    limits = c(fill_min, fill_max),
-    name = "Agreement \noverlap [%]",
-  )+
-  labs(x = NULL, y = NULL, fill = "Central product range") +
-  scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
-  coord_sf(ylim = c(-70, 90), expand = F)+
-  theme_map_fig5+theme(legend.position = "right")
 
 
 # join all ----
@@ -622,29 +636,29 @@ library(lmerTest)
 plot_dt[, joint_high_pct_10 := joint_high_pct/10]
 
 ## absolute difference ----
-m_dev_model <- lmer(abs(log2(ratio_ET)) ~ joint_high_pct_10 + dataset_type + (1 | dataset) +(1 | ma_basin),
+m_dev_model <- lmer(abs(log2(mean_RE)) ~ joint_high_pct_10 + dataset_type + (1 | dataset) +(1 | ma_basin),
                     data = plot_dt, REML = FALSE)
 summary(m_dev_model)
 
-m_dev_model <- lmer(abs(log2(ratio_ET)) ~ joint_high_pct_10 + dataset_type + continent + (1 | dataset) +(1 | ma_basin),
+m_dev_model <- lmer(abs(log2(mean_RE)) ~ joint_high_pct_10 + dataset_type + continent + (1 | dataset) +(1 | ma_basin),
                     data = plot_dt, REML = FALSE)
 summary(m_dev_model)
 
 ## absolute difference ----
 
 basin_sum[, joint_high_pct_10 := joint_high_pct/10]
-lm_model <- lm(abs(log2(ratio_med)) ~ joint_high_pct_10, data = basin_sum)
+lm_model <- lm(abs(log2(mean_RE_med)) ~ joint_high_pct_10, data = basin_sum)
 summary(lm_model)
 
-lm_model <- lm(log2(ratio_q75)-log2(ratio_q25) ~ joint_high_pct_10, data = basin_sum)
+lm_model <- lm(log2(mean_RE_q75)-log2(mean_RE_q25) ~ joint_high_pct_10, data = basin_sum)
 summary(lm_model)
 
 plot_dt_sel <- plot_dt[, .(
-  ratio_Q25 = quantile(ratio_ET, 0.25),
-  ratio_Q75 = quantile(ratio_ET, 0.75),
+  mean_RE_Q25 = quantile(mean_RE, 0.25),
+  mean_RE_Q75 = quantile(mean_RE, 0.75),
   rel_da_higher = first(rel_da_higher)),
   .(ma_basin)
   ]
 
-model_test <- lm(log2(ratio_Q75/ratio_Q25)~rel_da_higher, data = plot_dt_sel)
+model_test <- lm(log2(mean_RE_Q75/mean_RE_Q25)~rel_da_higher, data = plot_dt_sel)
 summary(model_test)

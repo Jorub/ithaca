@@ -1,7 +1,6 @@
 # Does grid-scale agreement transfer across scales?
 source('source/partition_evap.R')
 
-library(terra)
 
 agreement_grid <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "dataset_agreement_grid_wise.rds"))
 evap_mean_datasets <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_datasets_grid_mean.rds"))
@@ -81,36 +80,10 @@ agreement_stats_scale <- merge(agreement_grid, evap_mean_datasets_scale_stats[
                                                           "deg_8_lon", "deg_8_lat"))
 
 
-agreement_stats_scale[, median_siqr_0_25_to_8 := median(std_quant_range), .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[, median_siqr_1_to_8 := median(sIQR_1deg), .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[, median_siqr_2_to_8 := median(sIQR_2deg), .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[, median_siqr_4_to_8 := median(sIQR_4deg), .(deg_8_lon, deg_8_lat)]
+agreement_stats_scale[, reduction_1deg := std_quant_range - sIQR_1deg]
+agreement_stats_scale[, reduction_2deg := std_quant_range - sIQR_2deg]
+agreement_stats_scale[, reduction_4deg := std_quant_range - sIQR_4deg]
+agreement_stats_scale[, reduction_8deg := std_quant_range - sIQR_8deg]
 
-agreement_stats_scale_deg_8 <- unique(agreement_stats_scale[,.(median_siqr_0_25_to_8,
-                                                                     median_siqr_1_to_8,
-                                                                     median_siqr_2_to_8,
-                                                                     median_siqr_4_to_8,
-                                                                     sIQR_8deg)])
-
-ggplot(agreement_stats_scale_deg_8)+
-  geom_point(aes(x = median_siqr_0_25_to_8, y = sIQR_8deg, col = "0.25"), alpha = 0.5)+
-  geom_point(aes(x = median_siqr_1_to_8, y = sIQR_8deg, col = "1"), alpha = 0.5)+
-  geom_point(aes(x = median_siqr_2_to_8, y = sIQR_8deg, col = "2"), alpha = 0.5)+
-  geom_point(aes(x = median_siqr_4_to_8, y = sIQR_8deg, col = "4"), alpha = 0.5)+
-  geom_abline(slope = 1, intercept = 0)+
-  theme_bw()
-
-
-agreement_stats_scale[, median_siqr_0_25_to_8 := median(std_quant_range), .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[, median_siqr_0_25_to_4 := median(std_quant_range), .(deg_4_lon, deg_4_lat)]
-agreement_stats_scale[, median_siqr_0_25_to_2 := median(std_quant_range), .(deg_2_lon, deg_2_lat)]
-agreement_stats_scale[, median_siqr_0_25_to_1 := median(std_quant_range), .(deg_1_lon, deg_1_lat)]
-
-ggplot(agreement_stats_scale)+
-  geom_point(aes(x = median_siqr_0_25_to_8, y = sIQR_8deg, col = "8"), alpha = 0.5)+
-  geom_point(aes(x = median_siqr_0_25_to_4, y = sIQR_4deg, col = "4"), alpha = 0.5)+
-  geom_point(aes(x = median_siqr_0_25_to_2, y = sIQR_2deg, col = "2"), alpha = 0.5)+
-  geom_point(aes(x = median_siqr_0_25_to_1, y = sIQR_1deg, col = "1"), alpha = 0.5)+
-  geom_abline(slope = 1, intercept = 0)+
-  theme_bw()
+saveRDS(agreement_stats_scale, paste0(PATH_SAVE_PARTITION_EVAP, "magnitude_agreement_scale_transfer.rds"))
 
