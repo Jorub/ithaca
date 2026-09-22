@@ -31,6 +31,11 @@ library(rnaturalearth)
 
 
 ## color ----
+colset_biome_short <- c("B. Forests" = "#4D648D", "Deserts" = "#EBB582", "Flooded" = "#337BAE","Mangroves" = "#064470", "M. Grasslands" = "#D24136","Mediterranean" = "#F4CC70",
+                  "T. Coni. Forests" = "#32520B", "T. BL Forests" = "#739F3D", "T. Grasslands" = "#785A46" ,
+                  "T/S Forests" = "#576b16", "T/S Dry BL Forests" = "#ACBD78", "T/S Moist BL Forests" = "#97BA23",
+                  "T/S Grasslands" = "#E38B75", "Tundra" = "#97B8C2"
+) # "B. Forests", "Deserts", "Flooded", "Mangroves", "M. Grasslands", "Mediterranean", "T. Coni. Forests", "T. BL Forests", "T. Grasslands", "T/S Coni. Forests", "T/S Dry BL Forests", "T/S Moist BL Forests","T/S Grasslands", "Tundra"
 
 color_agreement <- c("Low" = "#A63A3A",
                      "Below average" = "#E38B75", 
@@ -51,6 +56,9 @@ color_joint_agreement <- c("Both lower" = "#A63A3A",
                            "Magnitude higher \nDistribution lower"= "#6E5773",
                            "Average" = "gray90")
 
+
+color_joint_agreement_short <- c("Distribution higher" = "#E2A374", "Both higher" = "#4D648D", 
+                           "Magnitude higher" = "#6E5773", "Both lower" = "#A63A3A")
 
 color_quartile_agreement <- c(
   "Low" = "#6A51A3",
@@ -176,7 +184,7 @@ theme_fig1 <- theme_bw(base_size = 11) +
     plot.margin = margin(5.5, 8, 5.5, 5.5)
   )
 
-theme_fig3 <- theme_fig1 + theme(legend.position = "none")
+theme_fig3 <- theme_fig1 
 
 
 theme_fig4 <- theme_fig3

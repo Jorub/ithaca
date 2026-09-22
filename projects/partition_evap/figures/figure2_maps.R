@@ -239,7 +239,7 @@ fig_c <-  ggplot() +
   theme_map
 
 
-fig_c <- fig_c + theme(plot.margin = unit(c(1.1, 7, 0.1, 0.1), "cm"),
+fig_c <- fig_c + theme(plot.margin = unit(c(1.1, 9, 0.1, 0.1), "cm"),
                        legend.position = "none")
 
 # Panel c: area fraction inset ----
@@ -352,7 +352,7 @@ ggsave(
   ),
   plot = fig2,
   width = figure_widths,
-  height = 30,
+  height = 23,
   units = "cm",
   dpi = 300
 )

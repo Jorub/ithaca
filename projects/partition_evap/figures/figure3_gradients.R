@@ -41,6 +41,15 @@ joint_evap_agreement[rel_dataset_agreement %in% c("Low", "Below average")
 joint_evap_agreement[rel_dataset_agreement %in% c("High", "Above average")
                      & dist_dataset_agreement %in% c("High", "Above average"), 
                      joint_agreement := "Both higher",]
+
+joint_evap_agreement[rel_dataset_agreement %in% c("High", "Above average")
+                     & dist_dataset_agreement %in% c("Low", "Below average"), 
+                     joint_agreement := "Magnitude higher",]
+
+joint_evap_agreement[rel_dataset_agreement %in% c("Low", "Below average")
+                     & dist_dataset_agreement %in% c("High", "Above average"), 
+                     joint_agreement := "Distribution higher",]
+
 joint_evap_agreement[, sum_area_agreement := sum(area_agreement), .(evap_quant_v2, joint_agreement)]
 joint_evap_agreement[, area_fraction := sum_area_agreement/sum(area_agreement), .(evap_quant_v2)]
 
@@ -52,6 +61,7 @@ joint_agreement[joint_agreement == "Both higher", x_base := x_base+0.18]
 joint_agreement[joint_agreement == "Both lower", x_base := x_base-0.18]
 
 ## top ----
+
 a_top <- ggplot()+
   geom_col(data = q_agreement, aes(x = as.numeric(evap_quant_v2)-0.18, y = area_fraction, 
                                    fill = rel_dataset_agreement),
@@ -86,7 +96,7 @@ a_top <- ggplot()+
 
 a_bottom <- ggplot(joint_agreement)+
   geom_col(aes(x = x_base, y = area_fraction, fill = joint_agreement))+
-  scale_fill_manual(values = color_joint, name = "Joint agreement")+
+  scale_fill_manual(values = color_joint_agreement_short, name = "Joint agreement")+
   scale_x_continuous(
     breaks = 1:5,
     labels = evap_quant_labels_v2,
@@ -128,6 +138,15 @@ joint_evap_agreement[rel_dataset_agreement %in% c("Low", "Below average")
 joint_evap_agreement[rel_dataset_agreement %in% c("High", "Above average")
                      & dist_dataset_agreement %in% c("High", "Above average"), 
                      joint_agreement := "Both higher",]
+
+joint_evap_agreement[rel_dataset_agreement %in% c("High", "Above average")
+                     & dist_dataset_agreement %in% c("Low", "Below average"), 
+                     joint_agreement := "Magnitude higher",]
+
+joint_evap_agreement[rel_dataset_agreement %in% c("Low", "Below average")
+                     & dist_dataset_agreement %in% c("High", "Above average"), 
+                     joint_agreement := "Distribution higher",]
+
 joint_evap_agreement[, sum_area_agreement := sum(area_agreement), .(elev_class, joint_agreement)]
 joint_evap_agreement[, area_fraction := sum_area_agreement/sum(area_agreement), .(elev_class)]
 
@@ -174,7 +193,7 @@ b_top <- ggplot()+
 
 b_bottom <- ggplot(joint_agreement)+
   geom_col(aes(x = x_base, y = area_fraction, fill = joint_agreement))+
-  scale_fill_manual(values = color_joint, name = "Joint agreement")+
+  scale_fill_manual(values = color_joint_agreement_short, name = "Joint agreement")+
   scale_x_continuous(
     breaks = 1:6,
     labels = elev_labels,
@@ -220,6 +239,14 @@ joint_evap_agreement[rel_dataset_agreement %in% c("Low", "Below average")
 joint_evap_agreement[rel_dataset_agreement %in% c("High", "Above average")
                      & dist_dataset_agreement %in% c("High", "Above average"), 
                      joint_agreement := "Both higher",]
+
+joint_evap_agreement[rel_dataset_agreement %in% c("High", "Above average")
+                     & dist_dataset_agreement %in% c("Low", "Below average"), 
+                     joint_agreement := "Magnitude higher",]
+
+joint_evap_agreement[rel_dataset_agreement %in% c("Low", "Below average")
+                     & dist_dataset_agreement %in% c("High", "Above average"), 
+                     joint_agreement := "Distribution higher",]
 joint_evap_agreement[, sum_area_agreement := sum(area_agreement), .(lat_classes, joint_agreement)]
 joint_evap_agreement[, area_fraction := sum_area_agreement/sum(area_agreement), .(lat_classes)]
 
@@ -265,7 +292,7 @@ c_top <- ggplot()+
 
 c_bottom <- ggplot(joint_agreement)+
   geom_col(aes(x = x_base, y = area_fraction, fill = joint_agreement))+
-  scale_fill_manual(values = color_joint, name = "Joint agreement")+
+  scale_fill_manual(values = color_joint_agreement_short, name = "Joint agreement")+
   scale_x_continuous(
     breaks = 1:5,
     labels = lat_labels,

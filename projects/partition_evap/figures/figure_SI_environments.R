@@ -54,8 +54,8 @@ to_plot_stars$biome_short_class <- array(
   dim = dim(to_plot_stars$value)
 )
 
-fig_biome_short_class <- ggplot(to_plot_sf) +
-  geom_sf(aes(color = biome_short_class, fill = biome_short_class)) +
+fig_biome_short_class <- ggplot() +
+  geom_stars(data = to_plot_stars, aes(color = biome_short_class, fill = biome_short_class)) +
   geom_sf(data = world_no_antarctica, fill = NA, color = "gray35") +
   scale_fill_manual(values = colset_biome) + 
   scale_color_manual(values = colset_biome,
@@ -63,9 +63,7 @@ fig_biome_short_class <- ggplot(to_plot_sf) +
   labs(x = NULL, y = NULL, fill = "") +
   coord_sf(ylim = c(-70, 90), expand = F)+
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
-  geom_sf_text(data = labs_y, aes(label = label), color = "gray40", size = 4) +
-  geom_sf_text(data = labs_x, aes(label = label), color = "gray40", size = 4) +
-  ggtitle("Landcover")+
+  ggtitle("Biome")+
   theme_map_SI
 
 
