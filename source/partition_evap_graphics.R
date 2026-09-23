@@ -242,7 +242,8 @@ theme_map_SI <- theme_map +
 
 theme_scale <- theme_fig1
 theme_scale_grid <- theme_fig1 + theme(
-  panel.grid.major = element_line(colour = "gray90")
+  panel.grid.major = element_line(colour = "gray90"),
+  legend.position = "top"
 )
 
 ## figure parameters ----

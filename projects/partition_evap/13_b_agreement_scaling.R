@@ -134,7 +134,8 @@ fig_agreement_class <- ggplot(
     name = "Change after aggregation"
   )+ theme_scale_grid+
   theme(
-    axis.text.x = element_text(angle= 40, hjust = 1)
+    axis.text.x = element_text(angle= 40, hjust = 1),
+    legend.position = "top"
   )
 
 ggplot(
@@ -211,8 +212,8 @@ higher_af <- ggplot()+
   theme_bw()+
   scale_colour_manual(
     values = c(
-      "4 degrees" = "#D55E00",
-      "8 degrees" = "#0072B2"
+      "4 degrees" = "#7B4F9D",
+      "8 degrees" = "#168C8C"
     ),
     labels = c(
       "4° × 4°",
@@ -229,7 +230,8 @@ higher_af <- ggplot()+
     y = "sIQR after spatial aggregation",
     colour = "Aggregation scale"
   ) +
-  theme_scale_grid
+  theme_scale_grid+
+  theme(legend.position = "top")
 
 
 
@@ -240,8 +242,8 @@ ggplot()+
              aes(x = median_sIQR_0_25_8deg, y = sIQR_8deg, color = "8 degrees"), alpha = 0.5)+
   scale_colour_manual(
     values = c(
-      "4 degrees" = "#D55E00",
-      "8 degrees" = "#0072B2"
+      "4 degrees" = "#7B4F9D",
+      "8 degrees" = "#168C8C"
     ),
     labels = c(
       "4° × 4°",
@@ -264,7 +266,8 @@ ggplot()+
     y = "sIQR after spatial aggregation",
     colour = "Aggregation scale"
   ) +
-  theme_scale
+  theme_scale+
+  theme(legend.position = "top")
 
 
 ### FIGURE  lower area fraction plot -----
@@ -276,8 +279,8 @@ lower_af <- ggplot()+
   theme_bw()+
   scale_colour_manual(
     values = c(
-      "4 degrees" = "#D55E00",
-      "8 degrees" = "#0072B2"
+      "4 degrees" = "#7B4F9D",
+      "8 degrees" = "#168C8C"
     ),
     labels = c(
       "4° × 4°",
@@ -294,7 +297,8 @@ lower_af <- ggplot()+
     y = "sIQR after spatial aggregation",
     colour = "Aggregation scale"
   ) +
-  theme_scale_grid
+  theme_scale_grid+
+  theme(legend.position = "top")
 
 ggarrange(higher_af, lower_af, common.legend = T, nrow = 2)
 
