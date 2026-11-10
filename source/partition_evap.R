@@ -87,3 +87,10 @@ EVAP_DATASETS_REANAL <- c("era5-land", "jra55", "merra2")
 EVAP_DATASETS_REMOTE <- c("bess", "etmonitor", "gleam","mod16a")
 EVAP_DATASETS_HYDROL <- c("fldas", "gldas-clsm", "gldas-noah", "gldas-vic", "terraclimate")
 EVAP_DATASETS_ENSEMB <- c("camele", "etsynthesis", "synthesizedet")
+
+
+# thresholds ----
+min_8_deg_N <- 128
+min_4_deg_N <- 32
+min_2_deg_N <- 8
+min_1_deg_N <- 2

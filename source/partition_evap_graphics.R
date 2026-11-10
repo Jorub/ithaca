@@ -223,6 +223,17 @@ theme_map <- theme_fig1 +
     plot.margin = margin(5.5, 5.5, 5.5, 5.5)
   )
 
+theme_map_leg <- theme_fig1 +
+  theme(
+    panel.background = element_rect(fill = NA),
+    panel.ontop = TRUE,
+    panel.grid.major = element_line(colour = "gray70", linewidth = 0.2),
+    axis.text = element_text(color = "gray40", size = 10),
+    axis.ticks = element_line(color = "gray55", linewidth = 0.25),
+    axis.ticks.length = grid::unit(0.12, "cm"),
+    plot.margin = margin(5.5, 5.5, 5.5, 5.5),
+    legend.position = "right"
+  )
 
 theme_map_fig5 <- theme_map +
   theme(

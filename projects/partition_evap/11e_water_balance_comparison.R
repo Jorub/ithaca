@@ -20,14 +20,14 @@ diff_basin <- diff_basin[complete.cases(diff_basin)]
 grid_cell_area <- unique(diff_basin[, .(lon, lat)]) %>% grid_area() # m2
 diff_basin <- grid_cell_area[diff_basin, on = .(lon, lat)]
 
-diff_basin_av <- diff_basin[, .(mean_basin_diff = sum(difference*area)/sum(area)), .(ma_basin)]
+diff_basin_av <- diff_basin[, .(mean_basin_diff = sum(sym_rel_diff*area)/sum(area)), .(ma_basin)]
 
 # Area fraction of magnitude agreement classes ----
 diff_basin_rda <- diff_basin[, .(area = sum(area)), .(ma_basin, rel_dataset_agreement)]
 diff_basin_rda[, area_fraction := area/sum(area), (ma_basin)]
 
 # Area fraction of grid-scale differences classes ----
-grid_cell_diff <- diff_basin[, .(mean_diff = median(difference), 
+grid_cell_diff <- diff_basin[, .(mean_diff = median(sym_rel_diff), 
                                             area = first(area),
                                             ma_basin = first(ma_basin)), .(lon, lat)]
 
@@ -74,7 +74,7 @@ area_diff_10_merge <- rbind(
   missing_dt
 )
 
-grid_cell_diff_10 <- diff_basin_kept_10[, .(mean_diff = median(difference), 
+grid_cell_diff_10 <- diff_basin_kept_10[, .(mean_diff = median(sym_rel_diff), 
                                             area = first(area),
                                             ma_basin = first(ma_basin)), .(lon, lat)]
 
@@ -84,7 +84,7 @@ diff_basin_kept_15 <- diff_basin[, {
   .SD[dataset.x %chin% kept & dataset.y %chin% kept]
 }, by = ma_basin]
 
-grid_cell_diff_15 <- diff_basin_kept_15[, .(mean_diff = median(difference), 
+grid_cell_diff_15 <- diff_basin_kept_15[, .(mean_diff = median(sym_rel_diff), 
                                             area = first(area),
                                             ma_basin = first(ma_basin)), .(lon, lat)]
 
@@ -120,19 +120,19 @@ area_comparison_merge <- rbind(
 diff_basin_av_10 <- diff_basin[, {
   kept <- get_datasets(basin_list_10, .BY$ma_basin)
   use <- dataset.x %chin% kept & dataset.y %chin% kept
-  .(mean_basin_diff_10 = if (any(use)) weighted.mean(difference[use], area[use], na.rm = TRUE) else NA_real_)
+  .(mean_basin_diff_10 = if (any(use)) weighted.mean(sym_rel_diff[use], area[use], na.rm = TRUE) else NA_real_)
 }, by = ma_basin]
 
 diff_basin_av_15 <- diff_basin[, {
   kept <- get_datasets(basin_list_15, .BY$ma_basin)
   use <- dataset.x %chin% kept & dataset.y %chin% kept
-  .(mean_basin_diff_15 = if (any(use)) weighted.mean(difference[use], area[use], na.rm = TRUE) else NA_real_)
+  .(mean_basin_diff_15 = if (any(use)) weighted.mean(sym_rel_diff[use], area[use], na.rm = TRUE) else NA_real_)
 }, by = ma_basin]
 
 diff_basin_av_20 <- diff_basin[, {
   kept <- get_datasets(basin_list_20, .BY$ma_basin)
   use <- dataset.x %chin% kept & dataset.y %chin% kept
-  .(mean_basin_diff_20 = if (any(use)) weighted.mean(difference[use], area[use], na.rm = TRUE) else NA_real_)
+  .(mean_basin_diff_20 = if (any(use)) weighted.mean(sym_rel_diff[use], area[use], na.rm = TRUE) else NA_real_)
 }, by = ma_basin]
 
 
