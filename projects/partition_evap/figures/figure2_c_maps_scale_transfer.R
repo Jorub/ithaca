@@ -13,8 +13,16 @@ library(raster)
 agreement_stats_scale <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "magnitude_agreement_scale_transfer.rds"))
 agreement_stats_scale[, area_8deg := sum(area), .(deg_8_lon, deg_8_lat)]
 agreement_stats_scale[, N_8deg := .N, .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[rel_dataset_agreement %in% c("High", "Above average"), higher_agreement_frac_8deg := sum(area)/area_8deg, .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[is.na(higher_agreement_frac_8deg), higher_agreement_frac_8deg := 0,]
+
+agreement_stats_scale[, `:=`(
+  area_8deg = sum(area, na.rm = TRUE),
+  N_8deg = .N,
+  higher_agreement_frac_8deg = sum(
+    area[rel_dataset_agreement %in% c("High", "Above average")],
+    na.rm = TRUE
+  ) / sum(area, na.rm = TRUE)
+), .(deg_8_lon, deg_8_lat)]
+
 
 thresholds_sIQR <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP,'thresholds_sIQR.RDS'))
 agreement_stats_scale[sIQR_8deg > thresholds_sIQR[5], rel_da_8deg := ordered(5, labels = "Low")]
@@ -27,6 +35,7 @@ agreement_8deg_unique <- unique(agreement_stats_scale[,.(deg_8_lon, deg_8_lat,
                                                          sIQR_8deg, rel_da_8deg, 
                                                          higher_agreement_frac_8deg,
                                                          N_8deg)])
+
 agreement_8deg_ma <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, 
                                     "magnitude_agreement_8deg.rds"))
 
@@ -50,6 +59,8 @@ agreement_8deg[!rel_dataset_agreement %in% c("High", "Above average")
 
 class_levels <- c("Other", "Persistent", "Emergent", "Lost")
 agreement_8deg[, classes := factor(classes, levels = class_levels)]
+
+saveRDS(agreement_8deg, paste0(PATH_SAVE_PARTITION_EVAP,"magnitude_da_scale_transfer_8deg.RDS"))
 
 # Panel a: Magnitude agreement ----
 

@@ -102,7 +102,7 @@ levels(to_plot_stars$rel_dataset_agreement)
 ## plot ----
 fig_a <- ggplot() +
   geom_stars(data = to_plot_stars,
-             aes(fill = rel_dataset_agreement)) +
+             aes(fill = rel_dataset_agreement), linewidth = 0) +
   geom_sf(data = world_no_antarctica, fill = NA, color = "gray35") +
   scale_fill_manual(values = color_agreement, 
                     breaks = agreement_levels,
@@ -163,7 +163,7 @@ to_plot_stars$dist_dataset_agreement <- factor(
 ## plot ----
 fig_b <- ggplot() +
   geom_stars(data = to_plot_stars,
-             aes(fill = dist_dataset_agreement)) +
+             aes(fill = dist_dataset_agreement), linewidth = 0) +
   geom_sf(data = world_no_antarctica, fill = NA, color = "gray35") +
   scale_fill_manual(values = color_agreement, 
                     breaks = agreement_levels,
@@ -224,7 +224,7 @@ to_plot_stars$joint_agreement <- factor(
 ## plot ----
 fig_c <-  ggplot() +
   geom_stars(data = to_plot_stars,
-             aes(fill = joint_agreement)) +
+             aes(fill = joint_agreement), linewidth = 0) +
   geom_sf(data = world_no_antarctica, fill = NA, color = "gray35") +
   scale_fill_manual(values = color_joint_agreement, 
                     breaks = joint_levels ,
