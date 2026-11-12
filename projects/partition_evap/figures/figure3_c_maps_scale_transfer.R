@@ -18,8 +18,8 @@ class_levels <- c("Other", "Persistent", "Emergent", "Lost")
 
 scale_transfer_cols <- c(
   "Other" = "#D9D9D9",
-  "Persistent" = "#0072B2",
-  "Emergent" = "#009E73",
+  "Persistent" = "#56B4E9",
+  "Emergent" = "#006837",
   "Lost" = "#D55E00"
 )
 

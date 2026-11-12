@@ -3,18 +3,29 @@ source('source/partition_evap_graphics.R')
 
 agreement_stats_scale <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "magnitude_agreement_scale_transfer.rds"))
 
+stopifnot(!anyDuplicated(agreement_stats_scale[, .(lon, lat)]))
+
 # 8 degrees ----
 agreement_stats_scale[, area_8deg := sum(area), .(deg_8_lon, deg_8_lat)]
 agreement_stats_scale[, N_8deg := .N, .(deg_8_lon, deg_8_lat)]
 agreement_stats_scale[, median_sIQR_0_25_8deg := median(std_quant_range, na.rm = T), .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[rel_dataset_agreement %in% c("High", "Above average"), higher_agreement_frac_8deg := sum(area)/area_8deg, .(deg_8_lon, deg_8_lat)]
-agreement_stats_scale[rel_dataset_agreement %in% c("Low", "Below average"), lower_agreement_frac_8deg := sum(area)/area_8deg, .(deg_8_lon, deg_8_lat)]
+# Assign each fraction to every fine-grid row in the coarse cell.
+agreement_stats_scale[, higher_agreement_frac_8deg :=
+                        sum(area[rel_dataset_agreement %in% c("High", "Above average")]) /
+                        area_8deg, .(deg_8_lon, deg_8_lat)]
+agreement_stats_scale[, lower_agreement_frac_8deg :=
+                        sum(area[rel_dataset_agreement %in% c("Low", "Below average")]) /
+                        area_8deg, .(deg_8_lon, deg_8_lat)]
 
 # 4 degrees ----
 agreement_stats_scale[, area_4deg := sum(area), .(deg_4_lon, deg_4_lat)]
 agreement_stats_scale[, N_4deg := .N, .(deg_4_lon, deg_4_lat)]
-agreement_stats_scale[rel_dataset_agreement %in% c("High", "Above average"), higher_agreement_frac_4deg := sum(area)/area_4deg, .(deg_4_lon, deg_4_lat)]
-agreement_stats_scale[rel_dataset_agreement %in% c("Low", "Below average"), lower_agreement_frac_4deg := sum(area)/area_4deg, .(deg_4_lon, deg_4_lat)]
+agreement_stats_scale[, higher_agreement_frac_4deg :=
+                        sum(area[rel_dataset_agreement %in% c("High", "Above average")]) /
+                        area_4deg, .(deg_4_lon, deg_4_lat)]
+agreement_stats_scale[, lower_agreement_frac_4deg :=
+                        sum(area[rel_dataset_agreement %in% c("Low", "Below average")]) /
+                        area_4deg, .(deg_4_lon, deg_4_lat)]
 agreement_stats_scale[, median_sIQR_0_25_4deg := median(std_quant_range, na.rm = T), .(deg_4_lon, deg_4_lat)]
 
 ### Comparison of 0.25 to larger grid cell ----
@@ -172,14 +183,14 @@ ggplot(
   theme_bw()
 
 ### does area fraction of higher agreement result in higher aggregated sIQR-----
-agreement_stats_scale_deg_8 <- unique(agreement_stats_scale[,.(higher_agreement_frac_8deg,
+agreement_stats_scale_deg_8 <- unique(agreement_stats_scale[,.(deg_8_lon, deg_8_lat,
+                                                               higher_agreement_frac_8deg,
                                                                lower_agreement_frac_8deg,
                                                                sIQR_8deg, 
                                                                area_8deg, N_8deg,
                                                                median_sIQR_0_25_8deg)])
 
-agreement_stats_scale_deg_8[is.na(higher_agreement_frac_8deg), higher_agreement_frac_8deg := 0]
-agreement_stats_scale_deg_8[is.na(lower_agreement_frac_8deg), lower_agreement_frac_8deg := 0]
+stopifnot(!anyDuplicated(agreement_stats_scale_deg_8[, .(deg_8_lon, deg_8_lat)]))
 
 agreement_stats_scale_deg_8[N_8deg >= 128 & area_8deg >= 1e+11, .N]
 agreement_stats_scale_deg_8[higher_agreement_frac_8deg > 0, .N]
@@ -187,14 +198,14 @@ agreement_stats_scale_deg_8[higher_agreement_frac_8deg > 0, .N]
 ### filter ----
 agreement_deg_8_filt <- agreement_stats_scale_deg_8[N_8deg >= 128 & area_8deg >= 1e+11]
 
-agreement_stats_scale_deg_4 <- unique(agreement_stats_scale[,.(higher_agreement_frac_4deg,
+agreement_stats_scale_deg_4 <- unique(agreement_stats_scale[,.(deg_4_lon, deg_4_lat,
+                                                               higher_agreement_frac_4deg,
                                                                lower_agreement_frac_4deg,
                                                                sIQR_4deg, 
                                                                area_4deg, N_4deg,
                                                                median_sIQR_0_25_4deg)])
 
-agreement_stats_scale_deg_4[is.na(higher_agreement_frac_4deg), higher_agreement_frac_4deg := 0]
-agreement_stats_scale_deg_4[is.na(lower_agreement_frac_4deg), lower_agreement_frac_4deg := 0]
+stopifnot(!anyDuplicated(agreement_stats_scale_deg_4[, .(deg_4_lon, deg_4_lat)]))
 
 agreement_stats_scale_deg_4[N_4deg >= 128/4 & area_4deg >= 1e+11, .N]
 agreement_deg_4_filt <- agreement_stats_scale_deg_4[N_4deg >= 128/4 & area_4deg >= 1e+11]
@@ -439,7 +450,7 @@ heatmap <- ggplot(
 
 ## ggarange ----
 fig_scale_transfer <- ggarrange(fig_agreement_class, heatmap, higher_af,
-          lower_af)
+                                lower_af)
 
 ggsave(
   filename = paste0(

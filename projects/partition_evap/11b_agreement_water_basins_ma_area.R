@@ -71,4 +71,4 @@ agreement_da_all <- agreement_ma[, {
 }, by = ma_basin]
 
 
-saveRDS(agreement_summary, paste0(PATH_SAVE_PARTITION_EVAP, "high_agreement_ma_basins_area.rds"))
+saveRDS(agreement_da_all, paste0(PATH_SAVE_PARTITION_EVAP, "high_agreement_ma_basins_area.rds"))

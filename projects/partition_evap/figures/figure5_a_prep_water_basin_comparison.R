@@ -70,6 +70,9 @@ data_mean <- data_merged[,.(mean_evap = mean(evap_mean),
 data_mean[dataset == 'Ma', water_balance := mean_evap, .(ma_basin)]
 data_mean[, water_balance := mean(water_balance, na.rm = T), .(ma_basin)]
 
+# Keep Ma as the reference column, not as a member of the product ensemble.
+data_mean <- data_mean[dataset != "Ma"]
+
 data_stats <- data_mean[, .(
   Q25_evap = quantile(mean_evap, 0.25),
   Q75_evap = quantile(mean_evap, 0.75),
@@ -85,7 +88,7 @@ data_stats <- merge(data_stats, agreement_summary, by = "ma_basin")
 data_mean[, mean_RE := (mean_evap-water_balance)/water_balance]
 data_mean[mean_RE < 0, diff := 'under']
 data_mean[mean_RE > 0, diff := 'over']
-data_mean <- data_mean[!is.na(diff)]
+data_mean <- data_mean[!is.na(mean_RE)]
 
 plot_dt <- merge(data_mean, agreement_summary, by = "ma_basin", all.x = TRUE)
 
