@@ -22,7 +22,7 @@ stopifnot(identical(attr(diff_pp, "sym_rel_diff_definition"),
 
 # Godavari and product pair ----
 ma_sf$BasinID <- as.character(ma_sf$BasinID)
-godavari <- ma_sf[grepl("godavari", ma_sf$Name, ignore.case = TRUE), ]
+godavari <- ma_sf[grepl("Godavari", ma_sf$Name, ignore.case = TRUE), ]
 stopifnot(nrow(godavari) == 1)
 
 grid <- agreement_grid[
@@ -30,8 +30,8 @@ grid <- agreement_grid[
   .(lon, lat, area)
 ]
 pair <- diff_pp[
-  dataset.x == "GLDAS-VIC" & dataset.y == "TerraClimate",
-  .(lon, lat, sym_rel_diff, et_delta, pair_mean_et)
+  dataset.x == "gldas-vic" & dataset.y == "terraclimate",
+  .(lon, lat, evap_mean.x, evap_mean.y, sym_rel_diff, et_delta, pair_mean_et)
 ]
 pair <- merge(pair, grid, by = c("lon", "lat"))
 stopifnot(nrow(pair) > 0, !anyDuplicated(pair[, .(lon, lat)]))
@@ -59,7 +59,7 @@ pair_summary[, compensation := fifelse(
 basin_comparison[, ma_basin := as.character(ma_basin)]
 wb_summary <- basin_comparison[
   ma_basin == godavari$BasinID &
-    dataset %in% c("GLDAS-VIC", "TerraClimate"),
+    dataset %in% c("gldas-vic", "terraclimate"),
   .(dataset, mean_evap, water_balance,
     mean_RE = (mean_evap - water_balance) / water_balance,
     retained = abs((mean_evap - water_balance) / water_balance) <= 0.1)
@@ -71,7 +71,7 @@ cat("\nGodavari: water-balance filtering inputs\n")
 print(wb_summary)
 cat("\nReconstructed minus filtering basin means\n")
 print(data.table(
-  dataset = c("GLDAS-VIC", "TerraClimate"),
+  dataset = c("gldas-vic", "terraclimate"),
   reconstructed = c(pair_summary$vic_mean, pair_summary$terraclimate_mean)
 )[wb_summary, on = "dataset"][, .(
   dataset, reconstructed, filtering_mean = mean_evap,

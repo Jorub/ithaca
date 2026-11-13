@@ -41,6 +41,7 @@ for (i in seq_len(n_datasets - 1L)) {
     )
     dummy_result <- dummy_data[, .(
       lon, lat,
+      evap_mean.x, evap_mean.y,
       sym_rel_diff = abs(evap_mean.x - evap_mean.y) /
         ((evap_mean.x + evap_mean.y) / 2),
       pair_mean_et = (evap_mean.x + evap_mean.y) / 2,

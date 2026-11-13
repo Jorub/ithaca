@@ -39,7 +39,7 @@ data_merged[dataset %in% EVAP_DATASETS_HYDROL, dataset_type := "Hydr./LSM model"
 data_merged[dataset %in% EVAP_DATASETS_ENSEMB, dataset_type := "Composite"]
 data_merged[dataset %in% 'Ma', dataset_type := "Water balance"]
 
-data_merged[, ma_basin := as.numeric(as.factor(ma_basin))]
+data_merged[, ma_basin := as.numeric(as.character(ma_basin))]
 
 ### assign continent
 
