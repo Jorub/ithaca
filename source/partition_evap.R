@@ -94,3 +94,18 @@ min_8_deg_N <- 128
 min_4_deg_N <- 32
 min_2_deg_N <- 8
 min_1_deg_N <- 2
+
+## functions ----
+# Area-weighted median for basin summaries of grid-cell statistics.
+# Return the smallest value reaching 50% of the valid area.
+weighted_median <- function(x, weights) {
+  use <- is.finite(x) & is.finite(weights) & weights > 0
+  if (!any(use)) return(NA_real_)
+  values <- x[use]
+  weights <- weights[use]
+  value_order <- order(values)
+  values <- values[value_order]
+  weights <- weights[value_order]
+  values[which(cumsum(weights) >= sum(weights) / 2)[1]]
+}
+
