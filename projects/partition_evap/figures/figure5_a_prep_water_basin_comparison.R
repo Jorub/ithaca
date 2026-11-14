@@ -77,11 +77,12 @@ data_stats <- data_mean[, .(
   Q25_evap = quantile(mean_evap, 0.25),
   Q75_evap = quantile(mean_evap, 0.75),
   ens_mean = mean(mean_evap),
+  ens_median = median(mean_evap),
   continent = first(continent)),
   .(ma_basin)]
 
 data_stats[, IQR := Q75_evap - Q25_evap, .(ma_basin)]
-data_stats[, sIQR := IQR/ens_mean]
+data_stats[, sIQR := IQR / ens_median]
 
 data_stats <- merge(data_stats, agreement_summary, by = "ma_basin")
 

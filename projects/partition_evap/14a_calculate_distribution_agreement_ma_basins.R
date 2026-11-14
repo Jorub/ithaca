@@ -30,10 +30,11 @@ for (i in 1:(n_datasets_2000_2019-1)){
 
 saveRDS(data_out, paste0(PATH_SAVE_PARTITION_EVAP, "ks_test_ma_basin.rds"))
 
-counts <- data_out[, .(counts = .N) , .(ma_basin)]
-
-agreement <- data_out[KS_test_p > 0.05, .(matches = .N) , .(ma_basin)]
-agreement <- counts[agreement, on = .(ma_basin)]
+# Summarise all valid locations, including those with zero KS matches.
+agreement <- data_out[, .(
+  counts = sum(is.finite(KS_test_p)),
+  matches = sum(is.finite(KS_test_p) & KS_test_p > 0.05, na.rm = TRUE)
+), .(ma_basin)]
 agreement <- agreement[counts > 77]
 agreement[, index := matches/counts]
 

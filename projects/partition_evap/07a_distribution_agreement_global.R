@@ -24,10 +24,11 @@ for (i in 1:(n_datasets_2000_2019-1)){
 
 saveRDS(data_out, paste0(PATH_SAVE_PARTITION_EVAP, "ks_test_gridwise.rds"))
 
-counts <- data_out[, .(counts = .N) , .(lon, lat)]
-
-agreement <- data_out[KS_test_p > 0.05, .(matches = .N) , .(lon, lat)]
-agreement <- counts[agreement, on = .(lon, lat)]
+# Summarise all valid locations, including those with zero KS matches.
+agreement <- data_out[, .(
+  counts = sum(is.finite(KS_test_p)),
+  matches = sum(is.finite(KS_test_p) & KS_test_p > 0.05, na.rm = TRUE)
+), .(lon, lat)]
 agreement <- agreement[counts > 77]
 agreement[, index := matches/counts]
 

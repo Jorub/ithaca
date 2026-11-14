@@ -23,10 +23,21 @@ agreement_merge <- subset(agreement_merge, select = c("lon", "lat",
                                                       "ens_mean_mean", "ens_mean_q75",
                                                       "quant_range"))
 
+# Recover the ensemble median from the example products' temporal means.
+magnitude_product_means <- figure1_timeseries[
+  example_label %in% c("M1", "M2"),
+  .(evap_mean = mean(evap)), .(lon, lat, dataset)
+]
+magnitude_medians <- magnitude_product_means[, .(
+  ens_mean_median = median(evap_mean)
+), .(lon, lat)]
+agreement_merge <- merge(agreement_merge, magnitude_medians,
+                          by = c("lon", "lat"), all.x = TRUE)
+
 agreement_merge[, annotation := sprintf(
-  "IQR = %.0f mm yr\u207B\u00B9\nmean ET = %.0f mm yr\u207B\u00B9\nsIQR = %.2f",
+  "IQR = %.0f mm yr\u207B\u00B9\nmedian ET = %.0f mm yr\u207B\u00B9\nsIQR = %.2f",
   quant_range,
-  ens_mean_mean,
+  ens_mean_median,
   std_quant_range
 )]                          
 
@@ -148,7 +159,7 @@ panel_c <- ggplot(evap_mask_sample)+
     "text",
     x = 1100,
     y = 0.78,
-    label = "sIQR == frac(IQR, bar(ET[plain(ensemble)]))",
+    label = "sIQR == frac(IQR, median(ET[plain(ensemble)]))",
     parse = TRUE,
     size = 3.5
   )+

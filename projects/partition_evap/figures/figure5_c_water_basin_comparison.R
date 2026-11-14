@@ -53,7 +53,7 @@ basin_product_means <- basin_annual[, .(
   agreement_mean_et = mean(evap_mean)
 ), .(ma_basin, dataset)]
 basin_magnitude <- basin_product_means[, .(
-  sIQR = IQR(agreement_mean_et) / mean(agreement_mean_et)
+  sIQR = IQR(agreement_mean_et) / median(agreement_mean_et)
 ), .(ma_basin)]
 
 # Use the existing basin match ratios, including genuine zeros if present.
