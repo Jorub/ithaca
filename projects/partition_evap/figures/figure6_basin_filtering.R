@@ -131,12 +131,15 @@ basin_summary <- merge(basin_summary, basin_names,
 # Order heatmap by retained-product count.
 basin_order <- basin_summary[order(-N_retained, ma_basin), ma_basin]
 basin_comparison[, basin_plot := factor(ma_basin, levels = basin_order)]
-basin_labels <- setNames(basin_summary$basin_name, basin_summary$ma_basin)
+basin_labels <- setNames(
+  paste0(basin_summary$basin_name, " (", basin_summary$ma_basin, ")"),
+  basin_summary$ma_basin
+)
 dataset_order <- basin_comparison[, .(N_retained = sum(retained)),
                                   by = dataset][order(-N_retained, dataset), dataset]
 basin_comparison[, dataset_plot := factor(dataset, levels = rev(dataset_order))]
 
-# Three global maps ----
+# Two global maps ----
 map_base <- function(data, title) {
   ggplot() +
     geom_sf(data = world_no_antarctica,
@@ -151,11 +154,20 @@ map_base <- function(data, title) {
 }
 
 # a: Number of retained products.
-map_data$value <- map_data$N_retained
+retained_levels <- c("0", "1", "2–3", "4–5", "6–7", "≥8")
+retained_cols <- c(
+  "0" = "gray95", "1" = "#DADAEB", "2–3" = "#BCBDDC",
+  "4–5" = "#9E9AC8", "6–7" = "#756BB1", "≥8" = "#54278F"
+)
+map_data$value <- cut(
+  map_data$N_retained, breaks = c(-Inf, 0, 1, 3, 5, 7, Inf),
+  labels = retained_levels
+)
 fig_retained <- map_base(map_data, "a") +
-  scale_fill_viridis_c(
-    option = "C", direction = -1, breaks = pretty(map_data$N_retained),
-    name = "Products retained", na.value = "gray85"
+  scale_fill_manual(
+    values = retained_cols, limits = retained_levels, drop = FALSE,
+    name = "Products within ±10%\nof water balance", na.value = "gray85",
+    guide = guide_legend(nrow = 2, byrow = TRUE)
   )
 
 # b: Percentage of basin area with >20% median pairwise difference.
@@ -174,22 +186,9 @@ fig_residual <- map_base(map_data, "b") +
     guide = guide_legend(nrow = 2, byrow = TRUE)
   )
 
-# c: Change in basin median pairwise difference after filtering.
-change_breaks <- c(-Inf, -0.1, -0.05, 0.05, 0.1, Inf)
-change_labels <- c("< -10 pp", "-10 to -5 pp", "-5 to +5 pp",
-                   "+5 to +10 pp", "> +10 pp")
-map_data$value <- cut(map_data$delta_D, breaks = change_breaks,
-                      labels = change_labels, include.lowest = TRUE)
-fig_change <- map_base(map_data, "c") +
-  scale_fill_manual(
-    values = setNames(colorRampPalette(c(fig5_col_low, fig5_col_mid,
-                                         fig5_col_high))(5), change_labels),
-    limits = change_labels, drop = FALSE,
-    name = "Change after filtering", na.value = "gray85",
-    guide = guide_legend(nrow = 2, byrow = TRUE)
-  )
+# Filtering change is shown in figure6_SI_filtering_change.R.
 
-# d: Product-specific signed errors and retained-product outlines ----
+# c: Product-specific signed errors and retained-product outlines ----
 fig_datasets <- ggplot(basin_comparison) +
   geom_tile(aes(x = basin_plot, y = dataset_plot, fill = mean_RE),
             colour = "white", linewidth = 0.2) +
@@ -216,7 +215,7 @@ fig_datasets <- ggplot(basin_comparison) +
     values = c("Within 10% of water balance" = "gray25"), name = NULL,
     guide = guide_legend(override.aes = list(fill = NA, linewidth = 0.65))
   ) +
-  labs(x = "Basin", y = "Products", title = "d") +
+  labs(x = "Basin", y = "Products", title = "c") +
   theme_fig5 +
   theme(
     panel.grid = element_blank(), strip.text.y = element_text(angle = 0),
@@ -226,8 +225,7 @@ fig_datasets <- ggplot(basin_comparison) +
   )
 
 # Assemble and save ----
-fig_maps <- ggarrange(fig_retained, fig_residual, fig_change,
-                      ncol = 3, align = "hv")
+fig_maps <- ggarrange(fig_retained, fig_residual, ncol = 2, align = "hv")
 fig6 <- ggarrange(fig_maps, fig_datasets, ncol = 1, heights = c(1.3, 1.8))
 
 saveRDS(basin_summary, paste0(PATH_SAVE_PARTITION_EVAP,
