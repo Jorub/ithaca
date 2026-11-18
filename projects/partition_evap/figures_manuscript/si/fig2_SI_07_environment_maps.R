@@ -5,6 +5,7 @@ library(stars)
 library(raster)
 library(ggplot2)
 library(ggpubr)
+library(dplyr)
 
 source("source/partition_evap.R")
 source("source/partition_evap_graphics.R")
