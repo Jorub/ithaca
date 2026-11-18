@@ -40,14 +40,18 @@ for (definition in definitions) {
       identical(definition[[2]], as.name("weighted_median"))) eval(definition, env)
 }
 stopifnot(is.function(env$weighted_median))
-helpers <- c("manuscript_io.R", "scale_agreement_panels.R", "basin_accuracy_panels.R",
-              "basin_pair_maps.R", "basin_retention_panels.R", "filtering_overview_panels.R")
-for (helper in helpers) sys.source(file.path(root, "source", helper), env)
+sys.source(file.path(root, "source/manuscript_io.R"), env)
 
-# Exact majority boundary, missing values and both transition directions.
-classes <- env$scale_transition_class(c("High", "High", "Low", "Low", NA),
-                                      c(.5, .49, .5, .49, .8), .5)
-stopifnot(identical(as.character(classes), c("Persistent", "Emergent", "Lost", "Other", NA)))
+# Plot construction must be visible in every figure script; there are no
+# separate figure-builder wrappers left to hide its data or geometry.
+entrypoints <- c(list.files(file.path(root, "main"), pattern = "[.]R$", full.names = TRUE),
+                 list.files(file.path(root, "si"), pattern = "[.]R$", full.names = TRUE))
+stopifnot(length(entrypoints) == 20)
+for (entry in entrypoints) {
+  code <- readLines(entry, warn = FALSE)
+  stopifnot(any(grepl("ggplot\\(|geom_", code)),
+            !any(grepl("build_.*(figure|panel)|_panels[.]R", code)))
+}
 
 # Three synthetic basins: balanced members, shared high deviation and one retained.
 ids <- c("20", "29", "56")
@@ -97,46 +101,44 @@ env$agreement_years <- 2000:2019; env$wb_tolerance <- .1
 env$excluded_datasets <- character(0)
 env$wb_levels <- c("Below -10%", "Within 10%", "Above +10%")
 env$wb_cols <- setNames(c("orange", "green", "blue"), env$wb_levels)
+temp_output <- tempfile("manuscript_figures_"); dir.create(temp_output)
+env$PATH_SAVE_PARTITION_EVAP_FIGURES <- paste0(temp_output, "/")
+env$figure_widths <- 25
+env$file.exists <- function(path) basename(path) %in% names(fixtures) || base::file.exists(path)
+env$source <- function(file, local = TRUE, ...) {
+  if (startsWith(file, "projects/partition_evap/figures_manuscript/")) {
+    actual <- file.path(root, sub("^projects/partition_evap/figures_manuscript/", "", file))
+    sys.source(actual, env)
+    if (basename(file) == "manuscript_io.R") {
+      env$save_manuscript_figure <- function(plot, filename, dimensions) {
+        invisible(ggplotGrob(plot))
+      }
+    }
+  }
+  invisible(NULL)
+}
+env$source("projects/partition_evap/figures_manuscript/source/manuscript_io.R")
 device <- tempfile(fileext = ".pdf")
 pdf(device)
-accuracy <- env$build_basin_accuracy_panels()
-stopifnot(accuracy$summary[ma_basin == "20", ensemble_median_et] == 100,
-          accuracy$summary[ma_basin == "20", median_RE] == 0,
-          accuracy$summary[ma_basin == "20", basin_match_ratio] == 0,
-          nrow(accuracy$summary) == length(ids))
-invisible(lapply(accuracy[1:8], ggplotGrob))
+
+# Test the actual execution scripts with synthetic reads and project setup
+# disabled. Production datasets and project configuration are never sourced.
+sys.source(file.path(root, "main/fig4_agreement_water_balance.R"), env)
+stopifnot(env$basin_summary[ma_basin == "20", ensemble_median_et] == 100,
+          env$basin_summary[ma_basin == "20", median_RE] == 0,
+          env$basin_summary[ma_basin == "20", basin_match_ratio] == 0,
+          env$acceptance_counts$N_basins == length(ids))
+sys.source(file.path(root, "si/fig4_SI_01_median_water_balance_error.R"), env)
 
 # Both panels use medians across pairs; one retained member is unassessable.
-pair_changes <- env$summarise_filtering_changes(pairs, products)
-stopifnot(isTRUE(all.equal(pair_changes[ma_basin == "20", grid_change_pp], -5.5)),
-          isTRUE(all.equal(pair_changes[ma_basin == "20", aggregated_change_pp], .5)),
-          all(is.na(pair_changes[N_retained == 1, grid_change_pp])),
-          identical(attr(pair_changes, "grid_summary_definition"),
+sys.source(file.path(root, "si/fig5_SI_01_filtering_change.R"), env)
+stopifnot(isTRUE(all.equal(env$summary[ma_basin == "20", grid_change_pp], -5.5)),
+          isTRUE(all.equal(env$summary[ma_basin == "20", aggregated_change_pp], .5)),
+          all(is.na(env$summary[N_retained == 1, grid_change_pp])),
+          identical(attr(env$summary, "grid_summary_definition"),
                     "median across per-pair area-weighted grid-cell medians"))
-map <- merge(basins, pair_changes, by.x = "BasinID", by.y = "ma_basin")
-change_plot <- env$filtering_change_map(map, "grid_change_pp", "Synthetic")
-change_data <- change_plot$layers[[2]]$data
+change_data <- env$plots$grid_change_pp$layers[[2]]$data
 stopifnot(as.character(change_data$class[change_data$BasinID == "56"]) == "One retained product")
-invisible(ggplotGrob(change_plot))
-
-# Pair selection matches unordered keys; reversing A/B reverses only the sign.
-selected_examples <- data.table(panel_order = 1, ma_basin = "20", product_a = "c", product_b = "b")
-selected <- env$select_example_pairs(selected_examples, pairs)
-stopifnot(selected$dataset.x == "b", selected$dataset.y == "c")
-inputs <- list(basins = basins, settings = env$pair_map_settings(),
-  grid = data.table(ma_basin = "20", dataset.x = "b", dataset.y = "c",
-                    lon = c(.5, 1.5), lat = .5, et_delta = c(10, 50), sym_rel_diff = c(.1, .2)))
-forward <- copy(selected); forward[, `:=`(product_a = "b", product_b = "c")]
-forward_plot <- env$build_basin_pair_map(forward, inputs, "signed")
-reverse_plot <- env$build_basin_pair_map(selected, inputs, "signed")
-relative_forward <- env$build_basin_pair_map(forward, inputs, "relative")
-relative_reverse <- env$build_basin_pair_map(selected, inputs, "relative")
-stopifnot(identical(forward_plot$layers[[1]]$data$et_delta,
-                    -reverse_plot$layers[[1]]$data$et_delta),
-          identical(relative_forward$layers[[1]]$data$value,
-                    relative_reverse$layers[[1]]$data$value),
-          as.character(reverse_plot$layers[[1]]$data$value[1]) == "-10 to 10")
-invisible(ggplotGrob(env$assemble_pair_map_board(list(forward_plot, reverse_plot), inputs, "signed")))
 
 # One coarse row per cell, broadcast area fractions, and genuine zero match ratios.
 fine <- data.table(lon = seq_len(8), lat = 0, deg_8_lon = rep(c(4, 12, 20, 28), each = 2),
@@ -155,34 +157,74 @@ fixtures[["distribution_agreement_8deg.rds"]] <- dist
 fixtures[["thresholds_sIQR.RDS"]] <- c(0, .1, .2, .3, .4)
 fixtures[["thresholds_distribution_agreement.RDS"]] <- c(0, .1, .3, .7, .9)
 env$min_8_deg_N <- 1
-scale_panels <- env$build_scale_agreement_panels(8)[[1]]
-stopifnot(nrow(scale_panels$magnitude_data) == 4,
-          identical(as.character(scale_panels$magnitude_data$transition),
+sys.source(file.path(root, "main/fig3_scale_persistence.R"), env)
+stopifnot(nrow(env$panels$magnitude_data) == 4,
+          identical(as.character(env$panels$magnitude_data$transition),
                     c("Emergent", "Persistent", "Lost", "Other")),
-          sum(scale_panels$distribution_data$index == 0) == 2)
-invisible(ggplotGrob(scale_panels$magnitude))
+          sum(env$panels$distribution_data$index == 0) == 2)
 fixtures[["magnitude_agreement_8deg.rds"]] <- rbind(mag, mag[1])
-duplicate_rejected <- tryCatch({ env$build_scale_agreement_panels(8); FALSE }, error = function(e) TRUE)
+duplicate_rejected <- tryCatch({
+  sys.source(file.path(root, "main/fig3_scale_persistence.R"), env)
+  FALSE
+}, error = function(e) TRUE)
 stopifnot(duplicate_rejected)
 fixtures[["magnitude_agreement_8deg.rds"]] <- mag
 
-# Evaluate the SI entrypoints against synthetic reads; skip project setup/exports.
-temp_output <- tempfile("manuscript_figures_"); dir.create(temp_output)
-env$PATH_SAVE_PARTITION_EVAP_FIGURES <- paste0(temp_output, "/")
-env$figure_widths <- 25
-env$file.exists <- function(path) basename(path) %in% names(fixtures) || base::file.exists(path)
-env$source <- function(file, local = TRUE, ...) {
-  if (startsWith(file, "projects/partition_evap/figures_manuscript/")) {
-    actual <- file.path(root, sub("^projects/partition_evap/figures_manuscript/", "", file))
-    sys.source(actual, env)
-    if (basename(file) == "manuscript_io.R") {
-      env$save_manuscript_figure <- function(plot, filename, dimensions) {
-        invisible(ggplotGrob(plot))
-      }
-    }
-  }
-  invisible(NULL)
+# The all-scale SI scripts use the same direct plotting loop at 1, 2, 4, 8.
+for (scale in c(1, 2, 4)) {
+  fine[, (paste0("deg_", scale, "_lon")) := deg_8_lon]
+  fine[, (paste0("deg_", scale, "_lat")) := deg_8_lat]
+  mag_scale <- copy(mag)
+  dist_scale <- copy(dist)
+  setnames(mag_scale, c("deg_8_lon", "deg_8_lat", "sIQR_8deg"),
+           c(paste0("deg_", scale, "_lon"), paste0("deg_", scale, "_lat"), paste0("sIQR_", scale, "deg")))
+  setnames(dist_scale, c("deg_8_lon", "deg_8_lat"), paste0("deg_", scale, c("_lon", "_lat")))
+  fixtures[[paste0("magnitude_agreement_", scale, "deg.rds")]] <- mag_scale
+  fixtures[[paste0("distribution_agreement_", scale, "deg.rds")]] <- dist_scale
+  env[[paste0("min_", scale, "_deg_N")]] <- 1
 }
+fixtures[["magnitude_agreement_scale_transfer.rds"]] <- fine
+for (script in c("fig3_SI_01_agreement_all_scales.R", "fig3_SI_02_transitions_all_scales.R")) {
+  sys.source(file.path(root, "si", script), env)
+  stopifnot(length(env$panels) == 4,
+            all(vapply(env$panels, function(p) nrow(p$magnitude_data) == 4, logical(1))))
+}
+
+# Pair selection matches unordered keys; reversing A/B changes only the sign.
+selected_examples <- data.table(panel_order = 1, ma_basin = "20", product_a = "c", product_b = "b")
+env$fread <- function(file, ...) {
+  if (basename(file) == "basin_examples.csv") return(copy(selected_examples))
+  data.table::fread(file, ...)
+}
+fixtures[["dataset_agreement_grid_wise.rds"]] <- data.table(
+  ma_basin = "20", lon = c(.5, 1.5), lat = .5, area = 1)
+grid <- data.table(dataset.x = "b", dataset.y = "c", lon = c(.5, 1.5), lat = .5,
+                   evap_mean.x = c(110, 150), evap_mean.y = 100,
+                   et_delta = c(10, 50), abs_et_delta = c(10, 50),
+                   pair_mean_et = c(105, 125), sym_rel_diff = c(.1, .2))
+attr(grid, "sym_rel_diff_definition") <- "cellwise_pair_mean"
+fixtures[["product_pair_difference_gridwise.rds"]] <- grid
+map_layers <- list()
+env$geom_tile <- function(mapping = NULL, data = NULL, ...) {
+  if (is.data.frame(data) && "et_delta" %in% names(data)) {
+    map_layers[[env$metric]] <<- copy(data)
+  }
+  ggplot2::geom_tile(mapping = mapping, data = data, ...)
+}
+sys.source(file.path(root, "main/fig6_basin_examples.R"), env)
+stopifnot(env$selected_pairs$dataset.x == "b", env$selected_pairs$dataset.y == "c")
+reverse_layers <- copy(map_layers)
+selected_examples[, `:=`(product_a = "b", product_b = "c")]
+sys.source(file.path(root, "main/fig6_basin_examples.R"), env)
+stopifnot(identical(map_layers$signed$et_delta, -reverse_layers$signed$et_delta),
+          identical(map_layers$relative$value, reverse_layers$relative$value),
+          as.character(reverse_layers$signed$value[1]) == "-10 to 10")
+
+fixtures[["basin_compensating_pairs_by_gap.rds"]] <- copy(env$selected_pairs)
+sys.source(file.path(root, "si/fig6_online_selected_pair_maps.R"), env)
+stopifnot(length(env$plots) == 2,
+          identical(map_layers$signed$et_delta, grid$et_delta))
+
 for (script in c("fig5_SI_01_filtering_change.R", "fig5_SI_02_retained_pair_consistency.R",
                   "fig5_SI_03_excluded_products.R", "fig5_SI_04_compensating_pairs.R")) {
   sys.source(file.path(root, "si", script), env)
@@ -198,4 +240,4 @@ stopifnot(nrow(env$acceptance_counts) == 1,
 dev.off()
 unlink(c(temp_output, device), recursive = TRUE)
 cat("Parsed", length(files), "R files; sources and nine-pair selection verified.\n")
-cat("Synthetic accuracy, transition, per-pair filtering medians, gray-basin, pair-orientation and SI checks passed.\n")
+cat("Synthetic entrypoint checks passed: accuracy, scale transitions, pair-first filtering medians, gray basins, pair orientation and SI figures.\n")

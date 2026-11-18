@@ -8,7 +8,6 @@ source("source/partition_evap.R")
 source("source/partition_evap_graphics.R")
 source("projects/partition_evap/figures_manuscript/source/manuscript_io.R", local = TRUE)
 
-
 # Configuration ----
 paths <- manuscript_paths()
 
@@ -53,7 +52,6 @@ improvement <- ggplot(test_merge, aes(x = index_diff)) +
   )+
   theme_bw()
 
-
 match_ratios <- ggplot(test_merge)  +
   geom_boxplot(aes(y = index.x, x = 1)) +
   geom_boxplot(aes(y = index.y, x = 2)) +
@@ -68,7 +66,6 @@ match_ratios <- ggplot(test_merge)  +
   theme_bw()
 
 fig_distribution <- ggarrange(improvement, match_ratios, labels = c("a", "b"))
-
 
 save_manuscript_figure(fig_distribution, file.path(paths$si, "fig2_SI_08_centering"),
                        c(figure_widths / 2, 10))

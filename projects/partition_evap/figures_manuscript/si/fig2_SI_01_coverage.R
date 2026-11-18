@@ -8,7 +8,6 @@ source("source/partition_evap.R")
 source("source/partition_evap_graphics.R")
 source("projects/partition_evap/figures_manuscript/source/manuscript_io.R", local = TRUE)
 
-
 # Configuration ----
 paths <- manuscript_paths()
 
@@ -18,7 +17,6 @@ evap_data_coverage <- readRDS(paste0(PATH_SAVE_PARTITION_EVAP, "evap_data_count.
 
 ## plots ---- 
 ### data count ----
-
 
 map_coverage <- ggplot() +
   geom_tile(data = evap_data_coverage, aes(fill = as.factor(data_count),
@@ -72,8 +70,6 @@ map_coverage <- ggplot() +
   ) +
   theme_map_SI +
   guides(fill = guide_legend(ncol = 2, byrow = TRUE))
-
-
 
 save_manuscript_figure(map_coverage, file.path(paths$si, "fig2_SI_01_coverage"),
                        c(figure_widths / 2, figure_widths / 4.4))

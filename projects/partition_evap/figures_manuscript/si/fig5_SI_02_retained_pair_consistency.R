@@ -236,7 +236,6 @@ fig_criteria <- ggplot(consistency_bars, aes(basin_plot)) +
 fig_overview <- ggarrange(fig_map, fig_criteria,
                            ncol = 1, heights = c(1.5, 1.1), align = "v")
 
-
 # Save to the manuscript namespace, without overwriting exploratory summaries.
 settings <- list(wb_tolerance = wb_tolerance, gap_threshold_pp = gap_threshold_pp,
                  large_difference_threshold = large_difference_threshold,

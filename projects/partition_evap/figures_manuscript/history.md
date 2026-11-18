@@ -18,3 +18,12 @@
   now sourced globally as in the original figures; shared panel functions keep
   local scope. The remaining server directory mapping requires the actual
   file locations, rather than assumptions from a failed lookup.
+
+- 2026-11-18: Put figure-specific preparation, plotting and layout directly in
+  all main and SI/online scripts. Removed ten separate figure-builder files;
+  kept the shared export/legend and environmental fingerprint utilities.
+  Calculations, input/output names, periods and thresholds are preserved.
+  Server listing confirms both Figure 1 inputs in the configured directory.
+  Set explicit four-row layouts for the two all-scale SI map series so each
+  eight-panel figure remains on one page. Offline checks use synthetic inputs;
+  production data and figure generation were not run locally.

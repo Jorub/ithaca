@@ -7,15 +7,37 @@ library(ggpubr)
 source("source/partition_evap.R")
 source("source/partition_evap_graphics.R")
 source("projects/partition_evap/figures_manuscript/source/manuscript_io.R", local = TRUE)
-source("projects/partition_evap/figures_manuscript/source/basin_retention_panels.R", local = TRUE)
-
 
 # Configuration ----
 paths <- manuscript_paths()
 wb_tolerance <- .10
 
-retention <- read_basin_retention(wb_tolerance)
-summary <- retention$summary
+# Product retention ----
+products <- as.data.table(readRDS(file.path(PATH_SAVE_PARTITION_EVAP,
+                                           "basin_pair_product_status.rds")))
+stopifnot(isTRUE(all.equal(attr(products, "wb_tolerance"), wb_tolerance)))
+products[, ma_basin := as.character(ma_basin)]
+stopifnot(!anyDuplicated(products[, .(ma_basin, dataset)]),
+          all(is.finite(products$mean_RE)), all(!is.na(products$retained)))
+products[, retained := abs(mean_RE) <= wb_tolerance]
+basins <- readRDS(file.path(PATH_SAVE_PARTITION_EVAP, "ma_basins_spatial.rds"))
+basins$BasinID <- as.character(basins$BasinID)
+stopifnot(!anyDuplicated(basins$BasinID))
+summary <- products[, .(
+  N_products = .N, N_retained = sum(retained),
+  N_below = sum(mean_RE < -wb_tolerance),
+  N_above = sum(mean_RE > wb_tolerance)
+), ma_basin]
+summary[, N_excluded := N_below + N_above]
+names <- as.data.table(st_drop_geometry(basins))[, .(ma_basin = BasinID, basin_name = Name)]
+summary <- merge(names, summary, by = "ma_basin", all.x = TRUE)
+order <- summary[order(is.na(N_retained), -N_retained, as.integer(ma_basin)), ma_basin]
+products[, basin_plot := factor(ma_basin, levels = order)]
+summary[, basin_plot := factor(ma_basin, levels = order)]
+basin_labels <- setNames(paste0(summary$basin_name, " (", summary$ma_basin, ")"), summary$ma_basin)
+dataset_order <- products[, .(N_retained = sum(retained)), dataset][
+  order(-N_retained, dataset), dataset]
+products[, dataset_plot := factor(dataset, levels = rev(dataset_order))]
 # The denominator contains excluded products only. A bar spans 100 percentage
 # points: the negative share below zero and the positive share above zero.
 bars <- melt(summary, id.vars = c("ma_basin", "basin_plot", "N_excluded"),
@@ -31,7 +53,7 @@ fig_excluded <- ggplot(bars[is.finite(share)], aes(basin_plot, share, fill = dir
              inherit.aes = FALSE, colour = "gray45", size = 2.5) +
   scale_fill_manual(values = c("Below -10%" = fig5_col_low, "Above +10%" = fig5_col_high),
                      drop = FALSE, name = NULL) +
-  scale_x_discrete(labels = retention$labels, drop = FALSE) +
+  scale_x_discrete(labels = basin_labels, drop = FALSE) +
   scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, .25),
     labels = function(x) scales::percent(abs(x), accuracy = 1)) +
   labs(x = "Basin", y = "Share of excluded products",

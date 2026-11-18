@@ -27,7 +27,11 @@ Exports are isolated under `PATH_SAVE_PARTITION_EVAP_FIGURES/manuscript/`:
 
 [Main entrypoints](main/README.md), [SI entrypoints](si/README.md), and
 [source provenance](source_inventory.csv) document the mapping from old code.
-Shared panel builders live in `source/` within this folder.
+Each main/SI script contains its own data preparation, plot layers and layout.
+The `source/` folder contains only shared export/legend utilities and the existing
+fingerprint calculation used for multiple environmental groups. Figure-specific
+builder functions are intentionally avoided so scripts can be read and edited
+section by section in RStudio.
 
 ## Prepared inputs
 
@@ -37,8 +41,6 @@ Keep the existing preparation sequence and corrected caches:
    masks and saved reference thresholds. Figure 1 uses the existing
    `figure1_timeseries.rds` and `figure1_selected_locations.rds`, with paths
    supplied by `source/partition_evap.R`, as in the original figure script.
-   A failed lookup indicates that the configured path needs checking against
-   the server layout; it does not establish that the data need regeneration.
 2. Scale figures use corrected 13a output, KS outputs from 13d-13g, and
    magnitude/distribution classes from 13h/13i for 1, 2, 4 and 8 degrees.
 3. Water-balance figures use the existing Figure 5a preparation outputs,
@@ -54,7 +56,7 @@ Keep the existing preparation sequence and corrected caches:
    require `basin_filtering_grid_comparison.rds` or recalculate the global grid.
 
 Project configuration and graphics are sourced in the global environment,
-matching the existing figure scripts. Shared manuscript panel functions are
+matching the existing figure scripts. Shared export and fingerprint utilities are
 sourced locally so the runner can keep figure settings separate. No manuscript
 script assigns its own replacement for `PATH_SAVE_PARTITION_EVAP`.
 
