@@ -33,8 +33,12 @@ Shared panel builders live in `source/` within this folder.
 
 Keep the existing preparation sequence and corrected caches:
 
-1. Methods/global figures use the existing agreement grid, Figure 1 examples,
-   environmental masks and saved reference thresholds.
+1. Methods/global figures use the existing agreement grid, environmental
+   masks and saved reference thresholds. Figure 1 uses the existing
+   `figure1_timeseries.rds` and `figure1_selected_locations.rds`, with paths
+   supplied by `source/partition_evap.R`, as in the original figure script.
+   A failed lookup indicates that the configured path needs checking against
+   the server layout; it does not establish that the data need regeneration.
 2. Scale figures use corrected 13a output, KS outputs from 13d-13g, and
    magnitude/distribution classes from 13h/13i for 1, 2, 4 and 8 degrees.
 3. Water-balance figures use the existing Figure 5a preparation outputs,
@@ -48,6 +52,11 @@ Keep the existing preparation sequence and corrected caches:
    11i. The optional online series reads the 11i selection first.
 6. SI filtering changes use the two compact 11g summaries only. They do not
    require `basin_filtering_grid_comparison.rds` or recalculate the global grid.
+
+Project configuration and graphics are sourced in the global environment,
+matching the existing figure scripts. Shared manuscript panel functions are
+sourced locally so the runner can keep figure settings separate. No manuscript
+script assigns its own replacement for `PATH_SAVE_PARTITION_EVAP`.
 
 The new main filtering figure reads compact product status only, avoiding
 the old global pairwise recalculation. Existing project source files supply

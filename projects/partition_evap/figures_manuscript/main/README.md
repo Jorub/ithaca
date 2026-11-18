@@ -21,3 +21,7 @@ Figure 6 candidates: California, North Saskatchewan, Danube, Yellow River,
 Yangtze, Ob, Parana, Niger and Swan. Both members must be water-balance
 retained; ETmonitor is excluded from the candidate list. The nine-to-four
 selection and explanations remain provisional.
+
+Figure 1 reads its existing inputs using `PATH_SAVE_PARTITION_EVAP` from
+`source/partition_evap.R`, matching the original figure. The new scripts do
+not replace the server's data paths or automatically regenerate inputs.

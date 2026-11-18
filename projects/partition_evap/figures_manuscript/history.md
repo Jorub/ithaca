@@ -11,3 +11,10 @@
 - 2026-11-18: Confirmed median across per-pair summaries for both SI filtering-
   change panels. Removed the grid-first alternative and legacy cache dependency;
   full and retained ensembles use the same pair-first order of operations.
+
+- 2026-11-18: Corrected the interpretation of the server file error: the user
+  confirmed a different server layout, not missing data. Removed regeneration
+  advice and the extra Figure 1 missing-cache guard. Project configuration is
+  now sourced globally as in the original figures; shared panel functions keep
+  local scope. The remaining server directory mapping requires the actual
+  file locations, rather than assumptions from a failed lookup.
