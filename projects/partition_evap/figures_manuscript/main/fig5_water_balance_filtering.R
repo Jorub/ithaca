@@ -1,8 +1,9 @@
-# Figure 5: product retention by the basin water-balance filter ----
+# Figure 5: retained products and excluded water-balance deviations ----
 library(data.table)
 library(sf)
 library(ggplot2)
 library(ggpubr)
+library(ggrepel)
 
 source("source/partition_evap.R")
 source("source/partition_evap_graphics.R")
@@ -41,11 +42,16 @@ products[, dataset_plot := factor(dataset, levels = rev(dataset_order))]
 # Retained-product map ----
 map <- merge(basins, summary, by.x = "BasinID", by.y = "ma_basin", all.x = TRUE)
 levels <- c("0", "1", "2-3", "4-5", "6-7", "8+")
-colours <- setNames(c("gray95", "#DADAEB", "#BCBDDC", "#9E9AC8", "#756BB1", "#54278F"), levels)
+colours <- c("0" = "gray95", "1" = "gray45", "2-3" = "#D8B365",
+             "4-5" = "#80B8A6", "6-7" = "#4C84A8", "8+" = "#76558B")
 map$class <- cut(map$N_retained, c(-Inf, 0, 1, 3, 5, 7, Inf), labels = levels)
 fig_retained_map <- ggplot() +
   geom_sf(data = world_no_antarctica, fill = "gray95", colour = "gray80", linewidth = .2) +
   geom_sf(data = map, aes(fill = class), colour = "gray45", linewidth = .25) +
+  geom_label_repel(data = map, aes(label = BasinID, geometry = geometry),
+    stat = "sf_coordinates", seed = 42, min.segment.length = 0,
+    box.padding = .5, point.padding = .1, size = 2,
+    colour = "gray25", fill = "white", segment.colour = "gray35", max.overlaps = Inf) +
   scale_fill_manual(values = colours, limits = levels, drop = FALSE, na.value = "gray85",
     name = "Water-balance agreement\nProducts within +/-10%",
     guide = guide_legend(nrow = 2, byrow = TRUE)) +
@@ -70,17 +76,45 @@ fig_retention_heatmap <- ggplot(products) +
                           title.position = "top", title.hjust = .5)) +
   scale_colour_manual(values = c("Within 10% of water balance" = "gray25"), name = NULL,
     guide = guide_legend(override.aes = list(fill = NA, linewidth = .65))) +
-  labs(x = "Basin", y = "Products", title = "b") + theme_fig5 +
+  labs(x = NULL, y = "Products", title = "b") + theme_fig5 +
   theme(panel.grid = element_blank(), strip.text.y = element_text(angle = 0),
-    axis.text.x = element_text(size = 7, angle = 45, hjust = 1, vjust = 1),
+    axis.text.x = element_blank(), axis.ticks.x = element_blank(),
     legend.position = "bottom", legend.box = "vertical",
     legend.margin = margin(8, 6, 8, 6), plot.title = element_text(face = "bold"))
 
+# Excluded-product deviations ----
+# Retained products are excluded from the denominator. Each bar spans 100
+# percentage points, split below/above zero by the direction of deviation.
+bars <- melt(summary, id.vars = c("ma_basin", "basin_plot", "N_excluded"),
+              measure.vars = c("N_below", "N_above"),
+              variable.name = "direction", value.name = "N_products")
+bars[, share := fifelse(N_excluded > 0, N_products / N_excluded, NA_real_)]
+bars[direction == "N_below", share := -share]
+bars[, direction := factor(direction, levels = c("N_below", "N_above"),
+                            labels = c("Below -10%", "Above +10%"))]
+fig_excluded <- ggplot(bars[is.finite(share)], aes(basin_plot, share, fill = direction)) +
+  geom_col(width = .8) + geom_hline(yintercept = 0, colour = "gray25", linewidth = .3) +
+  geom_text(data = summary[N_excluded == 0], aes(basin_plot, 0, label = "0"),
+    inherit.aes = FALSE, colour = "gray45", size = 2.5) +
+  scale_fill_manual(values = c("Below -10%" = fig5_col_low, "Above +10%" = fig5_col_high),
+    drop = FALSE, name = NULL) +
+  scale_x_discrete(labels = basin_labels, drop = FALSE) +
+  scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, .5),
+    labels = function(x) scales::percent(abs(x), accuracy = 1)) +
+  labs(x = "Basin", y = "Share of excluded\nproducts",
+    title = "c  Direction of deviations among excluded products") +
+  theme_fig5 + theme(legend.position = "bottom", panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 7),
+    plot.title = element_text(face = "bold", size = 10))
+
 # Figure layout ----
-fig5 <- ggarrange(fig_retained_map, fig_retention_heatmap,
-                  ncol = 1, heights = c(1, 1.5))
+# Align the heatmap and bars, including the heatmap's facet strips.
+product_panels <- cowplot::align_plots(fig_retention_heatmap, fig_excluded,
+                                      align = "v", axis = "lr")
+fig5 <- ggarrange(fig_retained_map, product_panels[[1]], product_panels[[2]],
+                  ncol = 1, heights = c(1, 1.5, .85))
 save_manuscript_figure(fig5, file.path(paths$main, "fig5_water_balance_filtering"),
-                       c(figure_widths, 27))
+                       c(figure_widths, 34))
 fwrite(summary, file.path(paths$data, "fig5_product_retention_summary.csv"))
 fwrite(products[, .(ma_basin, dataset, mean_RE, retained)],
        file.path(paths$data, "fig5_product_retention_status.csv"))

@@ -14,8 +14,8 @@ gap_threshold_pp <- 10
 large_difference_threshold <- 0.20
 joint_area_limit <- 0.20
 area_limits <- 0.20
-consistency_levels <- c("Both criteria met", "Gap criterion only",
-                         "Area criterion only", "Neither criterion met")
+consistency_levels <- c("Consistent across scales; large differences limited", "Consistent across scales; large differences widespread",
+                         "Different across scales; large differences limited", "Different across scales; large differences widespread")
 consistency_cols <- setNames(
   c("#08519C", "#9ECAE1", "#E2A374", "#D9B3B3"), consistency_levels
 )
@@ -90,10 +90,10 @@ retained_pairs[, area_pass :=
 retained_pairs[, joint_pass := gap_pass & area_pass]
 retained_pairs[, consistency_class := fcase(
   !assessable, NA_character_,
-  joint_pass, "Both criteria met",
-  gap_pass, "Gap criterion only",
-  area_pass, "Area criterion only",
-  default = "Neither criterion met"
+  joint_pass, "Consistent across scales; large differences limited",
+  gap_pass, "Consistent across scales; large differences widespread",
+  area_pass, "Different across scales; large differences limited",
+  default = "Different across scales; large differences widespread"
 )]
 pair_counts <- retained_pairs[, .(
   N_retained_pairs = .N,
@@ -180,34 +180,41 @@ consistency_bars[, proportion := fifelse(
 )]
 consistency_bars[, consistency_class := factor(consistency_class,
   levels = class_count_columns, labels = consistency_levels)]
-unassessable <- basin_summary[N_assessable_pairs == 0]
+unassessable <- copy(basin_summary[N_assessable_pairs == 0])
+unassessable[, status := fifelse(N_retained %in% 1,
+                                "One retained product", "Not assessable")]
+status_levels <- c("One retained product", "Not assessable")
+status_cols <- c("One retained product" = "gray70", "Not assessable" = "gray45")
+status_breaks <- status_levels[status_levels %in% unassessable$status]
 
-# a: Joint criterion, expressed as a proportion of assessable retained pairs.
+# a: Basin-grid consistency among assessable retained product pairs.
 map_data <- merge(ma_sf[, c("BasinID", "Name")], basin_summary,
                     by.x = "BasinID", by.y = "ma_basin", all.x = TRUE)
 map_levels <- c("0%", ">0-20%", ">20-40%", ">40-60%", ">60-80%",
-                 ">80-100%", "Not assessable")
-map_data$joint_class <- cut(
+                 ">80-100%", "One retained product", "Not assessable")
+map_data$joint_class <- as.character(cut(
   map_data$proportion_joint, breaks = c(-Inf, 0, .2, .4, .6, .8, 1),
-  labels = head(map_levels, -1)
-)
-map_data$joint_class <- factor(
-  fifelse(is.na(map_data$joint_class), "Not assessable",
-           as.character(map_data$joint_class)), levels = map_levels
-)
+  labels = map_levels[seq_len(6)]
+))
+map_data$joint_class[is.na(map_data$joint_class)] <- "Not assessable"
+map_data$joint_class[map_data$N_retained %in% 1] <- "One retained product"
+map_data$joint_class <- factor(map_data$joint_class, levels = map_levels)
 map_cols <- setNames(c("#F2F2F2", "#DEEBF7", "#C6DBEF", "#9ECAE1",
-                        "#4292C6", "#08519C", "gray70"), map_levels)
+                        "#4292C6", "#08519C", "gray70", "gray45"), map_levels)
+# Only show unavailable pair data in the legend when such a basin exists.
+map_breaks <- map_levels[map_levels != "Not assessable" |
+                          any(map_data$joint_class == "Not assessable")]
 fig_map <- ggplot() +
   geom_sf(data = world_no_antarctica,
             fill = "gray95", colour = "gray80", linewidth = .2) +
   geom_sf(data = map_data, aes(fill = joint_class),
             colour = "gray45", linewidth = .25) +
-  scale_fill_manual(values = map_cols, limits = map_levels, drop = FALSE,
-                      name = "Retained pairs meeting\nboth criteria",
+  scale_fill_manual(values = map_cols, limits = map_levels, breaks = map_breaks, drop = FALSE,
+                      name = "Basin-grid consistency\nbetween products (%)",
                       guide = guide_legend(nrow = 2, byrow = TRUE)) +
   scale_y_continuous(breaks = seq(-60, 60, 30)) +
   coord_sf(ylim = c(-70, 90), expand = FALSE) +
-  labs(x = NULL, y = NULL, title = "a  Basin and grid-cell consistency") +
+  labs(x = NULL, y = NULL, title = "a") +
   theme_map_fig5 + theme(legend.position = "bottom")
 
 bar_theme <- theme_fig5 + theme(
@@ -216,22 +223,25 @@ bar_theme <- theme_fig5 + theme(
 )
 # Gray columns indicate unavailable comparisons, rather than zero passes.
 fig_criteria <- ggplot(consistency_bars, aes(basin_plot)) +
-  geom_col(data = unassessable, aes(y = 1), fill = "gray70", width = .8) +
+  geom_col(data = unassessable, aes(y = 1, fill = status), width = .8) +
   geom_col(data = consistency_bars[is.finite(proportion)],
              aes(y = proportion, fill = consistency_class),
              position = position_stack(reverse = TRUE), width = .8) +
   geom_hline(yintercept = c(.25, .5, .75), colour = "gray45",
                linetype = "dashed", linewidth = .3) +
-  scale_fill_manual(values = consistency_cols, limits = consistency_levels,
+  scale_fill_manual(values = c(consistency_cols, status_cols),
+                      limits = c(consistency_levels, status_levels),
+                      breaks = c(consistency_levels, status_breaks),
+                      labels = function(x) sub("; ", ";\n", x, fixed = TRUE),
                       drop = FALSE, name = NULL,
-                      guide = guide_legend(nrow = 2, byrow = TRUE)) +
+                      guide = guide_legend(ncol = 2, byrow = TRUE)) +
   scale_x_discrete(labels = basin_labels, drop = FALSE) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, .25),
                       oob = scales::squish,
                       labels = scales::label_percent(accuracy = 1),
                       expand = expansion(mult = c(0, .03))) +
   labs(x = "Basin", y = "Proportion of\nretained pairs",
-       title = "b  Consistency criteria") +
+       title = "b  Agreement among retained product pairs") +
   bar_theme + theme(axis.text.x = element_text(angle = 60, hjust = 1, size = 7))
 fig_overview <- ggarrange(fig_map, fig_criteria,
                            ncol = 1, heights = c(1.5, 1.1), align = "v")

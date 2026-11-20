@@ -23,7 +23,7 @@ for (file in files) {
   }
 }
 examples <- fread(file.path(root, "basin_examples.csv"), colClasses = c(ma_basin = "character"))
-stopifnot(nrow(examples) == 9, !anyDuplicated(examples$ma_basin),
+stopifnot(nrow(examples) == 6, !anyDuplicated(examples$ma_basin),
           !any(c(examples$product_a, examples$product_b) == "etmonitor"),
           sum(examples$product_a == "jra55" | examples$product_b == "jra55") == 1)
 
@@ -46,7 +46,7 @@ sys.source(file.path(root, "source/manuscript_io.R"), env)
 # separate figure-builder wrappers left to hide its data or geometry.
 entrypoints <- c(list.files(file.path(root, "main"), pattern = "[.]R$", full.names = TRUE),
                  list.files(file.path(root, "si"), pattern = "[.]R$", full.names = TRUE))
-stopifnot(length(entrypoints) == 20)
+stopifnot(length(entrypoints) == 21)
 for (entry in entrypoints) {
   code <- readLines(entry, warn = FALSE)
   stopifnot(any(grepl("ggplot\\(|geom_", code)),
@@ -212,12 +212,17 @@ env$geom_tile <- function(mapping = NULL, data = NULL, ...) {
   ggplot2::geom_tile(mapping = mapping, data = data, ...)
 }
 sys.source(file.path(root, "main/fig6_basin_examples.R"), env)
+sys.source(file.path(root, "si/fig6_SI_02_basin_example_products.R"), env)
 stopifnot(env$selected_pairs$dataset.x == "b", env$selected_pairs$dataset.y == "c")
 reverse_layers <- copy(map_layers)
 selected_examples[, `:=`(product_a = "b", product_b = "c")]
 sys.source(file.path(root, "main/fig6_basin_examples.R"), env)
+sys.source(file.path(root, "si/fig6_SI_02_basin_example_products.R"), env)
 stopifnot(identical(map_layers$signed$et_delta, -reverse_layers$signed$et_delta),
           identical(map_layers$relative$value, reverse_layers$relative$value),
+          identical(map_layers$product_a$value, reverse_layers$product_b$value),
+          identical(map_layers$product_b$value, reverse_layers$product_a$value),
+          identical(map_layers$product_a$value, grid$evap_mean.x),
           as.character(reverse_layers$signed$value[1]) == "-10 to 10")
 
 fixtures[["basin_compensating_pairs_by_gap.rds"]] <- copy(env$selected_pairs)
@@ -239,5 +244,5 @@ stopifnot(nrow(env$acceptance_counts) == 1,
           env$acceptance_counts$N_basins == length(ids))
 dev.off()
 unlink(c(temp_output, device), recursive = TRUE)
-cat("Parsed", length(files), "R files; sources and nine-pair selection verified.\n")
+cat("Parsed", length(files), "R files; sources and six-pair selection verified.\n")
 cat("Synthetic entrypoint checks passed: accuracy, scale transitions, pair-first filtering medians, gray basins, pair orientation and SI figures.\n")

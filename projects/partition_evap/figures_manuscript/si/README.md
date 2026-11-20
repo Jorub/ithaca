@@ -18,6 +18,7 @@ PDF and PNG outputs go to `PATH_SAVE_PARTITION_EVAP_FIGURES/manuscript/si/`.
 | `fig5_SI_03_excluded_products.R` | Diverging 100% bars for excluded products only |
 | `fig5_SI_04_compensating_pairs.R` | Proportion of retained pairs with gap >=10 pp and compensation >50% |
 | `fig6_SI_01_basin_pair_heatmaps.R` | `fig6_SI_01_basin_<ID>_pair_heatmaps`: complete 2x2 per-basin series |
+| `fig6_SI_02_basin_example_products.R` | Six columns (selected basins), three rows: relative difference, mean ET of product A and mean ET of product B |
 | `fig6_online_selected_pair_maps.R` | Optional per-pair map series under `manuscript/online/`; excluded from normal SI runner |
 
 The continuous agreement script builds five related panels in one pass.

@@ -19,8 +19,8 @@ root. No preparation or production analysis is started automatically.
 
 Exports are isolated under `PATH_SAVE_PARTITION_EVAP_FIGURES/manuscript/`:
 
-- `main/`: six main-figure slots; Figure 6 currently exports two provisional
-  3x3 boards (signed and relative differences) for nine candidates.
+- `main/`: six main-figure slots; Figure 6 exports one six-basin board of
+  signed ET differences. Relative differences and both product maps are SI.
 - `si/`: contextual maps, scale series, basin overviews and full pair heatmaps.
 - `data/`: supporting CSV/RDS summaries and the selected pair list.
 - `online/`: optional individual two-panel pair maps; no website is published.
@@ -50,7 +50,7 @@ Keep the existing preparation sequence and corrected caches:
    (including area with symmetric relative difference >20%) and
    `basin_pair_product_status.rds`.
 5. Main Figure 6 also reads the corrected global pairwise grid **once** and
-   selects only the nine requested basin/pair combinations. It does not need
+   selects only the six requested basin/pair combinations. It does not need
    11i. The optional online series reads the 11i selection first.
 6. SI filtering changes use the two compact 11g summaries only. They do not
    require `basin_filtering_grid_comparison.rds` or recalculate the global grid.
@@ -100,14 +100,17 @@ paths, packages and themes; their configuration/install behaviour is inherited.
 
 ## Main versus SI
 
-Overview maps/bars of consistency, compensation frequency, filtering changes
-and excluded-product direction are in SI. Main Figure 5 contains the
-product-retention map and signed water-balance-error heatmap with dark-gray
-retention outlines. Main Figure 4 contains scatterplots; its median-error map
+Overview maps/bars of consistency, compensation frequency and filtering
+changes are in SI. Main Figure 5 contains the product-retention map, signed
+water-balance-error heatmap with dark-gray retention outlines, and excluded-
+product direction bars. The standalone excluded-product SI export is also retained. Main Figure 4 contains scatterplots; its median-error map
 is in SI. Centering remains SI. Detailed pair heatmaps remain SI/online.
 
-Nine basin examples are provisional, not representative of all retained pairs:
-the source maps were chosen to explore exceptions. Terrain, climate,
+Six selected basin examples (California, Danube, Yellow, Parana, Niger and
+Swan) show signed differences in one main figure. Figure 6 SI 02 places the
+six basins in columns, with relative differences and mean ET for products A
+and B in three rows. They illustrate
+exceptions rather than representing all retained pairs. Terrain, climate,
 land-cover and resolution explanations still require investigation.
 
 ## Validation and remaining decisions
@@ -125,8 +128,8 @@ Regression specifications and subgroup definitions for additional water-balance
 statistics remain to be discussed. No regression model or retrospective
 best-member ranking has been introduced. Overall median acceptance counts and
 per-basin above/within/below-tolerance counts are exported with Figure 4.
-The final reduction from nine examples to four and final caption wording
-remain open.
+The selected examples are California, Danube, Yellow, Parana, Niger and Swan.
+Final caption wording and explanations of the spatial patterns remain open.
 
 AI assistance: OpenAI Codex adapted the existing human and AI-assisted plotting
 code, assembled the new entrypoints and wrote validation/documentation.
